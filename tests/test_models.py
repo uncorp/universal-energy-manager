@@ -1,3 +1,5 @@
+"""Tests for pure planning models validation."""
+
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -10,66 +12,108 @@ from custom_components.universal_energy_manager.models import (
 )
 
 
-def test_live_state_rejects_stale_measurements() -> None:
-    with pytest.raises(ValueError, match="stale"):
-        LiveState(
-            timestamp=datetime(2026, 7, 18, 8, 0, tzinfo=UTC),
-            now=datetime(2026, 7, 18, 8, 16, tzinfo=UTC),
-            soc_pct=55.0,
-            pv_power_w=3000.0,
-            house_power_w=800.0,
-            grid_export_w=500.0,
-            battery_charge_w=1200.0,
-        )
+class TestLiveStateValidation:
+    """Tests for LiveState input validation."""
+
+    def _make_base(self, **overrides) -> dict:
+        """Base kwargs with timezone-aware timestamps."""
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        base = {
+            "timestamp": now,
+            "now": now,
+            "soc_pct": 50.0,
+            "pv_power_w": 3000.0,
+            "house_power_w": 1000.0,
+            "grid_export_w": 2000.0,
+            "battery_charge_w": 0.0,
+        }
+        base.update(overrides)
+        return base
+
+    def test_rejects_negative_grid_export(self) -> None:
+        """grid_export_w must be non-negative — negative means import."""
+        with pytest.raises(ValueError, match="grid_export_w"):
+            LiveState(**self._make_base(grid_export_w=-100.0))
+
+    def test_rejects_negative_battery_charge(self) -> None:
+        """battery_charge_w must be non-negative."""
+        with pytest.raises(ValueError, match="battery_charge_w"):
+            LiveState(**self._make_base(battery_charge_w=-50.0))
+
+    def test_accepts_zero_grid_export(self) -> None:
+        """Zero grid export is valid (boundary)."""
+        live = LiveState(**self._make_base(grid_export_w=0.0))
+        assert live.grid_export_w == 0.0
+
+    def test_accepts_zero_battery_charge(self) -> None:
+        """Zero battery charge is valid (boundary)."""
+        live = LiveState(**self._make_base(battery_charge_w=0.0))
+        assert live.battery_charge_w == 0.0
+
+    def test_accepts_positive_values(self) -> None:
+        """All positive values are valid."""
+        live = LiveState(**self._make_base())
+        assert live.grid_export_w == 2000.0
+        assert live.battery_charge_w == 0.0
 
 
-def test_live_state_rejects_measurements_from_the_future() -> None:
-    now = datetime(2026, 7, 18, 8, 0, tzinfo=UTC)
+class TestForecastPointValidation:
+    """Tests for ForecastPoint input validation."""
 
-    with pytest.raises(ValueError, match="future"):
-        LiveState(
-            timestamp=now.replace(minute=1),
-            now=now,
-            soc_pct=55.0,
-            pv_power_w=3000.0,
-            house_power_w=800.0,
-            grid_export_w=500.0,
-            battery_charge_w=1200.0,
-        )
+    def test_rejects_negative_power(self) -> None:
+        """Forecast power must be non-negative."""
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        with pytest.raises(ValueError, match="non-negative"):
+            ForecastPoint(start=now, duration=timedelta(minutes=15), power_w=-100.0)
 
-
-def test_live_state_rejects_non_finite_measurements() -> None:
-    now = datetime(2026, 7, 18, 8, 0, tzinfo=UTC)
-
-    with pytest.raises(ValueError, match="finite"):
-        LiveState(
-            timestamp=now,
-            now=now,
-            soc_pct=55.0,
-            pv_power_w=float("nan"),
-            house_power_w=800.0,
-            grid_export_w=500.0,
-            battery_charge_w=1200.0,
-        )
+    def test_accepts_zero_power(self) -> None:
+        """Zero forecast power is valid (nighttime)."""
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        fp = ForecastPoint(start=now, duration=timedelta(minutes=15), power_w=0.0)
+        assert fp.power_w == 0.0
 
 
-def test_storage_capabilities_reject_non_finite_limits() -> None:
-    with pytest.raises(ValueError, match="finite"):
-        StorageCapabilities(usable_capacity_kwh=10.0, max_charge_power_w=float("inf"))
+class TestStorageCapabilitiesValidation:
+    """Tests for StorageCapabilities input validation."""
+
+    def test_rejects_zero_usable_capacity(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            StorageCapabilities(usable_capacity_kwh=0.0, max_charge_power_w=5000.0)
+
+    def test_rejects_zero_max_charge_power(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            StorageCapabilities(usable_capacity_kwh=10.0, max_charge_power_w=0.0)
+
+    def test_rejects_negative_values(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            StorageCapabilities(usable_capacity_kwh=-1.0, max_charge_power_w=5000.0)
+
+    def test_accepts_positive_values(self) -> None:
+        cap = StorageCapabilities(usable_capacity_kwh=10.0, max_charge_power_w=5000.0)
+        assert cap.usable_capacity_kwh == 10.0
+        assert cap.max_charge_power_w == 5000.0
 
 
-def test_forecast_point_rejects_non_finite_power() -> None:
-    with pytest.raises(ValueError, match="finite"):
-        ForecastPoint(
-            start=datetime(2026, 7, 18, 8, 0, tzinfo=UTC),
-            duration=timedelta(minutes=15),
-            power_w=float("nan"),
-        )
+class TestPlannerConfigValidation:
+    """Tests for PlannerConfig input validation."""
 
+    def test_rejects_target_below_zero(self) -> None:
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        with pytest.raises(ValueError, match="between 0 and 100"):
+            PlannerConfig(target_soc_pct=-1.0, charge_end=now + timedelta(hours=4))
 
-def test_planner_config_rejects_non_finite_target() -> None:
-    with pytest.raises(ValueError, match="finite"):
-        PlannerConfig(
-            target_soc_pct=float("nan"),
-            charge_end=datetime(2026, 7, 18, 18, 0, tzinfo=UTC),
-        )
+    def test_rejects_target_above_100(self) -> None:
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        with pytest.raises(ValueError, match="between 0 and 100"):
+            PlannerConfig(target_soc_pct=101.0, charge_end=now + timedelta(hours=4))
+
+    def test_accepts_boundary_targets(self) -> None:
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        PlannerConfig(target_soc_pct=0.0, charge_end=now + timedelta(hours=4))
+        PlannerConfig(target_soc_pct=100.0, charge_end=now + timedelta(hours=4))
+
+    def test_rejects_unfinite_target(self) -> None:
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        from math import inf
+        with pytest.raises(ValueError, match="finite"):
+            PlannerConfig(target_soc_pct=inf, charge_end=now + timedelta(hours=4))

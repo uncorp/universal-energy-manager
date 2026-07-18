@@ -43,6 +43,10 @@ class LiveState:
             raise ValueError("pv_power_w must be non-negative")
         if self.house_power_w < 0.0:
             raise ValueError("house_power_w must be non-negative")
+        if self.grid_export_w < 0.0:
+            raise ValueError("grid_export_w must be non-negative")
+        if self.battery_charge_w < 0.0:
+            raise ValueError("battery_charge_w must be non-negative")
 
 
 @dataclass(frozen=True, slots=True)
