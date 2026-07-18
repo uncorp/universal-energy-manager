@@ -6,7 +6,7 @@ Stand: 2026-07-18. Dieses Dokument ist ein fachlicher Entwurf, keine laufende St
 
 - Der MVP-Umfang wurde am 2026-07-18 eingefroren. Neue Ideen bleiben im Backlog und werden erst nach stabiler Shadow-/Aktivvalidierung priorisiert.
 - Bis dahin wird **kein** GitHub-Repository erstellt und nichts in Home Assistant produktiv installiert oder umgestellt.
-- Nach Freigabe des MVP-Umfangs wird ein eigenständiges öffentliches GitHub-Projekt angelegt, das als HACS-Custom-Integration installierbar ist: **UEM – Universal Energy Manager**, Domain/Repository `universal_energy_manager` bzw. `universal-energy-manager`, Lizenz MIT.
+- Nach Freigabe des MVP-Umfangs wird ein öffentliches GitHub-Projekt angelegt, das als HACS-Custom-Integration installierbar ist: **UEM – Universal Energy Manager**, Domain/Repository `universal_energy_manager` bzw. `universal-energy-manager`, Lizenz MIT.
 - Der erste Release bleibt bewusst klein; Geräte, Tarife und Verbraucher werden später über Adapter erweitert.
 - Neue Ideen werden fortlaufend als Anforderungen gesammelt, aber erst nach MVP und Shadow-/Aktivtest priorisiert. Release-Regel: zuerst notwendige Bugfixes und Regressionstests, danach nach Möglichkeit genau ein abgegrenztes neues Feature pro Version; sicherheitskritische Fehler können jederzeit als reiner Fix-Release erscheinen.
 

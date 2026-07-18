@@ -4,7 +4,7 @@
 
 ## Ziel
 
-Ein eigenständiger lokaler Home-Assistant-Energiemanager, der `e3dc_rscp` als Datenquellen-Adapter nutzt und die E3DC-Akkuladung gegen das echte Tagesziel und die PV-Kurve plant — ohne künstliche Zwischenzielrampe oder Entitätsflut.
+Ein lokaler Home-Assistant-Energiemanager, der `e3dc_rscp` als Datenquellen-Adapter nutzt und die E3DC-Akkuladung gegen das echte Tagesziel und die PV-Kurve plant — ohne künstliche Zwischenzielrampe oder Entitätsflut.
 
 ## E3DC-Anbindung
 
