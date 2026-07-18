@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+
+# Home Assistant / private installation data
+.storage/
+secrets.yaml
+configuration.yaml
+*.diagnostics.json
+backups/
+.env
+MODEL_POLICY.md
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
