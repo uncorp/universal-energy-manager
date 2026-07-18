@@ -1,6 +1,6 @@
 # UEM – Universal Energy Manager
 
-A local-first Home Assistant energy manager for photovoltaic systems, home batteries and flexible loads.
+An independent, local-first Home Assistant energy manager for photovoltaic systems, home batteries and flexible loads.
 
 UEM is developed with E3DC in mind and uses adapters so that other systems can follow. It plans from live energy flows and conservative 15-minute PV forecasts, explains every decision, and avoids cloud lock-in and configuration clutter.
 
@@ -8,7 +8,7 @@ UEM is developed with E3DC in mind and uses adapters so that other systems can f
 
 The first release is deliberately small:
 
-- existing `e3dc_rscp` integration as the E3DC adapter
+- `e3dc_rscp` as the E3DC data-source adapter
 - real battery end target instead of artificial intermediate charge corridors
 - optional multiple PV forecast curves
 - conditional curtailment headroom
@@ -19,7 +19,7 @@ Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are 
 
 ## Safety
 
-UEM must never run as a second active E3DC controller. It can calculate in Shadow mode next to Maestro, but active control is blocked until known competing controllers are manually disabled.
+UEM is developed as an independent integration. Shadow mode only calculates from observed data and never sends commands. Active control remains blocked until explicit user approval and an exclusive-control check succeed.
 
 > This project is experimental energy-management software. Verify decisions in Shadow mode before enabling any active control.
 

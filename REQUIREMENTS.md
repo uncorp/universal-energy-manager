@@ -175,7 +175,7 @@ Keine 60 sichtbaren Expertenregler.
   - keine automatische Überschreibung einer Nutzervorgabe,
   - Reload/Validierung ohne Integrations-Neueinrichtung.
 - Die normale UI bleibt auf Strategie, Reserve, Tagesziel, Tarifquelle, Fahrzeugzielen und Netzladefreigabe beschränkt. Erweiterte Diagnose ist auf einer eigenen Seite bzw. im Profil verfügbar, nicht als Entitätenflut.
-- Ein zentraler Status zeigt aktive Fremdvorgaben verständlich an, z. B. `E3DC-Entladesperre durch Nutzer`, `Wallbox-Zeitplan aktiv` oder `AI 360° aktiv – UEM nur Shadow`. Bekannte Zustände werden vom Adapter gelesen; nicht zuverlässig erkennbare Fremdsteuerungen verhindern die Aktivierung, bis der Nutzer sie ausdrücklich bestätigt hat.
+- Ein zentraler Status zeigt für die eigene Planung relevante Nutzervorgaben verständlich an, z. B. `E3DC-Entladesperre durch Nutzer` oder `Wallbox-Zeitplan aktiv`. Nicht eindeutig zuordenbare externe Steuerzustände verhindern die Aktivierung, bis der Nutzer die exklusive Steuerung ausdrücklich bestätigt hat.
 
 ## MVP-Abgrenzung und Akzeptanzfälle
 
@@ -188,9 +188,9 @@ Keine 60 sichtbaren Expertenregler.
 - E3DC-Akku-Lade-/Entladegrenzen sicher setzen und nach Fehlern freigeben; keine Netzladung ohne explizite Freigabe.
 - Beobachtungsmodus für PV-only/BKW-only, ohne Steuerbefehle an nicht sicher steuerbare Geräte.
 - Schlanke UI, Profil-/Override-Datei und Entscheidungserklärung.
-- Zuerst verpflichtender Shadow-Modus bei jeder Neuinstallation: Der Manager berechnet und protokolliert seine **eigenen** Entscheidungen aus echten Live-Daten, sendet aber keine E3DC-Befehle. Der Modus darf parallel zu Maestro laufen, dient aber nicht einem automatischen Vergleich oder einer Bewertung fremder Regler.
-- Aktive Steuerung kann erst nach einem sichtbaren Bereitschaftsbericht, einer bewussten Nutzerfreigabe und einer Exklusivitätsprüfung aktiviert werden. Erkennt die Integration Maestro oder einen anderen bekannten E3DC-Regler als aktiv, bleibt UEM blockiert und erklärt, dass zuerst der andere Regler manuell deaktiviert werden muss.
-- UEM deaktiviert niemals Maestro, AI 360° oder fremde Automationen selbst. Nicht erkennbare externe Befehle werden im Aktivierungsdialog ausdrücklich abgefragt; aktive Steuerung wird nie durch ein Update oder Lernen automatisch eingeschaltet.
+- Zuerst verpflichtender Shadow-Modus bei jeder Neuinstallation: Der Manager berechnet und protokolliert seine **eigenen** Entscheidungen aus echten Live-Daten, sendet aber keine E3DC-Befehle.
+- Aktive Steuerung kann erst nach einem sichtbaren Bereitschaftsbericht, einer bewussten Nutzerfreigabe und einer bestätigten exklusiven Steuerkonfiguration aktiviert werden.
+- Nicht eindeutig zuordenbare externe Steuerzustände werden im Aktivierungsdialog ausdrücklich abgefragt; aktive Steuerung wird nie durch ein Update oder Lernen automatisch eingeschaltet.
 
 ### Bewusst nach dem MVP
 - Mehrere Tarife/Zählerkaskaden als aktive Kostenoptimierung.

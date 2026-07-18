@@ -4,12 +4,12 @@
 
 ## Ziel
 
-Ein lokaler Home-Assistant-Energiemanager, der die bestehende `e3dc_rscp`-Integration nutzt und die E3DC-Akkuladung gegen das echte Tagesziel und die PV-Kurve plant — ohne Maestro-artige Zwischenzielrampe oder Entitätsflut.
+Ein eigenständiger lokaler Home-Assistant-Energiemanager, der `e3dc_rscp` als Datenquellen-Adapter nutzt und die E3DC-Akkuladung gegen das echte Tagesziel und die PV-Kurve plant — ohne künstliche Zwischenzielrampe oder Entitätsflut.
 
 ## E3DC-Anbindung
 
 - `e3dc_rscp` ist Pflicht und wird nicht neu implementiert.
-- UEM erkennt die E3DC-RSCP-Entitäten standardmäßig über den zugehörigen Home-Assistant-Config-Entry und bekannte, bereits von Maestro genutzte Sensorzuordnungen.
+- UEM erkennt die E3DC-RSCP-Entitäten standardmäßig über den zugehörigen Home-Assistant-Config-Entry und dokumentierte E3DC-RSCP-Sensorzuordnungen.
 - Erkannte Entitäten werden im Setup vorbefüllt und zur Bestätigung angezeigt; bei fehlenden oder unplausiblen Werten wird nicht geraten und keine aktive Steuerung erlaubt.
 - UEM speichert keine E3DC-IP, keine Zugangsdaten und keine Tokens.
 
