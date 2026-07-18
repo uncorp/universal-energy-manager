@@ -19,13 +19,53 @@ Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are 
 
 ## Safety
 
-Shadow mode only calculates from observed data and never sends commands. Active control remains blocked until explicit user approval and an exclusive-control check succeed.
+**Shadow mode only calculates from observed data and never sends commands.** Active control remains blocked until explicit user approval and an exclusive-control check succeed.
 
 > This project is experimental energy-management software. Verify decisions in Shadow mode before enabling any active control.
 
 ## Installation
 
-HACS installation instructions will be added with the first installable Shadow release.
+### HACS (Home Assistant Community Store)
+
+1. In HACS, open **Integrations** → the three-dot menu → **Custom repositories**.
+2. Enter the repository URL of this project and set the **Category** to `Integration`.
+3. Find **UEM – Universal Energy Manager** in the list and install it.
+4. After installation, restart Home Assistant.
+5. Open **Settings → Devices & Services → Add Integration** and search for **UEM**.
+6. The config flow discovers entities from your existing `e3dc_rscp` integration. Confirm the detected entities to create a Shadow-only entry.
+
+**UEM does not store any E3DC credentials, IPs, or tokens.** It reuses the entity registry of your existing `e3dc_rscp` configuration entry.
+
+### No-control boundary
+
+The first release is **Shadow-only**: UEM reads sensor values and publishes planning output, but never calls a Home Assistant service to control hardware. The `switch.energy_manager_aktiv` entity is intentionally absent — active control will only appear in a future release after a deliberate user opt-in.
+
+## Required source entities
+
+UEM needs the following sensor categories from your existing `e3dc_rscp` integration. The config flow maps them automatically; no private entity IDs appear in documentation or this README.
+
+| UEM input | Source key in `e3dc_rscp` | Description |
+|---|---|---|
+| Battery SoC | `soc` | Current state of charge (percent) |
+| PV power | `solar-production` | Current PV generation (W) |
+| House consumption | `house-consumption` | Current home load (W) |
+| Grid export | `grid-production` | Current grid feed-in (W) |
+| Battery charge | `battery-charge` | Current battery charge/discharge (W) |
+| Battery capacity | `system-battery-installed-capacity` | Total installed battery capacity |
+| Max charge power | `system-battery-charge-max` | Maximum battery charge power |
+| PV forecast (optional) | any forecast entity with 15-min intervals | 15-minute PV generation curve |
+
+All power values are normalised to watts. If a required entity is missing or unavailable, UEM reports a `Messdatenfehler` (measurement data error) and does not produce planning output.
+
+## Shadow-mode sensors
+
+After installation UEM provides three read-only sensors:
+
+| Entity name | Description |
+|---|---|
+| `sensor.energy_manager_status` | Current safety mode and health. State is `Shadow – keine aktive Steuerung` in normal operation. Attributes: `active_control` (always `false`), `commands_sent` (always `false`), `last_error` (null when healthy), `forecast_connected` (boolean). |
+| `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid and whether the PV forecast is connected. |
+| `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. Value is `0.0` in the current Shadow implementation because no control is applied. Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
 
 ## Privacy
 
