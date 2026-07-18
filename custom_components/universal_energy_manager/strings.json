@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "UEM einrichten",
+        "description": "Wähle die vorhandene E3DC-RSCP-Integration. UEM startet ausschließlich im Shadow-Modus.",
+        "data": {
+          "e3dc_config_entry_id": "E3DC-RSCP-Integration"
+        }
+      },
+      "confirm": {
+        "title": "Erkannte Messwerte bestätigen",
+        "description": "UEM hat {detected} E3DC-Messwerte erkannt. Beim ersten Start werden keine Steuerbefehle gesendet."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "UEM ist bereits eingerichtet.",
+      "e3dc_rscp_not_configured": "Es wurde keine E3DC-RSCP-Integration gefunden."
+    },
+    "error": {
+      "missing_required_entities": "Erforderliche E3DC-Messwerte fehlen: {missing}. UEM rät nicht und bleibt daher nicht einrichtbar."
+    }
+  }
+}

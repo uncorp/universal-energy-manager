@@ -1,0 +1,12 @@
+{
+  "domain": "universal_energy_manager",
+  "name": "UEM – Universal Energy Manager",
+  "version": "0.1.0",
+  "config_flow": true,
+  "documentation": "https://github.com/uncorp/universal-energy-manager",
+  "issue_tracker": "https://github.com/uncorp/universal-energy-manager/issues",
+  "after_dependencies": ["e3dc_rscp"],
+  "codeowners": ["@uncorp"],
+  "iot_class": "local_polling",
+  "integration_type": "hub"
+}

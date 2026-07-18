@@ -12,6 +12,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install --upgrade pip pytest ruff
+      - run: python -m pip install --upgrade pip "homeassistant==2024.3.3" pytest ruff
       - run: python -m pytest
       - run: ruff check .
