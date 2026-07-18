@@ -10,7 +10,7 @@ def power_to_w(value: str | int | float, unit: str | None) -> float:
     except (TypeError, ValueError) as err:
         raise ValueError("power state is not numeric") from err
 
-    if unit == "W":
+    if unit in (None, "W"):
         return number
     if unit == "kW":
         return number * 1000.0
