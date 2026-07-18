@@ -7,6 +7,7 @@ def test_shadow_data_never_reports_a_sent_command() -> None:
         decision="Keine PV-Prognose verbunden",
         planned_charge_limit_w=0.0,
         error=None,
+        forecast_connected=False,
     )
 
     assert data.commands_sent is False

@@ -61,6 +61,7 @@ class UemStatusSensor(_UemSensor):
             "active_control": False,
             "commands_sent": False,
             "last_error": data.error if data else "no coordinator data",
+            "forecast_connected": data.forecast_connected if data else False,
         }
 
 

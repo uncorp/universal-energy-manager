@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_BATTERY_CHARGE_ENTITY,
+    CONF_FORECAST_ENTITY,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
@@ -33,6 +34,7 @@ class ShadowData:
     decision: str
     planned_charge_limit_w: float
     error: str | None
+    forecast_connected: bool
 
     @property
     def commands_sent(self) -> bool:
@@ -62,17 +64,31 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
                 decision="E3DC-Messwerte sind unvollständig oder ungültig; keine Steuerung aktiv.",
                 planned_charge_limit_w=0.0,
                 error=str(err),
+                forecast_connected=self._forecast_connected(),
             )
 
+        forecast = self._forecast_connected()
         return ShadowData(
             status=SHADOW_STATUS,
             decision=(
-                f"Livewerte gültig (Akku {live.soc_pct:.0f} %); PV-Prognose ist noch nicht "
-                "verbunden. UEM berechnet keine aktive Vorgabe."
+                f"Livewerte gültig (Akku {live.soc_pct:.0f} %); "
+                f"{'PV-Prognose verbunden' if forecast else 'PV-Prognose noch nicht verbunden'}. "
+                f"{'Berechne Ladevorgabe' if forecast else 'UEM berechnet keine aktive Vorgabe'}."
             ),
             planned_charge_limit_w=0.0,
             error=None,
+            forecast_connected=forecast,
         )
+
+    def _forecast_connected(self) -> bool:
+        """Return True when the optional forecast entity is configured and available."""
+        entity_id = self._entry.data.get(CONF_FORECAST_ENTITY)
+        if not isinstance(entity_id, str):
+            return False
+        state = self.hass.states.get(entity_id)
+        if state is None or state.state in {"unknown", "unavailable"}:
+            return False
+        return True
 
     def _live_state(self):
         return build_live_state(
