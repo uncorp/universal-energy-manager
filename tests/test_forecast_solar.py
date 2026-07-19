@@ -46,68 +46,65 @@ async def test_async_reader_combines_cached_curves_from_multiple_arrays() -> Non
 
 
 @pytest.mark.asyncio
-async def test_async_reader_skips_none_fetch_result() -> None:
-    """A fetch that returns None (source unavailable) is silently skipped
-    and yields no points instead of raising."""
+async def test_async_reader_raises_valueerror_when_fetch_returns_none() -> None:
+    """A fetch that returns None (source unavailable) must raise ValueError,
+    not crash with AttributeError or return silently."""
 
     async def fetch(_hass: object, _entry_id: str):
         return None
 
-    points = await async_read_forecast_solar(
-        object(),
-        ("roof",),
-        fetch=fetch,
-    )
-
-    assert points == ()
+    with pytest.raises(ValueError, match="configured Forecast.Solar source is unavailable"):
+        await async_read_forecast_solar(
+            object(),
+            ("roof",),
+            fetch=fetch,
+        )
 
 
 @pytest.mark.asyncio
-async def test_async_reader_skips_non_mapping_fetch_result() -> None:
-    """A fetch that returns a non-Mapping value (e.g. list, string) is
-    silently skipped instead of crashing."""
+async def test_async_reader_raises_valueerror_when_fetch_returns_non_mapping() -> None:
+    """A fetch that returns a non-Mapping value (e.g. list, string) must
+    raise a clear ValueError instead of crashing with AttributeError on
+    the missing .get() call."""
 
     async def fetch(_hass: object, _entry_id: str):
         return [1, 2, 3]  # type: ignore[return-value]
 
-    points = await async_read_forecast_solar(
-        object(),
-        ("roof",),
-        fetch=fetch,
-    )
-
-    assert points == ()
+    with pytest.raises(ValueError, match="Forecast.Solar source returned no hourly curve"):
+        await async_read_forecast_solar(
+            object(),
+            ("roof",),
+            fetch=fetch,
+        )
 
 
 @pytest.mark.asyncio
-async def test_async_reader_skips_dict_without_wh_hours() -> None:
-    """A fetch that returns a dict without a 'wh_hours' key is silently
-    skipped instead of raising."""
+async def test_async_reader_raises_valueerror_when_wh_hours_missing() -> None:
+    """A fetch that returns a dict without a 'wh_hours' key must raise
+    ValueError instead of crashing."""
 
     async def fetch(_hass: object, _entry_id: str):
         return {"some_other_key": "value"}  # type: ignore[return-value]
 
-    points = await async_read_forecast_solar(
-        object(),
-        ("roof",),
-        fetch=fetch,
-    )
-
-    assert points == ()
+    with pytest.raises(ValueError, match="Forecast.Solar source returned no hourly curve"):
+        await async_read_forecast_solar(
+            object(),
+            ("roof",),
+            fetch=fetch,
+        )
 
 
 @pytest.mark.asyncio
-async def test_async_reader_skips_wh_hours_that_is_not_a_mapping() -> None:
+async def test_async_reader_raises_valueerror_when_wh_hours_is_not_a_mapping() -> None:
     """A fetch that returns a dict where 'wh_hours' is not a Mapping
-    (e.g. a list or string) is silently skipped instead of raising."""
+    (e.g. a list or string) must raise ValueError."""
 
     async def fetch(_hass: object, _entry_id: str):
         return {"wh_hours": "not a mapping"}  # type: ignore[return-value]
 
-    points = await async_read_forecast_solar(
-        object(),
-        ("roof",),
-        fetch=fetch,
-    )
-
-    assert points == ()
+    with pytest.raises(ValueError, match="Forecast.Solar source returned no hourly curve"):
+        await async_read_forecast_solar(
+            object(),
+            ("roof",),
+            fetch=fetch,
+        )

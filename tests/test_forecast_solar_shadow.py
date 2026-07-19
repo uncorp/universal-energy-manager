@@ -1,8 +1,12 @@
-"""Shadow diagnostic for configured Forecast.Solar source returning no curve.
+"""Shadow contract: every selected Forecast.Solar source is required.
 
-GLM review noted: when a configured Forecast.Solar entry returns no hourly
-curve (None, empty dict, or missing wh_hours), the system should silently
-degrade to "not connected" instead of surfacing a hard error to the user.
+If any selected Forecast.Solar source is unavailable, malformed, or has no
+usable hourly curve, the aggregate must be invalidated and the coordinator
+must show an explicit safe forecast diagnostic (\"Shadow – Prognosefehler\").
+
+It must NOT silently skip bad selected sources or combine only the remaining
+sources. Legacy UEM entries without selected Forecast.Solar IDs keep their
+existing behavior (forecast_connected=False).
 
 This is purely Shadow-only: no HA entity reads, no provider refresh, no API
 calls, no credentials.
@@ -70,32 +74,13 @@ def _patch_import_with_fake_fs(
 
 
 # ---------------------------------------------------------------------------
-# Test 1: empty wh_hours → graceful degradation, NOT ValueError
+# Test 1: None fetch result → ValueError invalidates aggregate (Shadow contract)
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_empty_wh_hours_degrades_gracefully(hass, monkeypatch) -> None:
-    """A configured source that returns an empty wh_hours curve should not
-    raise; instead the coordinator should surface forecast_connected=False
-    with a clear status message."""
-    _setup_entities(hass)
-    _patch_import_with_fake_fs(monkeypatch, {"wh_hours": {}})
-
-    coordinator = UemShadowCoordinator(hass, _make_mock_forecast_solar_entry(hass, ["roof"]))
-    await coordinator.async_refresh()
-
-    assert coordinator.data.commands_sent is False
-    assert coordinator.data.error is None
-    assert coordinator.data.forecast_connected is False
-    assert coordinator.data.status != "Shadow – Prognosefehler"
-
-
-# ---------------------------------------------------------------------------
-# Test 2: None fetch result → graceful degradation, NOT ValueError
-# ---------------------------------------------------------------------------
-@pytest.mark.asyncio
-async def test_none_fetch_result_degrades_gracefully(hass, monkeypatch) -> None:
-    """A configured source that returns None (e.g. source unavailable) should
-    degrade to forecast_connected=False rather than raising."""
+async def test_none_fetch_result_invalidates_aggregate(hass, monkeypatch) -> None:
+    """A configured Forecast.Solar source that returns None must invalidate
+    the aggregate. The coordinator must show "Shadow – Prognosefehler" rather
+    than silently degrading to forecast_connected=False."""
     _setup_entities(hass)
     _patch_import_with_fake_fs(monkeypatch, None)
 
@@ -103,18 +88,18 @@ async def test_none_fetch_result_degrades_gracefully(hass, monkeypatch) -> None:
     await coordinator.async_refresh()
 
     assert coordinator.data.commands_sent is False
-    assert coordinator.data.error is None
     assert coordinator.data.forecast_connected is False
-    assert coordinator.data.status != "Shadow – Prognosefehler"
+    assert coordinator.data.status == "Shadow – Prognosefehler"
+    assert coordinator.data.error is not None
 
 
 # ---------------------------------------------------------------------------
-# Test 3: missing wh_hours key → graceful degradation
+# Test 2: missing wh_hours key → ValueError invalidates aggregate
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_missing_wh_hours_key_degrades_gracefully(hass, monkeypatch) -> None:
-    """A configured source that returns a dict without wh_hours should
-    degrade gracefully."""
+async def test_missing_wh_hours_key_invalidates_aggregate(hass, monkeypatch) -> None:
+    """A configured source that returns a dict without wh_hours must
+    invalidate the aggregate with a clear diagnostic."""
     _setup_entities(hass)
     _patch_import_with_fake_fs(monkeypatch, {"version": "2.0", "lat": 48.0})
 
@@ -122,8 +107,28 @@ async def test_missing_wh_hours_key_degrades_gracefully(hass, monkeypatch) -> No
     await coordinator.async_refresh()
 
     assert coordinator.data.commands_sent is False
-    assert coordinator.data.error is None
     assert coordinator.data.forecast_connected is False
+    assert coordinator.data.status == "Shadow – Prognosefehler"
+    assert coordinator.data.error is not None
+
+
+# ---------------------------------------------------------------------------
+# Test 3: empty wh_hours → ValueError invalidates aggregate
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_empty_wh_hours_invalidates_aggregate(hass, monkeypatch) -> None:
+    """A configured source that returns an empty wh_hours curve must
+    invalidate the aggregate with a clear diagnostic."""
+    _setup_entities(hass)
+    _patch_import_with_fake_fs(monkeypatch, {"wh_hours": {}})
+
+    coordinator = UemShadowCoordinator(hass, _make_mock_forecast_solar_entry(hass, ["roof"]))
+    await coordinator.async_refresh()
+
+    assert coordinator.data.commands_sent is False
+    assert coordinator.data.forecast_connected is False
+    assert coordinator.data.status == "Shadow – Prognosefehler"
+    assert coordinator.data.error is not None
 
 
 # ---------------------------------------------------------------------------

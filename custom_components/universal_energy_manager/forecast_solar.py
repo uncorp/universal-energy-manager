@@ -64,12 +64,15 @@ async def async_read_forecast_solar(
     for config_entry_id in config_entry_ids:
         forecast = await fetch(hass, config_entry_id)
         if forecast is None:
-            continue
+            raise ValueError("configured Forecast.Solar source is unavailable")
         if not isinstance(forecast, Mapping):
-            continue
+            raise ValueError("Forecast.Solar source returned no hourly curve")
         wh_hours = forecast.get("wh_hours")
         if not isinstance(wh_hours, Mapping):
-            continue
-        curves.append(forecast_points_from_wh_hours(wh_hours))
+            raise ValueError("Forecast.Solar source returned no hourly curve")
+        curve = forecast_points_from_wh_hours(wh_hours)
+        if not curve:
+            raise ValueError("Forecast.Solar source returned no hourly curve")
+        curves.append(curve)
 
     return combine_producer_forecasts(curves)
