@@ -65,6 +65,8 @@ async def async_read_forecast_solar(
         forecast = await fetch(hass, config_entry_id)
         if forecast is None:
             raise ValueError("configured Forecast.Solar source is unavailable")
+        if not isinstance(forecast, Mapping):
+            raise ValueError("Forecast.Solar source returned no hourly curve")
         wh_hours = forecast.get("wh_hours")
         if not isinstance(wh_hours, Mapping):
             raise ValueError("Forecast.Solar source returned no hourly curve")
