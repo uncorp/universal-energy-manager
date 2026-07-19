@@ -12,6 +12,9 @@ Forbidden patterns are all network-bound:
     - URL builders: yarl.URL (as network target)
     - Provider refresh patterns: async_get_data, refresh_provider,
       fetch_url, http_call, post_data, send_request, api_call
+
+The test suite includes synthetic-AST unit tests that prove the guard's own
+detection logic before exercising the real Shadow package.
 """
 
 from __future__ import annotations
@@ -31,7 +34,6 @@ _FORBIDDEN_HTTP_MODULES: frozenset[str] = frozenset(
         "aiohttp",
         "http.client",
         "yarl",
-        "asyncio",
     }
 )
 
@@ -150,6 +152,138 @@ def _check_forbidden_functions(node: ast.Module, filepath: str) -> list[str]:
     return violations
 
 
+# ---------------------------------------------------------------------------
+# Synthetic AST helpers — build AST nodes from source strings without
+# touching the filesystem. This proves the guard's detection logic directly.
+# ---------------------------------------------------------------------------
+
+def _parse_snippet(source: str) -> ast.Module:
+    """Parse a Python source snippet into an AST Module node."""
+    return ast.parse(source)
+
+
+# ---------------------------------------------------------------------------
+# Synthetic AST unit tests — prove detection behavior before exercising
+# the real Shadow package.
+# ---------------------------------------------------------------------------
+
+def test_forbidden_http_import_is_reported() -> None:
+    """A direct ``import requests`` must be flagged by the guard."""
+    snippet = "import requests\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    assert len(violations) >= 1, (
+        f"Expected at least one violation for 'import requests', "
+        f"got: {violations}"
+    )
+    assert "requests" in violations[0]
+
+
+def test_from_import_forbidden_http_module_is_reported() -> None:
+    """A ``from urllib.parse import urljoin`` must be flagged."""
+    snippet = "from urllib.parse import urljoin\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    assert len(violations) >= 1, (
+        f"Expected violation for 'from urllib.parse import', "
+        f"got: {violations}"
+    )
+    assert "urllib" in violations[0]
+
+
+def test_direct_forbidden_network_call_is_reported() -> None:
+    """A top-level function named ``urlopen`` must be flagged."""
+    snippet = """\
+def urlopen(url):
+    return None
+"""
+    tree = _parse_snippet(snippet)
+    violations = _check_forbidden_functions(tree, "fake.py")
+    assert len(violations) >= 1, (
+        f"Expected violation for 'urlopen', got: {violations}"
+    )
+    assert "urlopen" in violations[0]
+
+
+def test_forbidden_function_inside_async_function_is_reported() -> None:
+    """A forbidden function inside an async function body
+    must be flagged."""
+    snippet = """\
+async def my_handler():
+    async def fetch_url(url):
+        pass
+"""
+    tree = _parse_snippet(snippet)
+    violations = _check_forbidden_functions(tree, "fake.py")
+    assert len(violations) >= 1, (
+        f"Expected violation for nested 'fetch_url', got: {violations}"
+    )
+    assert "fetch_url" in violations[0]
+
+
+def test_forbidden_function_in_class_is_reported() -> None:
+    """A method named ``refresh_provider`` inside a class must be flagged."""
+    snippet = """\
+class MyClass:
+    async def refresh_provider(self):
+        pass
+"""
+    tree = _parse_snippet(snippet)
+    violations = _check_forbidden_functions(tree, "fake.py")
+    assert len(violations) >= 1, (
+        f"Expected violation for 'refresh_provider', got: {violations}"
+    )
+    assert "refresh_provider" in violations[0]
+
+
+def test_benign_import_is_not_rejected() -> None:
+    """A legitimate non-network import (e.g. ``json``) must not be flagged."""
+    snippet = "import json\nfrom pathlib import Path\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    assert len(violations) == 0, (
+        f"Expected no violations for benign imports, got: {violations}"
+    )
+
+
+def test_asyncio_import_is_not_rejected() -> None:
+    """``import asyncio`` must NOT be flagged —
+    asyncio is a stdlib for async programming, not inherently network-bound."""
+    snippet = "import asyncio\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    assert len(violations) == 0, (
+        f"Expected no violation for 'import asyncio', got: {violations}"
+    )
+
+
+def test_ha_import_is_not_rejected() -> None:
+    """A ``homeassistant`` import must not be flagged even as a sub-module."""
+    snippet = "from homeassistant.core import HomeAssistant\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    assert len(violations) == 0, (
+        f"Expected no violation for HA import, got: {violations}"
+    )
+
+
+def test_benign_function_names_are_not_rejected() -> None:
+    """A function named ``calculate`` must not match any forbidden pattern."""
+    snippet = """\
+def calculate_energy(data):
+    pass
+"""
+    tree = _parse_snippet(snippet)
+    violations = _check_forbidden_functions(tree, "fake.py")
+    assert len(violations) == 0, (
+        f"Expected no violations for 'calculate', got: {violations}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Real Shadow package integration tests (unchanged from before)
+# ---------------------------------------------------------------------------
+
 def test_shadow_package_has_no_http_network_imports() -> None:
     """Every Shadow module must be free of HTTP/network client imports."""
     all_violations: list[str] = []
@@ -160,8 +294,8 @@ def test_shadow_package_has_no_http_network_imports() -> None:
 
     if all_violations:
         msg = (
-            "Shadow integration must not import HTTP/network clients:\\n"
-            + "\\n".join(all_violations)
+            "Shadow integration must not import HTTP/network clients:\n"
+            + "\n".join(all_violations)
         )
         raise AssertionError(msg)
 
@@ -176,7 +310,7 @@ def test_shadow_package_has_no_forbidden_network_functions() -> None:
 
     if all_violations:
         msg = (
-            "Shadow integration must not use forbidden network function names:\\n"
-            + "\\n".join(all_violations)
+            "Shadow integration must not use forbidden network function names:\n"
+            + "\n".join(all_violations)
         )
         raise AssertionError(msg)
