@@ -15,12 +15,14 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_FORECAST_ENTITY,
+    CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
     DOMAIN,
 )
+from .forecast_solar import async_read_forecast_solar
 from .snapshot import StateSample, build_live_state
 
 SHADOW_STATUS = "Shadow – keine aktive Steuerung"
@@ -59,15 +61,29 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         try:
             live = self._live_state()
         except ValueError as err:
+            try:
+                forecast_connected = await self._forecast_connected()
+            except ValueError:
+                forecast_connected = False
             return ShadowData(
                 status="Shadow – Messdatenfehler",
                 decision="E3DC-Messwerte sind unvollständig oder ungültig; keine Steuerung aktiv.",
                 planned_charge_limit_w=0.0,
                 error=str(err),
-                forecast_connected=self._forecast_connected(),
+                forecast_connected=forecast_connected,
             )
 
-        forecast = self._forecast_connected()
+        try:
+            forecast = await self._forecast_connected()
+        except ValueError as err:
+            return ShadowData(
+                status="Shadow – Prognosefehler",
+                decision="PV-Prognose ist unvollständig oder ungültig; keine Steuerung aktiv.",
+                planned_charge_limit_w=0.0,
+                error=str(err),
+                forecast_connected=False,
+            )
+
         return ShadowData(
             status=SHADOW_STATUS,
             decision=(
@@ -80,15 +96,23 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
             forecast_connected=forecast,
         )
 
-    def _forecast_connected(self) -> bool:
-        """Return True when the optional forecast entity is configured and available."""
+    async def _forecast_connected(self) -> bool:
+        """Read configured cached forecast sources; never request a provider refresh."""
+        entry_ids = self._entry.data.get(CONF_FORECAST_SOLAR_ENTRY_IDS)
+        if entry_ids is not None:
+            if not isinstance(entry_ids, list) or not all(
+                isinstance(value, str) for value in entry_ids
+            ):
+                raise ValueError("invalid Forecast.Solar source configuration")
+            if not entry_ids:
+                return False
+            return bool(await async_read_forecast_solar(self.hass, entry_ids))
+
         entity_id = self._entry.data.get(CONF_FORECAST_ENTITY)
         if not isinstance(entity_id, str):
             return False
         state = self.hass.states.get(entity_id)
-        if state is None or state.state in {"unknown", "unavailable"}:
-            return False
-        return True
+        return state is not None and state.state not in {"unknown", "unavailable"}
 
     def _live_state(self):
         return build_live_state(

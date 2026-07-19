@@ -8,7 +8,11 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.universal_energy_manager.const import DOMAIN, E3DC_RSCP_DOMAIN
+from custom_components.universal_energy_manager.const import (
+    CONF_FORECAST_SOLAR_ENTRY_IDS,
+    DOMAIN,
+    E3DC_RSCP_DOMAIN,
+)
 
 
 @pytest.mark.asyncio
@@ -36,6 +40,12 @@ async def test_user_flow_prefills_e3dc_rscp_entities_and_creates_shadow_entry(
         unique_id="S10E-12345",
     )
     source_entry.add_to_hass(hass)
+    forecast_entries = [
+        MockConfigEntry(domain="forecast_solar", title="Hauptdach"),
+        MockConfigEntry(domain="forecast_solar", title="Balkon"),
+    ]
+    for forecast_entry in forecast_entries:
+        forecast_entry.add_to_hass(hass)
     registry = er.async_get(hass)
     for source_key in (
         "soc",
@@ -70,3 +80,6 @@ async def test_user_flow_prefills_e3dc_rscp_entities_and_creates_shadow_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UEM – Universal Energy Manager"
     assert result["data"]["e3dc_source_unique_id"] == "S10E-12345"
+    assert result["data"][CONF_FORECAST_SOLAR_ENTRY_IDS] == [
+        entry.entry_id for entry in forecast_entries
+    ]

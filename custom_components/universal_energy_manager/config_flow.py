@@ -12,6 +12,7 @@ from .const import (
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
+    CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MAX_CHARGE_POWER_ENTITY,
@@ -19,6 +20,7 @@ from .const import (
     CONF_SOC_ENTITY,
     DOMAIN,
     E3DC_RSCP_DOMAIN,
+    FORECAST_SOLAR_DOMAIN,
 )
 from .e3dc_rscp import (
     discover_e3dc_entities,
@@ -90,6 +92,10 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if source_entry is None:
             return self.async_abort(reason="e3dc_rscp_not_configured")
 
+        forecast_solar_entry_ids = [
+            entry.entry_id
+            for entry in self.hass.config_entries.async_entries(FORECAST_SOLAR_DOMAIN)
+        ]
         discovered = self._discover_entities(self._e3dc_entry_id)
         entity_data = {
             CONF_SOC_ENTITY: discovered.soc,
@@ -118,6 +124,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_E3DC_CONFIG_ENTRY_ID: self._e3dc_entry_id,
                     CONF_E3DC_SOURCE_UNIQUE_ID: source_entry.unique_id,
+                    CONF_FORECAST_SOLAR_ENTRY_IDS: forecast_solar_entry_ids,
                     **entity_data,
                 },
             )
