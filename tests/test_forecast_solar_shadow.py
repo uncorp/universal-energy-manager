@@ -132,7 +132,43 @@ async def test_empty_wh_hours_invalidates_aggregate(hass, monkeypatch) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 4: legacy entry without CONF_FORECAST_SOLAR_ENTRY_IDS → unchanged
+# Test 4: invalid source → explicit safe diagnostic, zero limit, no commands
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_invalid_source_yields_zero_planned_charge_limit_and_safe_diagnostics(
+    hass, monkeypatch,
+) -> None:
+    """Integration-level test: an invalid selected Forecast.Solar source must
+    produce a ShadowData with (1) an explicit safe forecast-error diagnostic,
+    (2) a zero planned charge limit, and (3) no commands sent.
+
+    This is a strict TDD-style contract test — the coordinator must not
+    silently plan against incomplete production data.
+    """
+    _setup_entities(hass)
+    _patch_import_with_fake_fs(monkeypatch, None)
+
+    coordinator = UemShadowCoordinator(
+        hass,
+        _make_mock_forecast_solar_entry(hass, ["invalid-roof"]),
+    )
+    await coordinator.async_refresh()
+
+    # 1. Safe Shadow forecast diagnostic
+    assert coordinator.data.status == "Shadow – Prognosefehler"
+    assert coordinator.data.error is not None
+    assert "Forecast.Solar source is unavailable" in coordinator.data.error
+
+    # 2. Zero planned charge limit — no planning against incomplete data
+    assert coordinator.data.planned_charge_limit_w == 0.0
+
+    # 3. No commands sent in Shadow mode
+    assert coordinator.data.commands_sent is False
+    assert coordinator.data.forecast_connected is False
+
+
+# ---------------------------------------------------------------------------
+# Test 5: legacy entry without CONF_FORECAST_SOLAR_ENTRY_IDS → unchanged
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_legacy_no_forecast_config_still_works(hass) -> None:
