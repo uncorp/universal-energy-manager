@@ -55,6 +55,7 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
             update_interval=timedelta(seconds=15),
         )
         self._entry = entry
+        self._entry.async_on_unload(self.async_shutdown)
 
     async def _async_update_data(self) -> ShadowData:
         """Read live E3DC values only; never call a control service."""
