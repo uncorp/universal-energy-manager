@@ -186,3 +186,59 @@ def test_build_live_state_accepts_none_unit_as_watts() -> None:
     assert live.pv_power_w == 3000.0
     assert live.house_power_w == 500.0
     assert live.grid_export_w == 2500.0
+
+
+def test_build_live_state_rejects_negative_grid_export() -> None:
+    """Negative grid_export must be rejected — that indicates import."""
+    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    with pytest.raises(ValueError, match="grid_export"):
+        build_live_state(
+            now=now,
+            soc=StateSample("50", "%", now),
+            pv_power=StateSample("2000", "W", now),
+            house_power=StateSample("500", "W", now),
+            grid_export=StateSample("-100", "W", now),
+            battery_charge=StateSample("0", "W", now),
+        )
+
+
+def test_build_live_state_rejects_negative_battery_charge() -> None:
+    """Negative battery charge must be rejected."""
+    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    with pytest.raises(ValueError, match="battery_charge"):
+        build_live_state(
+            now=now,
+            soc=StateSample("50", "%", now),
+            pv_power=StateSample("2000", "W", now),
+            house_power=StateSample("500", "W", now),
+            grid_export=StateSample("1500", "W", now),
+            battery_charge=StateSample("-50", "W", now),
+        )
+
+
+def test_build_live_state_rejects_non_numeric_battery_charge() -> None:
+    """Non-numeric battery charge must propagate a ValueError."""
+    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    with pytest.raises(ValueError, match="not numeric"):
+        build_live_state(
+            now=now,
+            soc=StateSample("50", "%", now),
+            pv_power=StateSample("2000", "W", now),
+            house_power=StateSample("500", "W", now),
+            grid_export=StateSample("1500", "W", now),
+            battery_charge=StateSample("unavailable", "W", now),
+        )
+
+
+def test_build_live_state_validates_soc_pct_in_live_state() -> None:
+    """SoC validation must also be caught by LiveState __post_init__."""
+    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    with pytest.raises(ValueError, match="soc_pct"):
+        build_live_state(
+            now=now,
+            soc=StateSample("150", "%", now),
+            pv_power=StateSample("2000", "W", now),
+            house_power=StateSample("500", "W", now),
+            grid_export=StateSample("1500", "W", now),
+            battery_charge=StateSample("0", "W", now),
+        )
