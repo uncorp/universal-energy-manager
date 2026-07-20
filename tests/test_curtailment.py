@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pytest import approx
 
 from custom_components.universal_energy_manager.curtailment import calculate_headroom_kwh
 from custom_components.universal_energy_manager.models import ForecastPoint
@@ -153,3 +154,41 @@ def test_headroom_rejects_non_positive_max_charge_power() -> None:
             planned_flexible_load_w=0.0,
             max_charge_power_w=0.0,
         )
+
+
+def test_headroom_with_zero_export_limit() -> None:
+    """When export_limit_w is 0, every surplus watt needs headroom."""
+    now = datetime(2026, 7, 18, 11, 0, tzinfo=UTC)
+    headroom = calculate_headroom_kwh(
+        forecast=(
+            ForecastPoint(start=now, duration=timedelta(hours=1), power_w=10000.0),
+        ),
+        export_limit_w=0.0,
+        expected_base_load_w=500.0,
+        planned_flexible_load_w=0.0,
+        max_charge_power_w=12000.0,
+    )
+    # Excess = 10000 - 500 - 0 - 0 = 9500 W
+    # Absorbable = min(9500, 12000) = 9500
+    # Headroom = 9.5 kWh
+    assert headroom == 9.5
+
+
+def test_headroom_multibucket_calculation() -> None:
+    """Multiple forecast buckets must sum headroom correctly."""
+    now = datetime(2026, 7, 18, 11, 0, tzinfo=UTC)
+    hour1 = now + timedelta(hours=1)
+    hour2 = now + timedelta(hours=2)
+    headroom = calculate_headroom_kwh(
+        forecast=(
+            ForecastPoint(start=now, duration=timedelta(hours=1), power_w=10000.0),
+            ForecastPoint(start=hour1, duration=timedelta(hours=1), power_w=8000.0),
+            ForecastPoint(start=hour2, duration=timedelta(hours=1), power_w=2000.0),
+        ),
+        export_limit_w=6000.0,
+        expected_base_load_w=500.0,
+        planned_flexible_load_w=0.0,
+        max_charge_power_w=12000.0,
+    )
+    # Buckets: 3.5 + 1.5 + 0.0 = 5.0 kWh
+    assert headroom == approx(5.0)
