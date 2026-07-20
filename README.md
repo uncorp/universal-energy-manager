@@ -67,6 +67,18 @@ After installation UEM provides three read-only sensors:
 | `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid and whether the PV forecast is connected. |
 | `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. Value is `0.0` in the current Shadow implementation because no control is applied. Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
 
+## Development and tests
+
+The local Home Assistant test dependency is deliberately isolated in `.venv-ha`; it is not a Home Assistant installation and cannot change a running HA instance. Create it with Python 3.11 and run the reproducible test command:
+
+```bash
+python3.11 -m venv .venv-ha
+.venv-ha/bin/python -m pip install -r requirements_test.txt
+bash scripts/run_tests.sh
+```
+
+`requirements_test.txt` pins Home Assistant to `2024.3.3`, matching CI. Do not use the lightweight `.venv` for the integration suite; it intentionally does not contain Home Assistant.
+
 ## Privacy
 
 UEM is local-first. Never commit Home Assistant configuration, E3DC credentials, IP addresses, diagnostics, backups or real household energy data. Tests use synthetic fixtures only.
