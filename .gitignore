@@ -15,7 +15,6 @@ configuration.yaml
 *.diagnostics.json
 backups/
 .env
-MODEL_POLICY.md
 
 # Editors and OS
 .vscode/
