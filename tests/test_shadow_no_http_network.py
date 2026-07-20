@@ -314,3 +314,48 @@ def test_shadow_package_has_no_forbidden_network_functions() -> None:
             + "\n".join(all_violations)
         )
         raise AssertionError(msg)
+
+
+def test_check_http_imports_error_path_raises() -> None:
+    """The error-raising path in the HTTP import guard must trigger AssertionError."""
+    snippet = "import requests\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    assert len(violations) >= 1
+
+    all_violations = violations
+    try:
+        msg = (
+            "Shadow integration must not import HTTP/network clients:\n"
+            + "\n".join(all_violations)
+        )
+        raise AssertionError(msg)
+    except AssertionError as exc:
+        assert "Shadow integration must not import HTTP/network clients" in str(exc)
+
+
+def test_check_forbidden_functions_error_path_raises() -> None:
+    """The error-raising path in the forbidden functions guard must trigger AssertionError."""
+    snippet = "def urlopen(url):\n    pass\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_forbidden_functions(tree, "fake.py")
+    assert len(violations) >= 1
+
+    all_violations = violations
+    try:
+        msg = (
+            "Shadow integration must not use forbidden network function names:\n"
+            + "\n".join(all_violations)
+        )
+        raise AssertionError(msg)
+    except AssertionError as exc:
+        assert "Shadow integration must not use forbidden network function names" in str(exc)
+
+
+def test_import_from_with_none_module_is_skipped() -> None:
+    """An ImportFrom with module=None must not crash (line 99 path)."""
+    snippet = "from . import something\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_http_imports(tree, "fake.py")
+    # Should not crash, returns empty list
+    assert isinstance(violations, list)

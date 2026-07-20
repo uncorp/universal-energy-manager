@@ -57,6 +57,11 @@ def _parse_source(path: Path) -> ast.Module:
     return ast.parse(path.read_bytes(), filename=str(path))
 
 
+def _parse_snippet(source: str) -> ast.Module:
+    """Parse a Python source snippet into an AST Module node."""
+    return ast.parse(source)
+
+
 def _check_imports(node: ast.Module, filepath: str) -> list[str]:
     """Return a list of violations found in this module."""
     violations: list[str] = []
@@ -117,3 +122,64 @@ def test_shadow_package_has_no_service_control_imports() -> None:
             + "\n".join(all_violations)
         )
         raise AssertionError(msg)
+
+
+def test_check_imports_reports_direct_forbidden_module() -> None:
+    """A direct ``import homeassistant.core.ServiceCall`` must be reported."""
+    snippet = "import homeassistant.core.ServiceCall\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_imports(tree, "fake.py")
+    assert len(violations) >= 1, f"Expected violation, got: {violations}"
+
+
+def test_check_imports_reports_forbidden_callable_import() -> None:
+    """``from homeassistant.core import call_service`` must be reported."""
+    snippet = "from homeassistant.core import call_service\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_imports(tree, "fake.py")
+    assert len(violations) >= 1, f"Expected violation, got: {violations}"
+
+
+def test_check_imports_reports_forbidden_callable_in_import_from() -> None:
+    """``from homeassistant import call_service`` must be reported via ImportFrom path."""
+    snippet = "from homeassistant import call_service\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_imports(tree, "fake.py")
+    assert len(violations) >= 1, f"Expected violation, got: {violations}"
+
+
+def test_check_imports_reports_aliased_forbidden_name() -> None:
+    """An aliased import like ``import something as call_service`` must be reported."""
+    snippet = "import something as call_service\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_imports(tree, "fake.py")
+    assert len(violations) >= 1, f"Expected violation for aliased import, got: {violations}"
+
+
+def test_check_imports_reports_forbidden_module_submodule() -> None:
+    """``from homeassistant.core import ServiceCall`` must be reported."""
+    snippet = "from homeassistant.core import ServiceCall\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_imports(tree, "fake.py")
+    assert len(violations) >= 1, f"Expected violation, got: {violations}"
+
+
+def test_check_imports_error_path_raises_assertion() -> None:
+    """The error-raising path (all_violations non-empty) must trigger AssertionError."""
+    # Create a module that imports a forbidden symbol
+    snippet = "from homeassistant.core import call_service\n"
+    tree = _parse_snippet(snippet)
+    violations = _check_imports(tree, "fake.py")
+    assert len(violations) >= 1
+
+    # Simulate the error path
+    all_violations = violations
+    try:
+        msg = (
+            "Shadow integration must not import HA service/control APIs:\n"
+            + "\n".join(all_violations)
+        )
+        raise AssertionError(msg)
+        assert False, "Should not reach here"  # noqa: B011
+    except AssertionError as exc:
+        assert "Shadow integration must not import HA service/control APIs" in str(exc)

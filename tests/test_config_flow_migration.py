@@ -172,3 +172,42 @@ class TestEntryDataConsistency:
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert CONF_FORECAST_SOLAR_ENTRY_IDS in result["data"]
         assert isinstance(result["data"][CONF_FORECAST_SOLAR_ENTRY_IDS], list)
+
+    def test_async_entries_domain_none_returns_all(self) -> None:
+        """Calling _async_entries with no domain must return entries from all domains."""
+        hass = MagicMock()
+        e3dc_entry = _make_entry()
+        uem_entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM",
+            data={},
+            source="user",
+            entry_id="uem-001",
+            unique_id="e3dc_rscp:S10E-12345",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        flow = _make_flow(hass, [e3dc_entry], existing_uem_entry=uem_entry)
+        result = flow.hass.config_entries.async_entries()
+        assert len(result) == 2
+
+    def test_async_entries_with_domain_returns_single_domain(self) -> None:
+        """Calling _async_entries with a specific domain must return only that domain's entries."""
+        hass = MagicMock()
+        e3dc_entry = _make_entry()
+        uem_entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM",
+            data={},
+            source="user",
+            entry_id="uem-001",
+            unique_id="e3dc_rscp:S10E-12345",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        flow = _make_flow(hass, [e3dc_entry], existing_uem_entry=uem_entry)
+        result = flow.hass.config_entries.async_entries(E3DC_RSCP_DOMAIN)
+        assert len(result) == 1
+        assert result[0].entry_id == "e3dc-001"

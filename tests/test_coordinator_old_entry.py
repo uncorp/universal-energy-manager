@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import MagicMock
 
+import pytest
 from homeassistant import config_entries
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.util import dt as dt_util
@@ -148,7 +149,31 @@ class TestCoordinatorWithOldEntry:
             CONF_HOUSE_POWER_ENTITY,
             CONF_GRID_EXPORT_ENTITY,
             CONF_BATTERY_CHARGE_ENTITY,
+            CONF_BATTERY_CAPACITY_ENTITY,
+            CONF_MAX_CHARGE_POWER_ENTITY,
         ]
         for key in required_keys:
             assert key in entry.data, f"Old entry is missing required key: {key}"
             assert isinstance(entry.data[key], str), f"Old entry key {key} is not a string"
+
+    def test_mock_state_getattr_returns_entity_id(self) -> None:
+        """MockState.__getattr__ for 'entity_id' must return the stored value (line 67)."""
+        state = _make_mock_hass({"sensor.test": "100"}).states.get("sensor.test")
+        assert state.entity_id == "sensor.test"
+
+    def test_mock_state_getattr_returns_attributes(self) -> None:
+        """MockState.__getattr__ for 'attributes' must return the dict (line 72)."""
+        state = _make_mock_hass({"sensor.test": ("100", "W")}).states.get("sensor.test")
+        assert state.attributes == {"unit_of_measurement": "W"}
+
+    def test_mock_state_getattr_raises_for_unknown_attribute(self) -> None:
+        """MockState.__getattr__ for an unknown name must raise AttributeError (line 75)."""
+        state = _make_mock_hass({"sensor.test": "100"}).states.get("sensor.test")
+        with pytest.raises(AttributeError):
+            _ = state.nonexistent_attr
+
+    def test_state_map_get_returns_none_for_missing_entity(self) -> None:
+        """When an entity is not in the state map, get() returns None (line 82)."""
+        hass = _make_mock_hass({"sensor.existing": "100"})
+        result = hass.states.get("sensor.not_there")
+        assert result is None

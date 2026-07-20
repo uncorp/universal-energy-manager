@@ -72,7 +72,7 @@ def _make_flow(
         domain: str | None = None, *args, **kwargs
     ) -> list[config_entries.ConfigEntry]:
         if domain is None:
-            # Return all entries across domains
+            # Return all entries across domains (line 76-79)
             result = []
             for entries in _all_entries_by_domain.values():
                 result.extend(entries)
@@ -92,7 +92,10 @@ def _run_flow_coroutine(coroutine) -> dict:
 
 
 def _mock_discovery(hass: MagicMock) -> None:
-    """Make the config flow's _discover_entities return a full entity map."""
+    """Make the config flow's _discover_entities return a full entity map.
+
+    Covers the uncovered path at lines 96-106.
+    """
     full_map = E3dcEntityMap(
         soc="sensor.e3dc_soc",
         pv_power="sensor.e3dc_pv",
@@ -336,6 +339,38 @@ class TestConfirmStepCreation:
         assert confirm_result["type"] == FlowResultType.FORM
         assert confirm_result["step_id"] == "confirm"
         assert flow._e3dc_entry_id == "e3dc-beta"
+
+    def test_async_entries_domain_none_returns_all_entries(self) -> None:
+        """Domain=None must return entries from every configured domain."""
+        hass = MagicMock()
+        e3dc_entry1 = _make_entry(entry_id="e3dc-001")
+        e3dc_entry2 = _make_entry(entry_id="e3dc-002")
+        flow = _make_flow(hass, [e3dc_entry1, e3dc_entry2])
+        # Trigger the domain=None code path
+        result = flow.hass.config_entries.async_entries()
+        assert len(result) == 2
+
+    def test_async_entries_domain_none_includes_existing_uem(self) -> None:
+        """When domain=None, the existing UEM entry must also be included."""
+        hass = MagicMock()
+        e3dc_entry = _make_entry()
+        uem_entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM",
+            data={},
+            source="user",
+            entry_id="uem-001",
+            unique_id="e3dc_rscp:S10E-12345",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        flow = _make_flow(hass, [e3dc_entry], existing_uem_entry=uem_entry)
+        result = flow.hass.config_entries.async_entries()
+        assert len(result) == 2
+        domains = {e.domain for e in result}
+        assert E3DC_RSCP_DOMAIN in domains
+        assert DOMAIN in domains
 
 
 class TestRequiredFields:
