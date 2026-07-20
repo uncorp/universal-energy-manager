@@ -4,7 +4,7 @@ Covers:
 - coordinator line 76: forecast_connected=False fallback when live error + forecast error
 - coordinator line 120: empty entry_ids list → False
 - coordinator lines 152-153: plan_charge ValueError → 0.0
-- coordinator line 200: naive charge_end gets tzinfo attached
+- coordinator _resolve_charge_end: naive charge_end gets tzinfo attached
 - coordinator line 248: _sample raises ValueError for missing entity
 """
 
@@ -59,10 +59,10 @@ def test_empty_forecast_solar_entry_ids_returns_false() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Line 200: naive charge_end gets tzinfo attached
+# Naive charge_end gets tzinfo attached (via _resolve_charge_end)
 # ---------------------------------------------------------------------------
 def test_naive_charge_end_gets_tzinfo_attached() -> None:
-    """A naive (tzinfo=None) charge_end must be normalized with tzinfo (line 200)."""
+    """A naive (tzinfo=None) charge_end must be normalized with tzinfo (_resolve_charge_end)."""
     naive_end = "2026-07-18T20:00:00"
     naive_dt = datetime.fromisoformat(naive_end)
     assert naive_dt.tzinfo is None

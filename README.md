@@ -65,7 +65,7 @@ After installation UEM provides three read-only sensors:
 |---|---|
 | `sensor.energy_manager_status` | Current safety mode and health. State is `Shadow – keine aktive Steuerung` in normal operation. Attributes: `active_control` (always `false`), `commands_sent` (always `false`), `last_error` (null when healthy), `forecast_connected` (boolean). |
 | `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid and whether the PV forecast is connected. |
-| `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. Value is `0.0` in the current Shadow implementation because no control is applied. Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
+| `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. The value reflects the planner's computed limit (may be `0.0` when live data is missing or the final target is already reached). Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
 
 ## Development and tests
 

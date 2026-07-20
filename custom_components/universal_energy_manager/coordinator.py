@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
@@ -180,17 +180,12 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         except (TypeError, ValueError):
             return None
 
-    def _build_planner_config(self, live: LiveState) -> PlannerConfig:
-        """Derive PlannerConfig from entry data with safe defaults."""
-        target_soc = self._entry.data.get(CONF_TARGET_SOC_PCT)
-        if not isinstance(target_soc, (int, float)):
-            target_soc = DEFAULT_TARGET_SOC_PCT
-
+    def _resolve_charge_end(self, live: LiveState) -> datetime:
+        """Derive charge_end from entry data or fall back to defaults."""
         charge_end_raw = self._entry.data.get(CONF_CHARGE_END)
         if isinstance(charge_end_raw, str):
-            from datetime import datetime as _dt
             try:
-                charge_end = _dt.fromisoformat(charge_end_raw)
+                charge_end = datetime.fromisoformat(charge_end_raw)
             except (TypeError, ValueError):
                 charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
         else:
@@ -198,17 +193,24 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
 
         if charge_end.tzinfo is None:
             charge_end = charge_end.replace(tzinfo=live.now.tzinfo)
+        return charge_end
+
+    def _build_planner_config(self, live: LiveState) -> PlannerConfig:
+        """Derive PlannerConfig from entry data with safe defaults."""
+        target_soc = self._entry.data.get(CONF_TARGET_SOC_PCT)
+        if not isinstance(target_soc, (int, float)):
+            target_soc = DEFAULT_TARGET_SOC_PCT
 
         return PlannerConfig(
             target_soc_pct=float(target_soc),
-            charge_end=charge_end,
+            charge_end=self._resolve_charge_end(live),
         )
 
     def _build_forecast_from_snapshot(self, live: LiveState) -> tuple[ForecastPoint, ...]:
         """Build a minimal forecast from the current PV state for the
         Shadow planner when no Forecast.Solar data is available.
 
-        Uses the current PV power as a single 4-hour forecast interval
+        Uses the current PV power as a single interval
         ending at charge_end. This ensures the planner can make a
         meaningful decision even when only live PV data is available.
         """
@@ -216,15 +218,7 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         if pv_power <= 0:
             return ()
 
-        charge_end_raw = self._entry.data.get(CONF_CHARGE_END)
-        if isinstance(charge_end_raw, str):
-            from datetime import datetime as _dt
-            try:
-                charge_end = _dt.fromisoformat(charge_end_raw)
-            except (TypeError, ValueError):
-                charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
-        else:
-            charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
+        charge_end = self._resolve_charge_end(live)
 
         return (ForecastPoint(
             start=live.now,

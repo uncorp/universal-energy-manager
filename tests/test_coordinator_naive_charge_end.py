@@ -1,6 +1,6 @@
 """Tests for coordinator handling of naive (tzinfo-less) charge_end.
 
-Closes the uncovered branch on coordinator.py line 200:
+Closes the uncovered branch on coordinator.py _resolve_charge_end:
     if charge_end.tzinfo is None:
         charge_end = charge_end.replace(tzinfo=live.now.tzinfo)
 
@@ -63,7 +63,7 @@ async def test_naive_charge_end_exercises_coordinator_line_200(hass) -> None:
     coordinator = UemShadowCoordinator(hass, entry)
     await coordinator.async_refresh()
 
-    # The charge_end must have been given tzinfo (line 200 exercised)
+    # The charge_end must have been given tzinfo (_resolve_charge_end)
     assert coordinator.data.error is None
-    # If charge_end is naive, line 200 attaches tzinfo and planning proceeds
+    # If charge_end is naive, _resolve_charge_end attaches tzinfo and planning proceeds
     assert coordinator.data.planned_charge_limit_w >= 0.0
