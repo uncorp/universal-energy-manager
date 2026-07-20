@@ -8,6 +8,9 @@ def test_shadow_data_never_reports_a_sent_command() -> None:
         planned_charge_limit_w=0.0,
         error=None,
         forecast_connected=False,
+        pv_power_w=0.0,
+        house_power_w=0.0,
+        strategy="pv_first",
     )
 
     assert data.commands_sent is False

@@ -82,6 +82,9 @@ def test_shadow_data_exposes_forecast_connected_when_false() -> None:
         planned_charge_limit_w=0.0,
         error="test error",
         forecast_connected=False,
+        pv_power_w=0.0,
+        house_power_w=0.0,
+        strategy="pv_first",
     )
     assert data.forecast_connected is False
 
@@ -93,6 +96,9 @@ def test_shadow_data_exposes_forecast_connected_when_true() -> None:
         planned_charge_limit_w=2000.0,
         error=None,
         forecast_connected=True,
+        pv_power_w=3200.0,
+        house_power_w=800.0,
+        strategy="battery_first",
     )
     assert data.forecast_connected is True
 

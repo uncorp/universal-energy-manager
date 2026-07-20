@@ -40,6 +40,9 @@ def _make_mock_coordinator_data(
     planned_charge_limit_w: float = 4500.0,
     error: str | None = None,
     forecast_connected: bool = True,
+    pv_power_w: float = 3200.0,
+    house_power_w: float = 800.0,
+    strategy: str = "pv_first",
 ) -> ShadowData:
     return ShadowData(
         status=status,
@@ -47,6 +50,9 @@ def _make_mock_coordinator_data(
         planned_charge_limit_w=planned_charge_limit_w,
         error=error,
         forecast_connected=forecast_connected,
+        pv_power_w=pv_power_w,
+        house_power_w=house_power_w,
+        strategy=strategy,
     )
 
 
