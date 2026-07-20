@@ -30,6 +30,18 @@ class TestLiveStateValidation:
         base.update(overrides)
         return base
 
+    def test_rejects_nonfinite_soc_pct(self) -> None:
+        """LiveState must reject infinite or NaN SoC values."""
+        from math import inf
+        with pytest.raises(ValueError, match="finite"):
+            LiveState(**self._make_base(soc_pct=inf))
+
+    def test_rejects_nonfinite_pv_power(self) -> None:
+        """LiveState must reject infinite or NaN PV power values."""
+        from math import nan
+        with pytest.raises(ValueError, match="finite"):
+            LiveState(**self._make_base(pv_power_w=nan))
+
     def test_rejects_negative_grid_export(self) -> None:
         """grid_export_w must be non-negative — negative means import."""
         with pytest.raises(ValueError, match="grid_export_w"):
@@ -59,6 +71,20 @@ class TestLiveStateValidation:
 
 class TestForecastPointValidation:
     """Tests for ForecastPoint input validation."""
+
+    def test_rejects_infinite_power(self) -> None:
+        """Forecast power must not be infinite."""
+        from math import inf
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        with pytest.raises(ValueError, match="finite"):
+            ForecastPoint(start=now, duration=timedelta(minutes=15), power_w=inf)
+
+    def test_rejects_nan_power(self) -> None:
+        """Forecast power must not be NaN."""
+        from math import nan
+        now = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+        with pytest.raises(ValueError, match="finite"):
+            ForecastPoint(start=now, duration=timedelta(minutes=15), power_w=nan)
 
     def test_rejects_negative_power(self) -> None:
         """Forecast power must be non-negative."""
