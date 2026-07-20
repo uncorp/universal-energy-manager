@@ -13,16 +13,24 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
+    CONF_CHARGE_END,
     CONF_FORECAST_ENTITY,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
+    CONF_TARGET_SOC_PCT,
+    DEFAULT_CHARGE_END_HOURS,
+    DEFAULT_TARGET_SOC_PCT,
     DOMAIN,
 )
 from .forecast_solar import async_read_forecast_solar
+from .models import ForecastPoint, LiveState, PlannerConfig, StorageCapabilities
+from .planner import plan_charge
 from .snapshot import StateSample, build_live_state
 
 SHADOW_STATUS = "Shadow – keine aktive Steuerung"
@@ -85,14 +93,17 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
                 forecast_connected=False,
             )
 
+        charge_limit_w = self._compute_charge_limit(live, forecast)
+
         return ShadowData(
             status=SHADOW_STATUS,
             decision=(
                 f"Livewerte gültig (Akku {live.soc_pct:.0f} %); "
                 f"{'PV-Prognose verbunden' if forecast else 'PV-Prognose noch nicht verbunden'}. "
-                f"{'Berechne Ladevorgabe' if forecast else 'UEM berechnet keine aktive Vorgabe'}."
+                f"{'Berechne Ladevorgabe' if forecast else 'UEM berechnet keine aktive Vorgabe'}. "
+                f"Soll-Ladelimit: {charge_limit_w:.0f} W."
             ),
-            planned_charge_limit_w=0.0,
+            planned_charge_limit_w=charge_limit_w,
             error=None,
             forecast_connected=forecast,
         )
@@ -114,6 +125,112 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
             return False
         state = self.hass.states.get(entity_id)
         return state is not None and state.state not in {"unknown", "unavailable"}
+
+    def _compute_charge_limit(self, live: LiveState, forecast_connected: bool) -> float:
+        """Compute a Shadow-only charge limit via the pure planner."""
+        try:
+            storage = self._build_storage_capabilities()
+            config = self._build_planner_config(live)
+        except (ValueError, TypeError):
+            return 0.0
+
+        forecast: tuple[ForecastPoint, ...] = ()
+        if forecast_connected:
+            try:
+                forecast = self._build_forecast_from_snapshot(live)
+            except (ValueError, TypeError):
+                forecast = ()
+
+        try:
+            decision = plan_charge(
+                live=live,
+                storage=storage,
+                config=config,
+                forecast=forecast,
+            )
+            return decision.charge_limit_w
+        except ValueError:
+            return 0.0
+
+    def _build_storage_capabilities(self) -> StorageCapabilities:
+        """Derive storage limits from configured entities."""
+        cap_entity = self._entry.data.get(CONF_BATTERY_CAPACITY_ENTITY)
+        max_entity = self._entry.data.get(CONF_MAX_CHARGE_POWER_ENTITY)
+
+        cap_val = self._parse_float_entity(cap_entity)
+        max_val = self._parse_float_entity(max_entity)
+
+        if cap_val is None or max_val is None:
+            raise ValueError("missing battery capacity or max charge power")
+
+        return StorageCapabilities(
+            usable_capacity_kwh=float(cap_val),
+            max_charge_power_w=float(max_val),
+        )
+
+    def _parse_float_entity(self, entity_id: str | None) -> float | None:
+        """Best-effort float from a configured entity state, or None."""
+        if not isinstance(entity_id, str):
+            return None
+        state = self.hass.states.get(entity_id)
+        if state is None or state.state in {"unknown", "unavailable"}:
+            return None
+        try:
+            return float(state.state)
+        except (TypeError, ValueError):
+            return None
+
+    def _build_planner_config(self, live: LiveState) -> PlannerConfig:
+        """Derive PlannerConfig from entry data with safe defaults."""
+        target_soc = self._entry.data.get(CONF_TARGET_SOC_PCT)
+        if not isinstance(target_soc, (int, float)):
+            target_soc = DEFAULT_TARGET_SOC_PCT
+
+        charge_end_raw = self._entry.data.get(CONF_CHARGE_END)
+        if isinstance(charge_end_raw, str):
+            from datetime import datetime as _dt
+            try:
+                charge_end = _dt.fromisoformat(charge_end_raw)
+            except (TypeError, ValueError):
+                charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
+        else:
+            charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
+
+        if charge_end.tzinfo is None:
+            charge_end = charge_end.replace(tzinfo=live.now.tzinfo)
+
+        return PlannerConfig(
+            target_soc_pct=float(target_soc),
+            charge_end=charge_end,
+        )
+
+    def _build_forecast_from_snapshot(self, live: LiveState) -> tuple[ForecastPoint, ...]:
+        """Build a minimal forecast from the current PV state for the
+        Shadow planner when no Forecast.Solar data is available.
+
+        Uses the current PV power as a single 4-hour forecast interval
+        ending at charge_end. This ensures the planner can make a
+        meaningful decision even when only live PV data is available.
+        """
+        pv_power = live.pv_power_w
+        if pv_power <= 0:
+            return ()
+
+        charge_end_raw = self._entry.data.get(CONF_CHARGE_END)
+        if isinstance(charge_end_raw, str):
+            from datetime import datetime as _dt
+            try:
+                charge_end = _dt.fromisoformat(charge_end_raw)
+            except (TypeError, ValueError):
+                charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
+        else:
+            charge_end = live.now + timedelta(hours=DEFAULT_CHARGE_END_HOURS)
+
+        return (ForecastPoint(
+            start=live.now,
+            duration=charge_end - live.now,
+            power_w=pv_power,
+        ),)
 
     def _live_state(self):
         return build_live_state(

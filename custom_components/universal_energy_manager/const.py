@@ -15,3 +15,9 @@ CONF_MAX_CHARGE_POWER_ENTITY = "max_charge_power_entity"
 CONF_FORECAST_ENTITY = "forecast_entity"
 CONF_FORECAST_SOLAR_ENTRY_IDS = "forecast_solar_entry_ids"
 FORECAST_SOLAR_DOMAIN = "forecast_solar"
+
+CONF_TARGET_SOC_PCT = "target_soc_pct"
+CONF_CHARGE_END = "charge_end"
+
+DEFAULT_TARGET_SOC_PCT = 95.0
+DEFAULT_CHARGE_END_HOURS = 6
