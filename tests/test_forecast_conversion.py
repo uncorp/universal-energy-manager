@@ -2,10 +2,8 @@
 
 These functions are used by the coordinator to convert raw entity attributes
 into ForecastPoint sequences. They are exercised indirectly through the
-coordinator, but direct unit tests ensure error paths are covered.
-"""
-
-from datetime import UTC, datetime, timedelta
+coordinator, but direct unit tests ensure error paths are covered."""
+from datetime import timedelta
 
 import pytest
 
@@ -13,7 +11,6 @@ from custom_components.universal_energy_manager.forecast import (
     forecast_from_hourly_energy,
     forecast_from_minute_data,
 )
-from custom_components.universal_energy_manager.models import ForecastPoint
 
 
 class TestForecastFromHourlyEnergy:
