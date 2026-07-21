@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 – UEM universal: e3dc_rscp optional, manual mapping, reconfigure fix
+
+- **Bugfix:** UEM config flow no longer aborts with `e3dc_rscp_not_configured` when e3dc_rscp is not installed. Instead, the user is presented with a clear choice: cancel (set up adapter first) or continue with manual entity mapping.
+- **Bugfix:** Reconfigure rescan with deleted e3dc_rscp entry correctly aborts with `e3dc_rscp_not_configured` instead of silently overwriting manual values.
+- **TDD:** New test suite verifies no-abort path in fresh HAOS without e3dc_rscp (4 new tests).
+
 ## 0.1.1 – Shadow update
 
 - Erweiterte Shadow-Planung mit generischen und Forecast.Solar-Prognosequellen.

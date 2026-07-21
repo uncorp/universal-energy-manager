@@ -11,6 +11,7 @@ The first release is deliberately small:
 - **Universal entity mapping** — UEM works with any HA sensors; no adapter required
 - `e3dc_rscp` as an **optional** E3DC data-source adapter for auto-discovery and prefill
 - Optional Forecast.Solar integration — **Solar/PV only**, unlimited sources (d roofs, orientations, BKW)
+- Reconfigure action — rescan adapter without overwriting manual values
 - Real battery end target instead of artificial intermediate charge corridors
 - Conditional curtainment headroom
 - Mandatory **Shadow mode** on installation

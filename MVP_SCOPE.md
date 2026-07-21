@@ -8,10 +8,12 @@ Ein lokaler Home-Assistant-Energiemanager, der `e3dc_rscp` als Datenquellen-Adap
 
 ## E3DC-Anbindung
 
-- `e3dc_rscp` ist Pflicht und wird nicht neu implementiert.
+- `e3dc_rscp` ist **optional** und dient als Datenquellen-Adapter für Auto-Erkennung und Vorbelegung.
 - UEM erkennt die E3DC-RSCP-Entitäten standardmäßig über den zugehörigen Home-Assistant-Config-Entry und dokumentierte E3DC-RSCP-Sensorzuordnungen.
 - Erkannte Entitäten werden im Setup vorbefüllt und zur Bestätigung angezeigt; bei fehlenden oder unplausiblen Werten wird nicht geraten und keine aktive Steuerung erlaubt.
+- Ohne Adapter führt die Einrichtung zur manuellen Entitätszuordnung — universell einsetzbar.
 - UEM speichert keine E3DC-IP, keine Zugangsdaten und keine Tokens.
+- Reconfigure-Adapter-Scan überschreibt keine manuellen Werte.
 
 ## Enthalten
 
