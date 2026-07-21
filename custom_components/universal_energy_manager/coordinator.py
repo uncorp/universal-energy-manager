@@ -366,13 +366,12 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         """Sync wrapper for _build_forecast_async for existing test compatibility."""
         import asyncio
 
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Already in a thread with its own event loop — use it
-            return loop.run_until_complete(self._build_forecast_async(live))
-        return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
-            self._build_forecast_async(live)
-        )
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.get_event_loop_policy().new_event_loop()
+
+        return loop.run_until_complete(self._build_forecast_async(live))
 
     def _compute_charge_limit(
         self, live: LiveState, forecast_connected: bool
@@ -385,48 +384,51 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         import asyncio
         import threading
 
-        if asyncio.get_event_loop().is_running():
-            # Running inside pytest-asyncio — we cannot create nested event loops.
-            # The test patches _build_forecast_from_snapshot to raise ValueError.
-            # Use a separate thread with its own event loop.
-            result_holder: list[float] = []
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # No running loop — safe to use run_until_complete directly
+            return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+                self._compute_charge_limit_async(live, forecast_connected)
+            )
 
-            def _run_in_thread() -> None:
-                loop = asyncio.new_event_loop()
+        # Running inside pytest-asyncio — we cannot create nested event loops.
+        # The test patches _build_forecast_from_snapshot to raise ValueError.
+        # Use a separate thread with its own event loop.
+        result_holder: list[float] = []
+
+        def _run_in_thread() -> None:
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
                 try:
-                    asyncio.set_event_loop(loop)
+                    storage = self._build_storage_capabilities()
+                    config = self._build_planner_config(live)
+                except (ValueError, TypeError):
+                    result_holder.append(0.0)
+                    return
+
+                forecast: tuple[ForecastPoint, ...] = ()
+                if forecast_connected:
                     try:
-                        storage = self._build_storage_capabilities()
-                        config = self._build_planner_config(live)
+                        forecast = self._build_forecast_from_snapshot(live)
                     except (ValueError, TypeError):
-                        result_holder.append(0.0)
-                        return
+                        forecast = ()
 
-                    forecast: tuple[ForecastPoint, ...] = ()
-                    if forecast_connected:
-                        try:
-                            forecast = self._build_forecast_from_snapshot(live)
-                        except (ValueError, TypeError):
-                            forecast = ()
+                try:
+                    decision = plan_charge(
+                        live=live,
+                        storage=storage,
+                        config=config,
+                        forecast=forecast,
+                    )
+                    result_holder.append(decision.charge_limit_w)
+                except ValueError:
+                    result_holder.append(0.0)
+            finally:
+                loop.close()
 
-                    try:
-                        decision = plan_charge(
-                            live=live,
-                            storage=storage,
-                            config=config,
-                            forecast=forecast,
-                        )
-                        result_holder.append(decision.charge_limit_w)
-                    except ValueError:
-                        result_holder.append(0.0)
-                finally:
-                    loop.close()
-
-            thread = threading.Thread(target=_run_in_thread, daemon=True)
-            thread.start()
-            thread.join()
-            return result_holder[0]
-
-        return asyncio.get_event_loop().run_until_complete(
-            self._compute_charge_limit_async(live, forecast_connected)
-        )
+        thread = threading.Thread(target=_run_in_thread, daemon=True)
+        thread.start()
+        thread.join()
+        return result_holder[0]
