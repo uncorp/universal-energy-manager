@@ -2,18 +2,19 @@
 
 A local-first Home Assistant energy manager for photovoltaic systems, home batteries and flexible loads.
 
-UEM is developed with E3DC in mind and uses adapters so that other systems can follow. It plans from live energy flows and conservative 15-minute PV forecasts, explains every decision, and avoids cloud lock-in and configuration clutter.
+UEM works with **any** home energy system that provides the required HA sensor entities. `e3dc_rscp` is **optional** and, when available, only provides auto-detected entity suggestions. Forecast.Solar is **optional** and provides as many Solar/PV forecasts as configured (roofs, orientations, balcony systems). BHKW and wind forecasts are not implemented in this release.
 
 ## First release scope
 
 The first release is deliberately small:
 
-- `e3dc_rscp` as the E3DC data-source adapter
-- real battery end target instead of artificial intermediate charge corridors
-- optional multiple PV forecast curves
-- conditional curtailment headroom
-- mandatory Shadow mode on installation
-- active control only after explicit user approval and an exclusive-controller check
+- Universal entity mapping (any source, not just `e3dc_rscp`)
+- Optional `e3dc_rscp` adapter for automatic entity suggestions
+- Optional Forecast.Solar integration for multiple Solar/PV forecasts
+- Real battery end target instead of artificial intermediate charge corridors
+- Conditional curtailment headroom
+- Mandatory Shadow mode on installation
+- Active control only after explicit user approval and an exclusive-controller check
 
 Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are planned after a stable Shadow release.
 
@@ -32,11 +33,16 @@ Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are 
 3. Find **UEM – Universal Energy Manager** in the list and install it.
 4. After installation, restart Home Assistant.
 5. Open **Settings → Devices & Services → Add Integration** and search for **UEM**.
-6. The config flow discovers entities from your existing `e3dc_rscp` integration. Confirm the detected entities to create a Shadow-only entry.
+6. The config flow discovers entities from your existing `e3dc_rscp` integration if available. Confirm the detected entities (they are editable suggestions) to create a Shadow-only entry.
+7. If `e3dc_rscp` is not installed, the flow offers manual entity mapping — UEM works with any system providing the required sensor entities.
 
-**UEM does not store any E3DC credentials, IPs, or tokens.** It reuses the entity registry of your existing `e3dc_rscp` configuration entry.
+**UEM does not store any E3DC credentials, IPs, or tokens.** When `e3dc_rscp` is present, it reuses the entity registry of your existing `e3dc_rscp` configuration entry. For manual mapping, you enter entity IDs directly.
 
-### No-control boundary
+### Reconfigure action
+
+After installation, open the UEM config entry in **Settings → Devices & Services** and select **Reconfigure**. This re-discovers entities from any connected adapter (e.g. a newly installed `e3dc_rscp`) while preserving your existing manual mappings as suggestions — it never overwrites values you have set.
+
+**No-control boundary**
 
 The first release is **strictly sensor-only and Shadow-only**: UEM reads sensor values and publishes planning output, but never calls a Home Assistant service to control hardware. It adds **no switches, selects, services or controllable entities**. Active control can only be considered in a future release after deliberate user opt-in and an exclusive-controller check.
 

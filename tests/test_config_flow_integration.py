@@ -16,17 +16,17 @@ from custom_components.universal_energy_manager.const import (
 
 
 @pytest.mark.asyncio
-async def test_user_flow_aborts_without_e3dc_rscp(
+async def test_user_flow_shows_manual_mapping_without_e3dc_rscp(
     hass, enable_custom_integrations
 ) -> None:
-    """A UEM entry cannot be created without its read-only E3DC source."""
+    """Without e3dc_rscp, the UEM flow should show a manual mapping form, not abort."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "e3dc_rscp_not_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
 
 @pytest.mark.asyncio
