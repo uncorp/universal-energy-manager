@@ -133,13 +133,14 @@ class TestUserStep:
         assert result["reason"] == "single_instance_allowed"
 
     def test_user_step_aborts_when_no_e3dc_entries(self) -> None:
-        """If no e3dc_rscp entries exist, the flow should abort with the proper reason."""
+        """If no e3dc_rscp entries exist, the flow now shows a choice form
+        (e3dc_rscp is optional) instead of aborting."""
         hass = MagicMock()
         flow = _make_flow(hass, [])
 
         result = _run_flow_coroutine(flow.async_step_user())
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "e3dc_rscp_not_configured"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "no_e3dc_choice"
 
     def test_user_step_skips_confirm_when_single_e3dc_entry(self) -> None:
         """With exactly one e3dc_rscp entry, the user step should go straight to confirm."""
@@ -176,21 +177,17 @@ class TestUserStep:
 class TestConfirmStep:
     """Tests for async_step_confirm decision paths."""
 
-    def test_confirm_step_delegates_to_user_when_no_entry_id_set(self) -> None:
-        """If _e3dc_entry_id is None on confirm, flow delegates to async_step_user."""
+    def test_confirm_step_delegates_to_no_e3dc_choice_when_no_entry_id_set(self) -> None:
+        """If _e3dc_entry_id is None on confirm, flow delegates to no_e3dc_choice step."""
         hass = MagicMock()
-        # Provide an e3dc entry so user step reaches confirm
         e3dc_entry = _make_entry()
         flow = _make_flow(hass, [e3dc_entry])
         flow._e3dc_entry_id = None
 
-        # async_step_user() with a single entry goes straight to confirm
-        # confirm with _e3dc_entry_id still None would loop, but the flow
-        # actually delegates once and the next user step sets _e3dc_entry_id
+        # async_step_confirm with _e3dc_entry_id=None delegates to no_e3dc_choice
         result = _run_flow_coroutine(flow.async_step_confirm())
-        # With a single e3dc entry, async_step_user skips to confirm
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "confirm"
+        assert result["step_id"] == "no_e3dc_choice"
 
     def test_confirm_step_aborts_when_source_entry_deleted(self) -> None:
         """If the selected e3dc entry no longer exists, confirm should abort."""

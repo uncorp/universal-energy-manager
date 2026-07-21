@@ -14,6 +14,7 @@ CONF_BATTERY_CAPACITY_ENTITY = "battery_capacity_entity"
 CONF_MAX_CHARGE_POWER_ENTITY = "max_charge_power_entity"
 CONF_FORECAST_ENTITY = "forecast_entity"
 CONF_FORECAST_SOLAR_ENTRY_IDS = "forecast_solar_entry_ids"
+CONF_MANUAL_ENTITIES = "manual_entities"
 CONF_STRATEGY = "strategy"
 FORECAST_SOLAR_DOMAIN = "forecast_solar"
 

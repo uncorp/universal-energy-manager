@@ -8,14 +8,16 @@ UEM is developed with E3DC in mind and uses adapters so that other systems can f
 
 The first release is deliberately small:
 
-- `e3dc_rscp` as the E3DC data-source adapter
-- real battery end target instead of artificial intermediate charge corridors
-- optional multiple PV forecast curves
-- conditional curtailment headroom
-- mandatory Shadow mode on installation
-- active control only after explicit user approval and an exclusive-controller check
+- **Universal entity mapping** — UEM works with any HA sensors; no adapter required
+- `e3dc_rscp` as an **optional** E3DC data-source adapter for auto-discovery and prefill
+- Optional Forecast.Solar integration — **Solar/PV only**, unlimited sources (d roofs, orientations, BKW)
+- Real battery end target instead of artificial intermediate charge corridors
+- Conditional curtainment headroom
+- Mandatory **Shadow mode** on installation
+- Active control only after explicit user approval and an exclusive-controller check
+- **Reconfigure action** for adapter rescan without overwriting manual values
 
-Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are planned after a stable Shadow release.
+BHKW/Wind forecasts are out of scope for this release. Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are planned after a stable Shadow release.
 
 ## Safety
 
@@ -32,9 +34,19 @@ Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are 
 3. Find **UEM – Universal Energy Manager** in the list and install it.
 4. After installation, restart Home Assistant.
 5. Open **Settings → Devices & Services → Add Integration** and search for **UEM**.
-6. The config flow discovers entities from your existing `e3dc_rscp` integration. Confirm the detected entities to create a Shadow-only entry.
 
-**UEM does not store any E3DC credentials, IPs, or tokens.** It reuses the entity registry of your existing `e3dc_rscp` configuration entry.
+### Universal setup flow
+
+UEM is designed to work **without any adapter**:
+
+1. The config flow detects whether an `e3dc_rscp` integration exists.
+2. **No adapter found?** You see two options:
+   - **Cancel** — set up the E3DC-RSCP integration first (recommended for E3DC users)
+   - **Continue** — proceed with universal manual entity mapping
+3. **Adapter found?** Detected entities are shown as editable prefill; you can accept, modify, or switch to manual mapping.
+4. Confirm the entity assignments to create a Shadow-only UEM entry.
+
+**UEM does not store any E3DC credentials, IPs, or tokens.** It reuses the entity registry of your existing configuration when available.
 
 ### No-control boundary
 
@@ -42,10 +54,10 @@ The first release is **strictly sensor-only and Shadow-only**: UEM reads sensor 
 
 ## Required source entities
 
-UEM needs the following sensor categories from your existing `e3dc_rscp` integration. The config flow maps them automatically; no private entity IDs appear in documentation or this README.
+UEM needs the following sensor categories from Home Assistant. The config flow maps them automatically via the `e3dc_rscp` adapter when available; otherwise you assign them manually. No private entity IDs appear in documentation.
 
-| UEM input | Source key in `e3dc_rscp` | Description |
-|---|---|---|
+|| UEM input | Source key in `e3dc_rscp` | Description |
+|---|---|---|---|
 | Battery SoC | `soc` | Current state of charge (percent) |
 | PV power | `solar-production` | Current PV generation (W) |
 | House consumption | `house-consumption` | Current home load (W) |
@@ -57,12 +69,25 @@ UEM needs the following sensor categories from your existing `e3dc_rscp` integra
 
 All power values are normalised to watts. If a required entity is missing or unavailable, UEM reports a `Messdatenfehler` (measurement data error) and does not produce planning output.
 
+## Forecast.Solar
+
+Forecast.Solar is **optional** and supports **unlimited sources** (dächer, Ausrichtungen, BKW). Only Solar/PV forecasts are processed. BHKW and Wind forecasts are not implemented in this release.
+
+## Reconfigure action
+
+After installation, UEM provides a reconfigure action in the integration settings. This allows:
+
+- **Rescan e3dc_rscp** — detect new/discovered entities without overwriting existing manual assignments
+- **Edit entities** — modify the manual entity mapping without recreating the entry
+
+Manual values are never silently overwritten.
+
 ## Shadow-mode sensors
 
 After installation UEM provides five read-only sensors:
 
-| Entity name | Description |
-|---|---|
+|| Entity name | Description |
+|---|---|---|
 | `sensor.energy_manager_status` | Current safety mode and health. State is `Shadow – keine aktive Steuerung` in normal operation. Attributes: `active_control` (always `false`), `commands_sent` (always `false`), `last_error` (null when healthy), `forecast_connected` (boolean). |
 | `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid and whether the PV forecast is connected. |
 | `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. The value reflects the planner's computed limit (may be `0.0` when live data is missing or the final target is already reached). Attributes: `shadow_only` (`true`), `command_sent` (`false`). |

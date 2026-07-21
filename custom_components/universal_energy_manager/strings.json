@@ -3,22 +3,38 @@
     "step": {
       "user": {
         "title": "UEM einrichten",
-        "description": "Wähle die vorhandene E3DC-RSCP-Integration. UEM startet ausschließlich im Shadow-Modus.",
-        "data": {
-          "e3dc_config_entry_id": "E3DC-RSCP-Integration"
-        }
+        "description": "Wähle die vorhandene E3DC-RSCP-Integration. UEM startet ausschließlich im Shadow-Modus. Ohne Adapter kannst du manuelle Entitätszuordnung verwenden."
       },
       "confirm": {
         "title": "Erkannte Messwerte bestätigen",
-        "description": "UEM hat {detected} E3DC-Messwerte erkannt. Beim ersten Start werden keine Steuerbefehle gesendet."
+        "description": "UEM hat {detected} E3DC-Messwerte erkannt. Beim ersten Start werden keine Steuerbefehle gesendet. Du kannst die Werte bearbeiten oder zur manuellen Zuordnung wechseln."
+      },
+      "no_e3dc_choice": {
+        "title": "Kein E3DC-RSCP-Adapter gefunden",
+        "description": "UEM kann ohne Adapter nur mit manueller Entitätszuordnung eingerichtet werden. Möchtest du:\n\n• **Abbrechen**: Richte zuerst die E3DC-RSCP-Integration ein (empfohlen)\n• **Fortfahren**: Weise Sensoren manuell zu (universell, auch ohne Adapter)"
+      },
+      "manual_mapping": {
+        "title": "Manuelle Entitätszuordnung",
+        "description": "Wähle die Home Assistant-Sensoren für UEM. {detected} Vorschläge verfügbar. Alle Felder sind erforderlich."
+      },
+      "reconfigure": {
+        "title": "UEM konfigurieren",
+        "description": "Aktuelle Konfiguration: {source}\nManuelle Zuordnung: {manual}\n\nWähle eine Aktion:"
+      },
+      "reconfigure_edit": {
+        "title": "Entitäten bearbeiten",
+        "description": "Ändere die Zuordnung der Sensoren. Leer lassen behält den aktuellen Wert."
       }
     },
     "abort": {
       "single_instance_allowed": "UEM ist bereits eingerichtet.",
-      "e3dc_rscp_not_configured": "Es wurde keine E3DC-RSCP-Integration gefunden."
+      "e3dc_rscp_not_configured": "Es wurde keine E3DC-RSCP-Integration gefunden.",
+      "e3dc_rscp_optional_cancel": "Einrichtung abgebrochen. Bitte richte zuerst den E3DC-RSCP-Adapter ein und versuche dann erneut, UEM hinzuzufügen.",
+      "already_configured": "Ein Eintrag mit dieser Konfiguration existiert bereits.",
+      "not_configured": "Konfigurationseintrag nicht gefunden."
     },
     "error": {
-      "missing_required_entities": "Erforderliche E3DC-Messwerte fehlen: {missing}. UEM rät nicht und bleibt daher nicht einrichtbar."
+      "missing_required_entities": "Erforderliche Entitätszuordnungen fehlen: {missing}. Bitte weise alle Sensoren zu."
     }
   }
 }

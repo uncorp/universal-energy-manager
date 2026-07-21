@@ -33,9 +33,9 @@ _REQUIRED_MANIFEST_FIELDS: dict[str, type] = {
     "iot_class": str,
 }
 
-# Home Assistant 2024.3+ requires these additional fields
-_ADDITIONAL_MANIFEST_FIELDS: dict[str, type] = {
-    "after_dependencies": list,
+# Home Assistant 2024.3+ supports optional fields.
+# e3dc_rscp is optional, no after_dependencies needed.
+_OPTIONAL_MANIFEST_FIELDS: dict[str, type] = {
     "codeowners": list,
     "integration_type": str,
 }
@@ -78,10 +78,10 @@ class TestManifestStructure:
                 self.manifest[field], expected_type
             ), f"Field {field}: expected {expected_type.__name__}, got {actual}"
 
-    def test_additional_fields_present(self) -> None:
-        """Fields required by HA 2024.3+ must be present."""
-        for field, expected_type in _ADDITIONAL_MANIFEST_FIELDS.items():
-            assert field in self.manifest, f"Missing required field: {field}"
+    def test_optional_fields_present(self) -> None:
+        """Optional manifest fields should be present when configured."""
+        for field, expected_type in _OPTIONAL_MANIFEST_FIELDS.items():
+            assert field in self.manifest, f"Missing optional field: {field}"
             actual = type(self.manifest[field]).__name__
             assert isinstance(
                 self.manifest[field], expected_type
