@@ -20,3 +20,6 @@ backups/
 .vscode/
 .idea/
 .DS_Store
+
+# Orchestrator state
+.hermes/
