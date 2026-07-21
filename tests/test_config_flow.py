@@ -189,15 +189,16 @@ class TestConfirmStep:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "no_e3dc_choice"
 
-    def test_confirm_step_aborts_when_source_entry_deleted(self) -> None:
-        """If the selected e3dc entry no longer exists, confirm should abort."""
+    def test_confirm_step_delegates_to_no_e3dc_choice_when_source_deleted(self) -> None:
+        """If the selected e3dc entry no longer exists, confirm should show the
+        choice form (cancel or continue with manual mapping) instead of aborting."""
         hass = MagicMock()
         flow = _make_flow(hass, [])
         flow._e3dc_entry_id = "nonexistent"
 
         result = _run_flow_coroutine(flow.async_step_confirm())
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "e3dc_rscp_not_configured"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "no_e3dc_choice"
 
     def test_confirm_step_shows_form_when_missing_required_entities(self) -> None:
         """When discovery yields missing required fields, show error form."""

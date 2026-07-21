@@ -222,7 +222,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             None,
         )
         if source_entry is None:
-            return self.async_abort(reason="e3dc_rscp_not_configured")
+            # Adapter was deleted or never existed — show the choice form
+            # instead of aborting so the user can proceed with manual mapping.
+            return await self.async_step_no_e3dc_choice()
 
         # Discover entities from the adapter
         self._e3dc_map = self._discover_entities(self._e3dc_entry_id)
