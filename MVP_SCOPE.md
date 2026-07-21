@@ -1,23 +1,19 @@
 # UEM MVP – eingefrorener Umfang
 
-**Status:** Eingefroren am 2026-07-21. Neue Ideen gehen in das Backlog und verändern diesen Umfang nicht ohne bewusste Entscheidung nach der Shadow-/Aktivvalidierung.
+**Status:** Eingefroren am 2026-07-18. Neue Ideen gehen in das Backlog und verändern diesen Umfang nicht ohne bewusste Entscheidung nach der Shadow-/Aktivvalidierung.
 
 ## Ziel
 
-Ein lokaler Home-Assistant-Energiemanager, der universell Entitäten aus **beliebigen** Energie-Systemen nutzt. `e3dc_rscp` ist optional und liefert nur automatische Vorschläge. Die manuelle Entitätszuordnung ist der universelle Standard.
+Ein lokaler Home-Assistant-Energiemanager, der `e3dc_rscp` als Datenquellen-Adapter nutzt und die E3DC-Akkuladung gegen das echte Tagesziel und die PV-Kurve plant — ohne künstliche Zwischenzielrampe oder Entitätsflut.
 
 ## E3DC-Anbindung
 
-- `e3dc_rscp` ist **optional**. Fehlt der Adapter beim erstmaligen Hinzufügen, bricht die Installation nicht ab, sondern bietet manuelle Entitätszuordnung.
-- UEM erkennt die E3DC-RSCP-Entitäten standardmäßig über den zugehörigen Home-Assistant-Config-Entry und dokumentierte E3DC-RSCP-Sensorzuordnungen — als **editierbare Vorschläge**, nicht als erzwungene Werte.
+- `e3dc_rscp` ist Pflicht und wird nicht neu implementiert.
+- UEM erkennt die E3DC-RSCP-Entitäten standardmäßig über den zugehörigen Home-Assistant-Config-Entry und dokumentierte E3DC-RSCP-Sensorzuordnungen.
 - Erkannte Entitäten werden im Setup vorbefüllt und zur Bestätigung angezeigt; bei fehlenden oder unplausiblen Werten wird nicht geraten und keine aktive Steuerung erlaubt.
 - UEM speichert keine E3DC-IP, keine Zugangsdaten und keine Tokens.
 
-## Forecast.Solar
-
-- UEM erkennt alle vorhandenen Forecast.Solar-Config-Entries (unbegrenzt viele).
-- Forecast.Solar liefert Solar-/PV-Forecasts (Dächer, Ausrichtungen, Balkonkraftwerke).
-- BHKW- und Wind-Forecasts werden in diesem Slice ausdrücklich nicht umgesetzt, nicht als Solar bezeichnet und nicht in PV-Forecasts gemischt.
+## Enthalten
 
 - Ein kanonischer Netzleistungsmesser.
 - E3DC SoC, Batterie-, PV-, Haus- und Netzleistung aus `e3dc_rscp`.

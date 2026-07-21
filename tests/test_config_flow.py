@@ -132,14 +132,14 @@ class TestUserStep:
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "single_instance_allowed"
 
-    def test_user_step_shows_manual_mapping_when_no_e3dc_entries(self) -> None:
-        """If no e3dc_rscp entries exist, the flow should show manual mapping."""
+    def test_user_step_aborts_when_no_e3dc_entries(self) -> None:
+        """If no e3dc_rscp entries exist, the flow should abort with the proper reason."""
         hass = MagicMock()
         flow = _make_flow(hass, [])
 
         result = _run_flow_coroutine(flow.async_step_user())
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "manual"
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "e3dc_rscp_not_configured"
 
     def test_user_step_skips_confirm_when_single_e3dc_entry(self) -> None:
         """With exactly one e3dc_rscp entry, the user step should go straight to confirm."""
