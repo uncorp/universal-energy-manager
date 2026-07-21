@@ -7,7 +7,7 @@
       },
       "confirm": {
         "title": "Erkannte Messwerte bestätigen",
-        "description": "UEM hat {detected} E3DC-Messwerte erkannt. Beim ersten Start werden keine Steuerbefehle gesendet. Du kannst die Werte bearbeiten oder zur manuellen Zuordnung wechseln."
+        "description": "UEM kann erkannte Entitäten vorbefüllen. Beim ersten Start werden keine Steuerbefehle gesendet. Du kannst die Werte bearbeiten oder zur manuellen Zuordnung wechseln."
       },
       "no_e3dc_choice": {
         "title": "Kein E3DC-RSCP-Adapter gefunden",
@@ -15,7 +15,7 @@
       },
       "manual_mapping": {
         "title": "Manuelle Entitätszuordnung",
-        "description": "Wähle die Home Assistant-Sensoren für UEM. {detected} Vorschläge verfügbar. Alle Felder sind erforderlich."
+        "description": "Wähle die Home Assistant-Sensoren für UEM. {detected} Vorschläge verfügbar. Batteriekapazität und maximale Ladeleistung können auch als feste Werte eingegeben werden. Leistungsfluss kann als vorzeichenbehafteter Sensor oder als separate Entitäten konfiguriert werden."
       },
       "reconfigure": {
         "title": "UEM konfigurieren",
@@ -34,7 +34,7 @@
       "not_configured": "Konfigurationseintrag nicht gefunden."
     },
     "error": {
-      "missing_required_entities": "Erforderliche Entitätszuordnungen fehlen: {missing}. Bitte weise alle Sensoren zu."
+      "missing_required_entities": "Erforderliche Entitätszuordnungen fehlen: {missing}. Bitte weise alle Sensoren zu. Für Batteriekapazität und maximale Ladeleistung kannst du entweder Entitäten oder feste Werte (kWh/W) eingeben."
     }
   }
 }

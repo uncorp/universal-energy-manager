@@ -19,9 +19,11 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.universal_energy_manager.const import (
+    CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
     DOMAIN,
@@ -39,6 +41,8 @@ def _minimal_config() -> dict:
         CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
         CONF_GRID_EXPORT_ENTITY: "sensor.e3dc_grid_export",
         CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+        CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
+        CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max_charge",
     }
 
 
@@ -50,6 +54,8 @@ def _populated_states(hass: HomeAssistant, _minimal_config: dict) -> dict:
         "sensor.e3dc_house": ("800", "W"),
         "sensor.e3dc_grid_export": ("1.4", "kW"),
         "sensor.e3dc_battery_charge": ("1.8", "kW"),
+        "sensor.e3dc_capacity": ("13.0", "kWh"),
+        "sensor.e3dc_max_charge": ("12000", "W"),
     }
     for entity_id, (state, unit) in values.items():
         hass.states.async_set(entity_id, state, {"unit_of_measurement": unit})

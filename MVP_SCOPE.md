@@ -14,6 +14,9 @@ Ein lokaler Home-Assistant-Energiemanager, der `e3dc_rscp` als Datenquellen-Adap
 - Ohne Adapter führt die Einrichtung zur manuellen Entitätszuordnung — universell einsetzbar.
 - UEM speichert keine E3DC-IP, keine Zugangsdaten und keine Tokens.
 - Reconfigure-Adapter-Scan überschreibt keine manuellen Werte.
+- Batteriekapazität und maximale Ladeleistung können als feste Werte (kWh / W) oder als Entität eingetragen werden.
+- Batterie- und Netzleistung wahlweise als vorzeichenbehafteter Sensor mit expliziter Konvention ODER als separate Entitäten — niemals wird die Richtung geraten.
+- Unvollständige Einrichtung erzeugt klar erkennbaren Shadow-Status (`Einrichtung unvollständig`), blockiert nicht und sendet keine Befehle.
 
 ## Enthalten
 

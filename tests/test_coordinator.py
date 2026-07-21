@@ -56,11 +56,27 @@ async def test_shadow_coordinator_reads_live_states_without_control_calls(hass) 
 
 @pytest.mark.asyncio
 async def test_shadow_coordinator_shows_safe_error_for_unavailable_input(hass) -> None:
+    """With complete config but unavailable entity → Messdatenfehler."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SOC_ENTITY: "sensor.e3dc_soc"},
+        data={
+            CONF_SOC_ENTITY: "sensor.e3dc_soc",
+            CONF_PV_POWER_ENTITY: "sensor.e3dc_pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
+            CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max_charge",
+        },
     )
-    hass.states.async_set("sensor.e3dc_soc", "unavailable")
+    for sid in (
+        "sensor.e3dc_soc",
+        "sensor.e3dc_pv",
+        "sensor.e3dc_house",
+        "sensor.e3dc_battery_charge",
+        "sensor.e3dc_capacity",
+        "sensor.e3dc_max_charge",
+    ):
+        hass.states.async_set(sid, "unavailable")
 
     coordinator = UemShadowCoordinator(hass, entry)
     await coordinator.async_refresh()
@@ -80,6 +96,8 @@ async def test_shadow_coordinator_reads_cached_forecast_without_sending_command(
         CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
         CONF_GRID_EXPORT_ENTITY: "sensor.e3dc_grid_export",
         CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+        CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
+        CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max_charge",
         CONF_FORECAST_SOLAR_ENTRY_IDS: ["roof"],
     }
     for entity_id, state, unit in (
@@ -88,6 +106,8 @@ async def test_shadow_coordinator_reads_cached_forecast_without_sending_command(
         ("sensor.e3dc_house", "800", "W"),
         ("sensor.e3dc_grid_export", "1.4", "kW"),
         ("sensor.e3dc_battery_charge", "1.8", "kW"),
+        ("sensor.e3dc_capacity", "13.0", "kWh"),
+        ("sensor.e3dc_max_charge", "12000", "W"),
     ):
         hass.states.async_set(entity_id, state, {"unit_of_measurement": unit})
 

@@ -461,12 +461,22 @@ class TestExistingPathNoRegression:
     """Ensure the existing e3dc_rscp flow path still works."""
 
     def test_with_e3dc_single_entry_skips_to_confirm(self) -> None:
-        """With one e3dc entry, user step skips directly to confirm."""
+        """With one e3dc entry, user step calls confirm. When discovery returns
+        a full entity map, confirm shows the form; when empty it redirects to manual."""
         hass = MagicMock()
         e3dc_entry = _make_entry()
         flow = _make_flow(hass, [e3dc_entry])
 
-        with patch.object(UemConfigFlow, "_discover_entities", return_value=E3dcEntityMap()):
+        full_map = E3dcEntityMap(
+            soc="sensor.e3dc_soc",
+            pv_power="sensor.e3dc_pv",
+            house_power="sensor.e3dc_house",
+            grid_export="sensor.e3dc_grid",
+            battery_charge="sensor.e3dc_charge",
+            battery_capacity="sensor.e3dc_capacity",
+            max_charge_power="sensor.e3dc_max_charge",
+        )
+        with patch.object(UemConfigFlow, "_discover_entities", return_value=full_map):
             result = _run_flow_coroutine(flow.async_step_user())
 
         assert result["type"] == FlowResultType.FORM

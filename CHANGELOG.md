@@ -1,10 +1,18 @@
 # Changelog
 
-## 0.1.2 – UEM universal: e3dc_rscp optional, manual mapping, reconfigure fix
+## 0.1.2 – UEM universal: e3dc_rscp optional, manual mapping, reconfigure, power modes
 
 - **Bugfix:** UEM config flow no longer aborts with `e3dc_rscp_not_configured` when e3dc_rscp is not installed. Instead, the user is presented with a clear choice: cancel (set up adapter first) or continue with manual entity mapping.
 - **Bugfix:** Reconfigure rescan with deleted e3dc_rscp entry correctly aborts with `e3dc_rscp_not_configured` instead of silently overwriting manual values.
-- **TDD:** New test suite verifies no-abort path in fresh HAOS without e3dc_rscp (4 new tests).
+- **Bugfix:** When e3dc discovery returns no entities, confirm step auto-redirects to manual_mapping (user is never blocked on an empty form).
+- **New:** Battery capacity — choose entity (kWh) or manual kWh value.
+- **New:** Max charge power — choose entity (W) or manual W value.
+- **New:** Battery power — choose signed entity with explicit sign convention (`Laden positiv` / `Entladen positiv`) OR separate charge/discharge entities. No direction guessing.
+- **New:** Grid power — choose signed entity with explicit sign convention (`Bezug positiv` / `Einspeisung positiv`) OR separate import/export entities.
+- **New:** Coordinator detects incomplete setup (missing required entities) and reports `Shadow – Einrichtung unvollständig` instead of crashing or silently failing.
+- **New:** Incomplete setup is clearly non-blocking: no control, no planning, unambiguous status.
+- **TDD:** 14 new tests covering manual fixed values, power modes, signed conventions, Solar-only forecasts, shadow safety for incomplete setup, reconfigure no-overwrite, and version rule (0.1.x only).
+- **UX:** All setup fields remain editable; setup can always be saved/resumed. Reconfigure never overwrites existing values.
 
 ## 0.1.1 – Shadow update
 

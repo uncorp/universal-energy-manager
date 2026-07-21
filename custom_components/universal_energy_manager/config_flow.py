@@ -3,6 +3,13 @@
 UEM is universal: e3dc_rscp is optional (auto-discovery / prefill only).
 Manual entity mapping is always available and is the primary path.
 Forecast.Solar is optional, Solar/PV-only, unlimited sources supported.
+
+New in v0.1.2:
+- Battery capacity: entity in kWh OR manual kWh value
+- Max charge power: entity in W OR manual W value
+- Battery power: signed entity with explicit sign convention OR separate charge/discharge
+- Grid power: signed entity with explicit sign convention OR separate import/export
+- No direction guessing — always explicit
 """
 
 from __future__ import annotations
@@ -16,20 +23,39 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
+    _ENT_MAP_LOOKUP,
+    BATTERY_POWER_MODE_SEPARATE,
+    BATTERY_POWER_MODE_SIGNED,
+    BATTERY_POWER_MODES,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
+    CONF_BATTERY_DISCHARGE_ENTITY,
+    CONF_BATTERY_MANUAL_CAPACITY_KWH,
+    CONF_BATTERY_POWER_MODE,
+    CONF_BATTERY_POWER_SIGN_CONVENTION,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
+    CONF_GRID_IMPORT_ENTITY,
+    CONF_GRID_POWER_MODE,
+    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MANUAL_ENTITIES,
+    CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
     DOMAIN,
     E3DC_RSCP_DOMAIN,
     FORECAST_SOLAR_DOMAIN,
+    GRID_POWER_MODE_SEPARATE,
+    GRID_POWER_MODE_SIGNED,
+    GRID_POWER_MODES,
+    SIGNED_CONVENTION_NEG_CHARGE_EXPORT,
+    SIGNED_CONVENTION_NEG_DISCHARGE_IMPORT,
+    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 from .e3dc_rscp import (
     discover_e3dc_entities,
@@ -39,15 +65,16 @@ from .e3dc_rscp import (
 
 _LOGGER = logging.getLogger(__name__)
 
-_REQUIRED_FIELDS = (
+# Core required entities (always needed, regardless of power mode)
+_CORE_REQUIRED = (
     CONF_SOC_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
-    CONF_GRID_EXPORT_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_CAPACITY_ENTITY,
-    CONF_MAX_CHARGE_POWER_ENTITY,
 )
+
+# Backward-compatible alias for tests that reference _REQUIRED_FIELDS
+_REQUIRED_FIELDS = _CORE_REQUIRED
 
 # Human-readable labels for the manual entity selection form
 _ENTITY_LABELS = {
@@ -55,54 +82,32 @@ _ENTITY_LABELS = {
     CONF_PV_POWER_ENTITY: "PV / Solar Power",
     CONF_HOUSE_POWER_ENTITY: "House Consumption",
     CONF_GRID_EXPORT_ENTITY: "Grid Export / Feed-in Power",
-    CONF_BATTERY_CHARGE_ENTITY: "Battery Charge / Discharge Power",
+    CONF_GRID_IMPORT_ENTITY: "Grid Import / Consumption from Grid",
+    CONF_BATTERY_CHARGE_ENTITY: "Battery Charge Power",
+    CONF_BATTERY_DISCHARGE_ENTITY: "Battery Discharge Power",
     CONF_BATTERY_CAPACITY_ENTITY: "Battery Installed Capacity",
     CONF_MAX_CHARGE_POWER_ENTITY: "Maximum Battery Charge Power",
+    CONF_BATTERY_MANUAL_CAPACITY_KWH: "Battery Installed Capacity (kWh, manuell)",
+    CONF_MAX_CHARGE_MANUAL_POWER_W: "Max. Charge Power (W, manuell)",
 }
 
+# Labels for power-mode dropdowns
+_POWER_MODE_LABELS = {
+    BATTERY_POWER_MODE_SIGNED: "Vorzeichen-behaftete Entität (ein Sensor, Vorzeichen wählen)",
+    BATTERY_POWER_MODE_SEPARATE: "Getrennte Entitäten (Laden + Entladen)",
+}
 
-def _entity_options(
-    hass, e3dc_entry_id: str | None = None, e3dc_map=None
-) -> dict[str, str]:
-    """Build a flat {entity_id → label} dict from the entity registry."""
-    registry = er.async_get(hass)
-    options: dict[str, str] = {}
+_GRID_MODE_LABELS = {
+    GRID_POWER_MODE_SIGNED: "Vorzeichen-behaftete Entität (ein Sensor, Vorzeichen wählen)",
+    GRID_POWER_MODE_SEPARATE: "Getrennte Entitäten (Bezug + Einspeisung)",
+}
 
-    if e3dc_entry_id is not None:
-        # Prefill with entities from the e3dc_rscp adapter
-        e3dc_unique_ids = {
-            entry.unique_id: entry.entity_id
-            for entry in er.async_entries_for_config_entry(
-                registry, e3dc_entry_id
-            )
-            if entry.domain == "sensor" and entry.unique_id is not None
-        }
-        e3dc_source_map = source_by_key_from_unique_ids(e3dc_unique_ids)
-        if e3dc_map is None:
-            e3dc_map = discover_e3dc_entities(e3dc_source_map)
-
-        for conf_key in _REQUIRED_FIELDS:
-            val = getattr(e3dc_map, conf_key, None)
-            if val is not None:
-                options[val] = f"{val} (auto-detected)"
-
-    # Also add all other sensors (non-e3dc) so user can pick freely
-    for entity_entry in registry.entities.values():
-        if (
-            entity_entry.domain == "sensor"
-            and entity_entry.entity_id not in options
-            and entity_entry.unique_id is not None
-        ):
-            options[entity_entry.entity_id] = entity_entry.entity_id
-
-    # Also add custom / free-text entities that might not be in the registry yet
-    for entity_id in list(options.keys()):
-        state = hass.states.get(entity_id)
-        if state is None:
-            # Remove unavailable entities from suggestions
-            options.pop(entity_id, None)
-
-    return options
+_SIGN_CONVENTION_LABELS = {
+    SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiv = Laden / Einspeisen",
+    SIGNED_CONVENTION_NEG_CHARGE_EXPORT: "Negativ = Laden / Einspeisen",
+    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiv = Entladen / Bezug",
+    SIGNED_CONVENTION_NEG_DISCHARGE_IMPORT: "Negativ = Entladen / Bezug",
+}
 
 
 class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -148,8 +153,10 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required("confirm"): vol.In(
-                            {"cancel": "Abbrechen – e3dc_rscp zuerst einrichten",
-                             "continue": "Mit manueller Zuordnung fortfahren"}
+                            {
+                                "cancel": "Abbrechen – e3dc_rscp zuerst einrichten",
+                                "continue": "Mit manueller Zuordnung fortfahren",
+                            }
                         )
                     }
                 ),
@@ -238,41 +245,27 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_BATTERY_CHARGE_ENTITY: self._e3dc_map.battery_charge,
             CONF_BATTERY_CAPACITY_ENTITY: self._e3dc_map.battery_capacity,
             CONF_MAX_CHARGE_POWER_ENTITY: self._e3dc_map.max_charge_power,
+            CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
+            CONF_BATTERY_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
+            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+            CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+            CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+            CONF_BATTERY_DISCHARGE_ENTITY: "",
+            CONF_GRID_IMPORT_ENTITY: "",
         }
         self._prefill_data = entity_data
 
-        missing = [
-            field
-            for field in _REQUIRED_FIELDS
-            if not entity_data[field]
-        ]
-
         if user_input is not None:
             # Collect confirmed values — prefer user input over prefill
-            for field in _REQUIRED_FIELDS:
-                if field in user_input and user_input[field]:
+            for field in list(entity_data.keys()):
+                if field in user_input and isinstance(user_input[field], str):
+                    val = user_input[field].strip() if user_input[field] else ""
+                    entity_data[field] = val
+                elif field in user_input:
                     entity_data[field] = user_input[field]
 
-            missing = [
-                field
-                for field in _REQUIRED_FIELDS
-                if not entity_data[field]
-            ]
-            if missing:
-                return self.async_show_form(
-                    step_id="confirm",
-                    errors={"base": "missing_required_entities"},
-                    description_placeholders={
-                        "missing": ", ".join(missing),
-                        "detected": str(
-                            sum(1 for v in entity_data.values() if v is not None)
-                        ),
-                    },
-                    data_schema=vol.Schema(
-                        self._build_entity_schema(entity_data, allow_empty=True)
-                    ),
-                )
-
+            # Collect optional forecast_solar entries
             forecast_solar_entry_ids = [
                 entry.entry_id
                 for entry in self.hass.config_entries.async_entries(
@@ -298,19 +291,24 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        # When NO core entities were detected, skip confirm and go straight to
+        # manual_mapping so the user is not blocked on an empty form.
+        detected_core = sum(
+            1 for field in _CORE_REQUIRED
+            if isinstance(entity_data.get(field), str) and entity_data.get(field, "").strip()
+        )
+        if detected_core == 0:
+            return await self.async_step_manual_mapping()
+
         # Default: show form with prefill in data_schema (editable fields)
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
                 "detected": str(
-                    sum(1 for v in entity_data.values() if v is not None)
-                ),
-                "missing": ", ".join(missing) if missing else "",
+                    sum(1 for v in entity_data.values() if isinstance(v, str) and v.strip())
+                )
             },
-            errors={"base": "missing_required_entities"} if missing else None,
-            data_schema=vol.Schema(
-                self._build_entity_schema(entity_data, allow_empty=bool(missing))
-            ),
+            data_schema=vol.Schema(self._build_full_schema(entity_data)),
         )
 
     # ------------------------------------------------------------------ #
@@ -335,42 +333,86 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if self._prefill_data
                     else "0"
                 },
-                data_schema=vol.Schema(
-                    self._build_entity_schema(self._prefill_data)
-                ),
+                data_schema=vol.Schema(self._build_full_schema(self._prefill_data)),
             )
 
-        # Validate all required fields are present
-        entity_data = {}
-        for field in _REQUIRED_FIELDS:
-            val = user_input.get(field)
-            if val is not None and val.strip():
-                entity_data[field] = val.strip()
+        # Collect all values: start from prefill, then overlay user_input
+        entity_data = dict(self._prefill_data) if self._prefill_data else {}
+        for field in set(list(entity_data.keys()) + list(user_input.keys())):
+            if field in user_input and isinstance(user_input[field], str):
+                entity_data[field] = user_input[field].strip()
+            elif field in user_input:
+                entity_data[field] = user_input[field]
+            elif field in entity_data:
+                pass  # keep prefill value
+            else:
+                entity_data[field] = ""
 
-        missing = [
-            field
-            for field in _REQUIRED_FIELDS
-            if field not in entity_data
-        ]
-        if missing:
-            return self.async_show_form(
-                step_id="manual_mapping",
-                errors={"base": "missing_required_entities"},
-                description_placeholders={"missing": ", ".join(missing)},
-                data_schema=vol.Schema(
-                    self._build_entity_schema(self._prefill_data)
-                ),
-            )
+        # Validate: core entities required
+        for field in _CORE_REQUIRED:
+            val = entity_data.get(field, "")
+            if not val or (isinstance(val, str) and not val.strip()):
+                return self.async_show_form(
+                    step_id="manual_mapping",
+                    errors={"base": "missing_required_entities"},
+                    description_placeholders={
+                        "missing": ", ".join(
+                            f for f in _CORE_REQUIRED
+                            if not entity_data.get(f, "")
+                            or (
+                                isinstance(entity_data.get(f, ""), str)
+                                and not entity_data.get(f, "").strip()
+                            )
+                        )
+                    },
+                    data_schema=vol.Schema(self._build_full_schema(entity_data)),
+                )
+
+        # Validate battery capacity: either entity or manual kWh
+        cap_entity = entity_data.get(CONF_BATTERY_CAPACITY_ENTITY, "")
+        cap_manual = entity_data.get(CONF_BATTERY_MANUAL_CAPACITY_KWH, "")
+        if not cap_entity or (isinstance(cap_entity, str) and not cap_entity.strip()):
+            if not cap_manual or (isinstance(cap_manual, str) and not cap_manual.strip()):
+                return self.async_show_form(
+                    step_id="manual_mapping",
+                    errors={"base": "missing_required_entities"},
+                    description_placeholders={
+                        "missing": CONF_BATTERY_CAPACITY_ENTITY
+                    },
+                    data_schema=vol.Schema(self._build_full_schema(entity_data)),
+                )
+
+        # Validate max charge power: either entity or manual W
+        max_entity = entity_data.get(CONF_MAX_CHARGE_POWER_ENTITY, "")
+        max_manual = entity_data.get(CONF_MAX_CHARGE_MANUAL_POWER_W, "")
+        if not max_entity or (isinstance(max_entity, str) and not max_entity.strip()):
+            if not max_manual or (isinstance(max_manual, str) and not max_manual.strip()):
+                return self.async_show_form(
+                    step_id="manual_mapping",
+                    errors={"base": "missing_required_entities"},
+                    description_placeholders={
+                        "missing": CONF_MAX_CHARGE_POWER_ENTITY
+                    },
+                    data_schema=vol.Schema(self._build_full_schema(entity_data)),
+                )
+
+        # Validate battery power mode
+        bat_mode = entity_data.get(CONF_BATTERY_POWER_MODE, "")
+        if bat_mode not in (BATTERY_POWER_MODE_SIGNED, BATTERY_POWER_MODE_SEPARATE):
+            entity_data[CONF_BATTERY_POWER_MODE] = BATTERY_POWER_MODE_SIGNED
+
+        # Validate grid power mode
+        grid_mode = entity_data.get(CONF_GRID_POWER_MODE, "")
+        if grid_mode not in (GRID_POWER_MODE_SIGNED, GRID_POWER_MODE_SEPARATE):
+            entity_data[CONF_GRID_POWER_MODE] = GRID_POWER_MODE_SIGNED
 
         # Collect optional forecast_solar entries
         forecast_solar_entry_ids = [
             entry.entry_id
-            for entry in self.hass.config_entries.async_entries(
-                FORECAST_SOLAR_DOMAIN
-            )
+            for entry in self.hass.config_entries.async_entries(FORECAST_SOLAR_DOMAIN)
         ]
 
-        # Generate a stable unique_id for manual entries (use flow ID as fallback)
+        # Generate a stable unique_id for manual entries
         config = getattr(self.hass, "config", None)
         location = getattr(config, "location", None)
         if location is not None:
@@ -410,7 +452,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             # Show current configuration with option to rescan
             is_manual = current_data.get(CONF_MANUAL_ENTITIES, False)
-            e3dc_info = "Kein Adapter konfiguriert" if is_manual else "e3dc_rscp Adapter vorhanden"
+            e3dc_info = (
+                "Kein Adapter konfiguriert" if is_manual else "e3dc_rscp Adapter vorhanden"
+            )
 
             return self.async_show_form(
                 step_id="reconfigure",
@@ -427,7 +471,11 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         do_rescan = user_input.get("rescan_e3dc", False)
+        if isinstance(do_rescan, str):
+            do_rescan = do_rescan.lower() in ("true", "1", "yes")
         do_edit = user_input.get("edit_manual", False)
+        if isinstance(do_edit, str):
+            do_edit = do_edit.lower() in ("true", "1", "yes")
 
         if do_edit:
             # Show edit form for manual entities
@@ -435,7 +483,13 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if do_rescan:
             # Rescan e3dc_rscp for new entities, preserve manual overrides
-            return await self._rescan_e3dc(entry, current_data)
+            new_data = await self._rescan_e3dc(entry, current_data)
+            if new_data is None:
+                return self.async_abort(reason="e3dc_rscp_not_configured")
+            return self.async_create_entry(
+                title="UEM – Universal Energy Manager",
+                data=new_data,
+            )
 
         # No action taken — go back to reconfigure form
         return await self.async_step_reconfigure()
@@ -445,61 +499,55 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Show entity editing form in reconfigure mode."""
         entity_data = {}
-        for field in _REQUIRED_FIELDS:
-            val = current_data.get(field)
-            if val:
-                entity_data[field] = val
+        for key, val in current_data.items():
+            entity_data[key] = str(val) if val is not None else ""
 
         return self.async_show_form(
             step_id="reconfigure_edit",
-            data_schema=vol.Schema(
-                self._build_entity_schema(entity_data, allow_empty=True)
-            ),
+            data_schema=vol.Schema(self._build_full_schema(entity_data)),
         )
 
     async def _rescan_e3dc(
         self, entry: config_entries.ConfigEntry, current_data: dict
-    ) -> FlowResult:
+    ) -> dict | None:
         """Rescan e3dc_rscp for new entities, only update fields that were
-        not manually overridden."""
+        not manually overridden.
+
+        Returns the new config data dict, or None if the e3dc entry is missing.
+        """
         e3dc_entry_id = current_data.get(CONF_E3DC_CONFIG_ENTRY_ID)
 
         # Check if e3dc_rscp entry still exists
-        e3dc_entries = self.hass.config_entries.async_entries(
-            E3DC_RSCP_DOMAIN
-        )
+        e3dc_entries = self.hass.config_entries.async_entries(E3DC_RSCP_DOMAIN)
         e3dc_source = next(
             (e for e in e3dc_entries if e.entry_id == e3dc_entry_id),
             None,
         )
 
         if e3dc_source is None:
-            return self.async_abort(reason="e3dc_rscp_not_configured")
+            return None
 
         # Discover new entities
         assert isinstance(e3dc_entry_id, str)
         e3dc_map = self._discover_entities(e3dc_entry_id)
         new_data = dict(current_data)
 
-        # Only update fields that haven't been manually overridden
-        for field in _REQUIRED_FIELDS:
-            existing_val = current_data.get(field)
-            discovered_val = getattr(e3dc_map, field, None)
-            if discovered_val and not existing_val:
-                # Auto-assign if nothing was set before
-                new_data[field] = discovered_val
-            # If existing_val is set, keep it (preserve manual values)
+        # Update only fields that were NOT manually set (empty or blank)
+        for key, val in new_data.items():
+            if not val or (isinstance(val, str) and not val.strip()):
+                mapped = _ENT_MAP_LOOKUP.get(key)
+                if mapped:
+                    entity_val = getattr(e3dc_map, mapped, None)
+                    if entity_val:
+                        new_data[key] = entity_val
 
-        self.hass.config_entries.async_update_entry(entry, data=new_data)
-        return self.async_abort(reason="reconfigure_complete")
+        return new_data
 
     def _get_current_entry(self) -> config_entries.ConfigEntry | None:
         """Get the ConfigEntry associated with this reconfigure flow."""
-        # In HA, reconfigure flows have _get_context() with entry_id
         context = self.context or {}
         entry_id = context.get("entry_id")
         if entry_id is None:
-            # Fallback: check _async_current_entries
             current = self._async_current_entries()
             if current:
                 return current[0]
@@ -523,13 +571,95 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             prefill = {}
 
         schema = {}
-        for field in _REQUIRED_FIELDS:
-            # Default to the prefill value
+        for field in _CORE_REQUIRED:
             default_val = prefill.get(field) or ""
-
             schema[vol.Optional(field, default=default_val)] = vol.All(
                 str, vol.Length(min=1 if not allow_empty else 0)
             )
+        return schema
+
+    def _build_full_schema(self, prefill: dict[str, Any] | None = None) -> dict:
+        """Build the complete manual mapping schema with all new fields."""
+        if prefill is None:
+            prefill = {}
+
+        schema = {}
+
+        # Core entities
+        for field in _CORE_REQUIRED:
+            default_val = prefill.get(field) or ""
+            schema[vol.Optional(field, default=default_val)] = str
+
+        # Grid export
+        grid_export_def = prefill.get(CONF_GRID_EXPORT_ENTITY) or ""
+        schema[
+            vol.Optional(CONF_GRID_EXPORT_ENTITY, default=grid_export_def)
+        ] = str
+
+        # Battery mode
+        bat_mode = prefill.get(CONF_BATTERY_POWER_MODE, BATTERY_POWER_MODE_SIGNED)
+        schema[
+            vol.Optional(CONF_BATTERY_POWER_MODE, default=bat_mode)
+        ] = vol.In(BATTERY_POWER_MODES)
+
+        # Battery sign convention (for signed mode)
+        bat_sign = prefill.get(
+            CONF_BATTERY_POWER_SIGN_CONVENTION, SIGNED_CONVENTION_POS_CHARGE_EXPORT
+        )
+        schema[
+            vol.Optional(CONF_BATTERY_POWER_SIGN_CONVENTION, default=bat_sign)
+        ] = str
+
+        # Battery discharge (only shown when mode = separate)
+        bat_discharge = prefill.get(CONF_BATTERY_DISCHARGE_ENTITY) or ""
+        schema[
+            vol.Optional(CONF_BATTERY_DISCHARGE_ENTITY, default=bat_discharge)
+        ] = str
+
+        # Battery capacity: entity
+        cap_def = prefill.get(CONF_BATTERY_CAPACITY_ENTITY) or ""
+        schema[
+            vol.Optional(CONF_BATTERY_CAPACITY_ENTITY, default=cap_def)
+        ] = str
+
+        # Battery capacity: manual kWh
+        cap_manual_def = prefill.get(CONF_BATTERY_MANUAL_CAPACITY_KWH) or ""
+        schema[
+            vol.Optional(CONF_BATTERY_MANUAL_CAPACITY_KWH, default=cap_manual_def)
+        ] = str
+
+        # Max charge power: entity
+        max_def = prefill.get(CONF_MAX_CHARGE_POWER_ENTITY) or ""
+        schema[
+            vol.Optional(CONF_MAX_CHARGE_POWER_ENTITY, default=max_def)
+        ] = str
+
+        # Max charge power: manual W
+        max_manual_def = prefill.get(CONF_MAX_CHARGE_MANUAL_POWER_W) or ""
+        schema[
+            vol.Optional(CONF_MAX_CHARGE_MANUAL_POWER_W, default=max_manual_def)
+        ] = str
+
+        # Grid mode
+        grid_mode = prefill.get(CONF_GRID_POWER_MODE, GRID_POWER_MODE_SIGNED)
+        schema[
+            vol.Optional(CONF_GRID_POWER_MODE, default=grid_mode)
+        ] = vol.In(GRID_POWER_MODES)
+
+        # Grid sign convention (for signed mode)
+        grid_sign = prefill.get(
+            CONF_GRID_POWER_SIGN_CONVENTION, SIGNED_CONVENTION_POS_CHARGE_EXPORT
+        )
+        schema[
+            vol.Optional(CONF_GRID_POWER_SIGN_CONVENTION, default=grid_sign)
+        ] = str
+
+        # Grid import (only shown when mode = separate)
+        grid_import = prefill.get(CONF_GRID_IMPORT_ENTITY) or ""
+        schema[
+            vol.Optional(CONF_GRID_IMPORT_ENTITY, default=grid_import)
+        ] = str
+
         return schema
 
     def _discover_entities(self, config_entry_id: str):

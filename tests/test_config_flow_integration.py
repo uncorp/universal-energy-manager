@@ -115,9 +115,7 @@ async def test_user_flow_prefills_e3dc_rscp_entities_and_creates_shadow_entry(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert result["description_placeholders"]["detected"] == "7"
-    # The confirm step now includes a 'missing' key in description_placeholders
-    assert "missing" in result["description_placeholders"]
+    assert result["description_placeholders"]["detected"] == "11"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -16,10 +16,12 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.universal_energy_manager.const import (
+    CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
     DOMAIN,
@@ -37,6 +39,8 @@ def _setup_entities(hass) -> None:
         ("sensor.e3dc_house", "800", "W"),
         ("sensor.e3dc_grid_export", "1.4", "kW"),
         ("sensor.e3dc_battery_charge", "1.8", "kW"),
+        ("sensor.e3dc_capacity", "13.0", "kWh"),
+        ("sensor.e3dc_max_charge", "12000", "W"),
     ):
         hass.states.async_set(entity_id, state, {"unit_of_measurement": unit})
 
@@ -51,6 +55,8 @@ def _make_mock_forecast_solar_entry(hass, entry_ids: list[str]) -> MockConfigEnt
             CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
             CONF_GRID_EXPORT_ENTITY: "sensor.e3dc_grid_export",
             CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
+            CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max_charge",
             CONF_FORECAST_SOLAR_ENTRY_IDS: entry_ids,
         },
     )
@@ -186,6 +192,8 @@ async def test_legacy_no_forecast_config_still_works(hass) -> None:
                 CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
                 CONF_GRID_EXPORT_ENTITY: "sensor.e3dc_grid_export",
                 CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+                CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
+                CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max_charge",
             },
         ),
     )

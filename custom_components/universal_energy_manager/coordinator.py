@@ -15,11 +15,13 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
+    CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_CHARGE_END,
     CONF_FORECAST_ENTITY,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
@@ -37,6 +39,7 @@ from .planner import plan_charge
 from .snapshot import StateSample, build_live_state
 
 SHADOW_STATUS = "Shadow – keine aktive Steuerung"
+SHADOW_STATUS_UNVOLLSTANDIG = "Shadow – Einrichtung unvollständig"
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +76,23 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
 
     async def _async_update_data(self) -> ShadowData:
         """Read live E3DC values only; never call a control service."""
+        # Quick-check: are required entities configured at all?
+        if self._is_incomplete():
+            strategy = self._read_strategy()
+            return ShadowData(
+                status=SHADOW_STATUS_UNVOLLSTANDIG,
+                decision=(
+                    "Einrichtung unvollständig — "
+                    "erforderliche Entitäten fehlen; keine Planung."
+                ),
+                planned_charge_limit_w=0.0,
+                error="Missing required entities for planning.",
+                forecast_connected=False,
+                pv_power_w=0.0,
+                house_power_w=0.0,
+                strategy=strategy,
+            )
+
         try:
             live = self._live_state()
         except ValueError as err:
@@ -432,3 +452,43 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         thread.start()
         thread.join()
         return result_holder[0]
+
+    # ------------------------------------------------------------------ #
+    # Incomplete setup detection                                           #
+    # ------------------------------------------------------------------ #
+
+    def _is_incomplete(self) -> bool:
+        """Return True when required entities are missing or empty."""
+        data = self._entry.data
+
+        # Core entities that must always be present
+        core_keys = [
+            CONF_SOC_ENTITY,
+            CONF_PV_POWER_ENTITY,
+            CONF_HOUSE_POWER_ENTITY,
+            CONF_BATTERY_CHARGE_ENTITY,
+        ]
+        for key in core_keys:
+            val = data.get(key)
+            if not val or (isinstance(val, str) and not val.strip()):
+                return True
+
+        # Battery capacity: either entity or manual kWh
+        cap_entity = data.get(CONF_BATTERY_CAPACITY_ENTITY)
+        cap_manual = data.get(CONF_BATTERY_MANUAL_CAPACITY_KWH)
+        if not cap_entity or (isinstance(cap_entity, str) and not cap_entity.strip()):
+            if not cap_manual or (
+                isinstance(cap_manual, str) and not cap_manual.strip()
+            ):
+                return True
+
+        # Max charge power: either entity or manual W
+        max_entity = data.get(CONF_MAX_CHARGE_POWER_ENTITY)
+        max_manual = data.get(CONF_MAX_CHARGE_MANUAL_POWER_W)
+        if not max_entity or (isinstance(max_entity, str) and not max_entity.strip()):
+            if not max_manual or (
+                isinstance(max_manual, str) and not max_manual.strip()
+            ):
+                return True
+
+        return False

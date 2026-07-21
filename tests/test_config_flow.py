@@ -143,7 +143,8 @@ class TestUserStep:
         assert result["step_id"] == "no_e3dc_choice"
 
     def test_user_step_skips_confirm_when_single_e3dc_entry(self) -> None:
-        """With exactly one e3dc_rscp entry, the user step should go straight to confirm."""
+        """With exactly one e3dc_rscp entry, user step calls confirm; when
+        discovery returns no entities the confirm auto-redirects to manual_mapping."""
         hass = MagicMock()
         e3dc_entry = _make_entry()
         flow = _make_flow(hass, [e3dc_entry])
@@ -152,7 +153,8 @@ class TestUserStep:
             result = _run_flow_coroutine(flow.async_step_user())
 
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "confirm"
+        # Empty e3dc discovery → confirm auto-submits to manual_mapping
+        assert result["step_id"] == "manual_mapping"
 
     def test_user_step_shows_form_when_multiple_e3dc_entries(self) -> None:
         """With multiple e3dc_rscp entries, the user step should show a selection form."""
@@ -200,11 +202,11 @@ class TestConfirmStep:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "no_e3dc_choice"
 
-    def test_confirm_step_shows_form_when_missing_required_entities(self) -> None:
-        """When discovery yields missing required fields, show error form."""
+    def test_confirm_step_redirects_to_manual_mapping_when_missing_required_entities(self) -> None:
+        """When discovery yields missing required fields, confirm redirects to manual_mapping."""
         hass = MagicMock()
         e3dc_entry = _make_entry()
-        partial_map = E3dcEntityMap(soc="sensor.e3dc_soc")  # most fields are None
+        partial_map = E3dcEntityMap()  # all fields are None/empty
 
         flow = _make_flow(hass, [e3dc_entry])
         flow._e3dc_entry_id = e3dc_entry.entry_id
@@ -212,10 +214,10 @@ class TestConfirmStep:
         with patch.object(UemConfigFlow, "_discover_entities", return_value=partial_map):
             result = _run_flow_coroutine(flow.async_step_confirm())
 
+        # Confirm now auto-submits to manual_mapping when core entities are missing
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "confirm"
-        assert "errors" in result
-        assert result["errors"]["base"] == "missing_required_entities"
+        assert result["step_id"] == "manual_mapping"
+        assert "detected" in result.get("description_placeholders", {})
 
     def test_confirm_step_aborts_when_unique_id_already_configured(self) -> None:
         """When a UEM entry with the same unique ID exists, confirm should abort."""
@@ -320,7 +322,8 @@ class TestConfirmStepCreation:
         )
 
     def test_user_step_preserves_e3dc_entry_id_on_selection(self) -> None:
-        """When the user selects an e3dc entry, _e3dc_entry_id should be set for confirm."""
+        """When the user selects an e3dc entry, _e3dc_entry_id should be set for confirm.
+        With a full entity map, confirm shows the form; with empty map it redirects to manual."""
         hass = MagicMock()
         entry1 = _make_entry(entry_id="e3dc-alpha", unique_id="S10E-11111", title="Alpha")
         entry2 = _make_entry(entry_id="e3dc-beta", unique_id="S10E-22222", title="Beta")
@@ -331,9 +334,19 @@ class TestConfirmStepCreation:
         assert form_result["type"] == FlowResultType.FORM
         assert form_result["step_id"] == "user"
 
-        # User selects entry2
+        # User selects entry2 — with full discovery confirm shows form
         user_input = {CONF_E3DC_CONFIG_ENTRY_ID: "e3dc-beta"}
-        confirm_result = _run_flow_coroutine(flow.async_step_user(user_input))
+        full_map = E3dcEntityMap(
+            soc="sensor.e3dc_soc",
+            pv_power="sensor.e3dc_pv",
+            house_power="sensor.e3dc_house",
+            grid_export="sensor.e3dc_grid",
+            battery_charge="sensor.e3dc_charge",
+            battery_capacity="sensor.e3dc_capacity",
+            max_charge_power="sensor.e3dc_max_charge",
+        )
+        with patch.object(UemConfigFlow, "_discover_entities", return_value=full_map):
+            confirm_result = _run_flow_coroutine(flow.async_step_user(user_input))
         assert confirm_result["type"] == FlowResultType.FORM
         assert confirm_result["step_id"] == "confirm"
         assert flow._e3dc_entry_id == "e3dc-beta"
@@ -375,15 +388,13 @@ class TestRequiredFields:
     """Tests for _REQUIRED_FIELDS constant."""
 
     def test_required_fields_contains_all_core_entities(self) -> None:
-        """_REQUIRED_FIELDS should list all mandatory sensor entities."""
+        """_REQUIRED_FIELDS should list the core entities that must always be present.
+        Battery capacity and max charge power can now use manual values as fallback."""
         expected = {
             CONF_SOC_ENTITY,
             CONF_PV_POWER_ENTITY,
             CONF_HOUSE_POWER_ENTITY,
-            CONF_GRID_EXPORT_ENTITY,
             CONF_BATTERY_CHARGE_ENTITY,
-            CONF_BATTERY_CAPACITY_ENTITY,
-            CONF_MAX_CHARGE_POWER_ENTITY,
         }
         assert set(_REQUIRED_FIELDS) == expected
 

@@ -10,11 +10,13 @@ The first release is deliberately small:
 
 - **Universal entity mapping** — UEM works with any HA sensors; no adapter required
 - `e3dc_rscp` as an **optional** E3DC data-source adapter for auto-discovery and prefill
-- Optional Forecast.Solar integration — **Solar/PV only**, unlimited sources (d roofs, orientations, BKW)
+- **Power modes** — Battery and grid power as signed entity (explicit sign convention) OR separate entities; never guesses direction
+- **Manual fallbacks** — Battery capacity (kWh) and max charge power (W) can be fixed values or entities
+- Optional Forecast.Solar integration — **Solar/PV only**, unlimited sources
 - Reconfigure action — rescan adapter without overwriting manual values
 - Real battery end target instead of artificial intermediate charge corridors
 - Conditional curtainment headroom
-- Mandatory **Shadow mode** on installation
+- Mandatory **Shadow mode** on installation; incomplete setup clearly non-blocking
 - Active control only after explicit user approval and an exclusive-controller check
 - **Reconfigure action** for adapter rescan without overwriting manual values
 
@@ -57,18 +59,32 @@ The first release is **strictly sensor-only and Shadow-only**: UEM reads sensor 
 
 UEM needs the following sensor categories from Home Assistant. The config flow maps them automatically via the `e3dc_rscp` adapter when available; otherwise you assign them manually. No private entity IDs appear in documentation.
 
-|| UEM input | Source key in `e3dc_rscp` | Description |
-|---|---|---|---|
-| Battery SoC | `soc` | Current state of charge (percent) |
-| PV power | `solar-production` | Current PV generation (W) |
-| House consumption | `house-consumption` | Current home load (W) |
-| Grid export | `grid-production` | Current grid feed-in (W) |
-| Battery charge | `battery-charge` | Current battery charge/discharge (W) |
-| Battery capacity | `system-battery-installed-capacity` | Total installed battery capacity |
-| Max charge power | `system-battery-charge-max` | Maximum battery charge power |
-| PV forecast (optional) | any forecast entity with 15-min intervals | 15-minute PV generation curve |
+||| UEM input | Source key in `e3dc_rscp` | Description |
+||---|---|---|---|
+|| Battery SoC | `soc` | Current state of charge (percent) |
+|| PV power | `solar-production` | Current PV generation (W) |
+|| House consumption | `house-consumption` | Current home load (W) |
+|| Grid export | `grid-production` | Current grid feed-in (W) |
+|| Battery charge | `battery-charge` | Current battery charge/discharge (W) |
 
-All power values are normalised to watts. If a required entity is missing or unavailable, UEM reports a `Messdatenfehler` (measurement data error) and does not produce planning output.
+### Power modes (v0.1.2+)
+
+- **Battery power:** Choose a signed entity (single sensor with explicit sign convention: `Laden positiv` or `Entladen positiv`) OR two separate entities (charge + discharge). No direction guessing.
+- **Grid power:** Choose a signed entity (explicit sign convention: `Bezug positiv` or `Einspeisung positiv`) OR two separate entities (import + export). No direction guessing.
+
+### Manual fallbacks (v0.1.2+)
+
+- **Battery capacity:** Choose an entity in kWh OR enter a fixed value (kWh).
+- **Max charge power:** Choose an entity in W OR enter a fixed value (W).
+
+### Optional entities
+
+- **SoC, PV power, house power:** Required — must be assigned via entity or manual mapping.
+- **Battery discharge entity:** Optional when using separate battery power mode.
+- **Grid import entity:** Optional when using separate grid power mode.
+- **Forecast.Solar:** Optional, Solar/PV only, unlimited sources.
+
+All power values are normalised to watts. If a required entity is missing or unavailable, UEM reports `Shadow – Einrichtung unvollständig` and produces no planning output. The integration remains installable and non-blocking.
 
 ## Forecast.Solar
 
@@ -87,13 +103,15 @@ Manual values are never silently overwritten.
 
 After installation UEM provides five read-only sensors:
 
-|| Entity name | Description |
-|---|---|---|
-| `sensor.energy_manager_status` | Current safety mode and health. State is `Shadow – keine aktive Steuerung` in normal operation. Attributes: `active_control` (always `false`), `commands_sent` (always `false`), `last_error` (null when healthy), `forecast_connected` (boolean). |
-| `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid and whether the PV forecast is connected. |
-| `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. The value reflects the planner's computed limit (may be `0.0` when live data is missing or the final target is already reached). Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
-| `sensor.energy_manager_erzeugung_aktuell` | Current PV generation power in watts, read from the mapped E3DC source. |
-| `sensor.energy_manager_gesamtlast_aktuell` | Current household load in watts, read from the mapped E3DC source. |
+||| Entity name | Description |
+||---|---|
+|| `sensor.energy_manager_status` | Current safety mode and health. State is `Shadow – keine aktive Steuerung` in normal operation, `Shadow – Einrichtung unvollständig` when required entities are missing. Attributes: `active_control` (always `false`), `commands_sent` (always `false`), `last_error` (null when healthy), `forecast_connected` (boolean). |
+|| `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid, whether the setup is complete, and whether the PV forecast is connected. |
+|| `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. The value reflects the planner's computed limit (may be `0.0` when live data is missing or the final target is already reached). Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
+|| `sensor.energy_manager_erzeugung_aktuell` | Current PV generation power in watts, read from the mapped E3DC source. |
+|| `sensor.energy_manager_gesamtlast_aktuell` | Current household load in watts, read from the mapped E3DC source. |
+
+When the setup is incomplete, UEM remains installed but does not produce planning output — no control, no crash, clear status.
 
 ## Development and tests
 
