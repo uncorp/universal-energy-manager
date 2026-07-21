@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.components.select import SelectEntity
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, STRATEGY_OPTIONS
+from .const import DOMAIN
 from .coordinator import SHADOW_STATUS, UemShadowCoordinator
 
 
@@ -29,8 +27,6 @@ async def async_setup_entry(
             UemPlannedChargeLimitSensor(coordinator, entry),
             UemCurrentGenerationSensor(coordinator, entry),
             UemTotalLoadSensor(coordinator, entry),
-            UemActiveSwitch(coordinator, entry),
-            UemStrategySelect(coordinator, entry),
         ]
     )
 
@@ -150,66 +146,3 @@ class UemTotalLoadSensor(_UemSensor):
     @property
     def native_value(self) -> float:
         return self.coordinator.data.house_power_w if self.coordinator.data else 0.0
-
-
-class UemActiveSwitch(_UemSensor, SwitchEntity):
-    """Master switch for active control. Always off in Shadow mode."""
-
-    _attr_name = "Aktiv"
-    _attr_icon = "mdi:toggle-switch-off-outline"
-
-    def __init__(
-        self, coordinator: UemShadowCoordinator, entry: ConfigEntry
-    ) -> None:
-        super().__init__(coordinator, entry, "active_switch")
-
-    @property
-    def is_on(self) -> bool:
-        """Shadow mode never allows active control."""
-        return False
-
-    @property
-    def extra_state_attributes(self) -> dict[str, bool]:
-        return {"shadow_only": True, "requires_opt_in": True}
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Shadow mode cannot turn on active control."""
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Shadow mode is already off."""
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
-
-class UemStrategySelect(_UemSensor, SelectEntity):
-    """Strategy selector for the charge planner."""
-
-    _attr_name = "Strategie"
-    _attr_icon = "mdi:theme-light-dark"
-
-    def __init__(
-        self, coordinator: UemShadowCoordinator, entry: ConfigEntry
-    ) -> None:
-        super().__init__(coordinator, entry, "strategy_select")
-        self._entry = entry
-
-    @property
-    def current_option(self) -> str:
-        """Return the currently selected strategy."""
-        if self.coordinator.data:
-            return self.coordinator.data.strategy
-        return self._entry.data.get("strategy", "pv_first")
-
-    @property
-    def options(self) -> list[str]:
-        """Return available strategy options."""
-        return STRATEGY_OPTIONS
-
-    async def async_select_option(self, option: str) -> None:
-        """Persist the selected strategy to the config entry."""
-        new_data = dict(self._entry.data)
-        new_data["strategy"] = option
-        self.hass.config_entries.async_update_entry(self._entry, data=new_data)
-        self.async_write_ha_state()

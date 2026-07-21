@@ -38,7 +38,7 @@ Dynamic tariff optimisation, EV scheduling, heat pumps and further adapters are 
 
 ### No-control boundary
 
-The first release is **Shadow-only**: UEM reads sensor values and publishes planning output, but never calls a Home Assistant service to control hardware. The `switch.energy_manager_aktiv` entity is intentionally absent — active control will only appear in a future release after a deliberate user opt-in.
+The first release is **strictly sensor-only and Shadow-only**: UEM reads sensor values and publishes planning output, but never calls a Home Assistant service to control hardware. It adds **no switches, selects, services or controllable entities**. Active control can only be considered in a future release after deliberate user opt-in and an exclusive-controller check.
 
 ## Required source entities
 
@@ -59,13 +59,15 @@ All power values are normalised to watts. If a required entity is missing or una
 
 ## Shadow-mode sensors
 
-After installation UEM provides three read-only sensors:
+After installation UEM provides five read-only sensors:
 
 | Entity name | Description |
 |---|---|
 | `sensor.energy_manager_status` | Current safety mode and health. State is `Shadow – keine aktive Steuerung` in normal operation. Attributes: `active_control` (always `false`), `commands_sent` (always `false`), `last_error` (null when healthy), `forecast_connected` (boolean). |
 | `sensor.energy_manager_entscheidung` | Human-readable planning explanation. Shows whether live values are valid and whether the PV forecast is connected. |
 | `sensor.energy_manager_soll_akku_ladelimit` | Calculated charge-limit setpoint in watts. The value reflects the planner's computed limit (may be `0.0` when live data is missing or the final target is already reached). Attributes: `shadow_only` (`true`), `command_sent` (`false`). |
+| `sensor.energy_manager_erzeugung_aktuell` | Current PV generation power in watts, read from the mapped E3DC source. |
+| `sensor.energy_manager_gesamtlast_aktuell` | Current household load in watts, read from the mapped E3DC source. |
 
 ## Development and tests
 
