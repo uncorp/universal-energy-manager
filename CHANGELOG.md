@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 – Shadow update
+## 0.2.1 – Shadow update
 
 - Erweiterte Shadow-Planung mit generischen und Forecast.Solar-Prognosequellen.
 - Zusätzliche lesende PV-Erzeugungs- und Gesamtlastsensoren.
