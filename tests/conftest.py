@@ -45,12 +45,17 @@ HomeAssistant = MagicMock
 
 class _State:
     """Minimal State stub that stores entity_id, state, attributes."""
-    def __init__(self, entity_id: str, state: str, attributes: dict | None = None):
+    def __init__(self, entity_id, state, attributes=None,
+                 last_changed=None, last_updated=None,
+                 context=None, time_created=None, updated=None):
         self.entity_id = entity_id
-        self.state = state
+        self.state = str(state)
         self.attributes = attributes or {}
-        self.last_changed = datetime.now(UTC)
-        self.last_updated = datetime.now(UTC)
+        self.last_changed = last_changed or datetime.now(UTC)
+        self.last_updated = last_updated or datetime.now(UTC)
+        self.context = context
+        self.time_created = time_created
+        self.updated = updated
 
 State = _State
 
@@ -97,9 +102,13 @@ class ConfigFlow:
     context = {}
     step_id = "user"
     _flow_result = None
+    _async_current_entries_data = []
 
     def __init_subclass__(cls, domain=None, **kwargs):
         cls.domain = domain
+
+    def _async_current_entries(self):
+        return self._async_current_entries_data
 
     async def async_step_user(self, user_input=None):
         return self._flow_result or MagicMock()
@@ -109,6 +118,21 @@ class ConfigFlow:
 
     async def async_step_reconfigure(self, user_input=None):
         return self._flow_result or MagicMock()
+
+    async def async_step_confirm(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_step_no_e3dc_choice(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_step_manual_mapping(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_step_source(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_get_progress(self):
+        return []
 
     async def async_show_form(
         self, *, step_id, errors=None, description_placeholders=None, last_step=None
@@ -153,19 +177,41 @@ class FlowResultType:
 class FlowResult:
     pass
 
-# --- homeassistant.util.dt ---
+# util
 class _DtMod:
     utc = MagicMock()
-    async_get_time_zone = MagicMock(return_value=None)
-    now = MagicMock()
-    parse_datetime = MagicMock()
-    utcnow = MagicMock()
+    def now(self):
+        return datetime.now(UTC)
+    def utcnow(self):
+        return datetime.now(UTC)
+    async def async_get_time_zone(self, tz):
+        import pytz
+        return pytz.timezone(tz) if tz else UTC
+    def parse_datetime(self, s):
+        return None
+_dt_mod_local = _DtMod()
 
 dt_util = _DtMod()
 
 # --- homeassistant.helpers ---
 class SensorEntity:
-    pass
+    """Minimal SensorEntity that maps _attr_native_* to public properties."""
+    _attr_native_unit_of_measurement = None
+    _attr_native_value = None
+    _attr_has_entity_name = True
+
+    @property
+    def unit_of_measurement(self):
+        if self._attr_native_unit_of_measurement is not None:
+            return self._attr_native_unit_of_measurement
+        return getattr(self, '_attr_unit_of_measurement', None)
+
+    @property
+    def native_value(self):
+        if self._attr_native_value is not None:
+            return self._attr_native_value
+        return getattr(self, '_attr_value', None)
+
 
 class CoordinatorEntity:
     _attr_has_entity_name = True
@@ -312,7 +358,28 @@ for _mod in [_ha_root, _ha_const, _ha_core, _ha_config_entries,
 # ===========================================================================
 _phacc = _make_stub("pytest_homeassistant_custom_component")
 _phacc_common = _make_stub("pytest_homeassistant_custom_component.common")
-_phacc_common.MockConfigEntry = MagicMock
+
+
+class _MockConfigEntry(ConfigEntry):
+    """ConfigEntry that acts as a mock but uses the real constructor."""
+    def __init__(self, *, domain, data=None, title="", entry_id=None,
+                 source="user", unique_id=None, options=None,
+                 version=1, minor_version=1, **kwargs):
+        super().__init__(
+            version=version,
+            minor_version=minor_version,
+            domain=domain,
+            title=title,
+            data=data or {},
+            source=source,
+            entry_id=entry_id or f"mock-{domain}",
+            unique_id=unique_id,
+            options=options or {},
+            **kwargs,
+        )
+
+
+_phacc_common.MockConfigEntry = _MockConfigEntry
 _phacc_common.mock_entity_picture = MagicMock
 sys.modules["pytest_homeassistant_custom_component"] = _phacc
 sys.modules["pytest_homeassistant_custom_component.common"] = _phacc_common
