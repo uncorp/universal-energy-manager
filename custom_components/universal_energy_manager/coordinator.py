@@ -245,12 +245,20 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
             return 0.0
 
     def _build_storage_capabilities(self) -> StorageCapabilities:
-        """Derive storage limits from configured entities."""
+        """Derive storage limits from entities or manual fallback values."""
         cap_entity = self._entry.data.get(CONF_BATTERY_CAPACITY_ENTITY)
         max_entity = self._entry.data.get(CONF_MAX_CHARGE_POWER_ENTITY)
+        cap_manual = self._entry.data.get(CONF_BATTERY_MANUAL_CAPACITY_KWH)
+        max_manual = self._entry.data.get(CONF_MAX_CHARGE_MANUAL_POWER_W)
 
+        # Try entity first, fall back to manual value
         cap_val = self._parse_float_entity(cap_entity)
+        if cap_val is None:
+            cap_val = self._parse_float_entity(cap_manual)
+
         max_val = self._parse_float_entity(max_entity)
+        if max_val is None:
+            max_val = self._parse_float_entity(max_manual)
 
         if cap_val is None or max_val is None:
             raise ValueError("missing battery capacity or max charge power")
@@ -261,14 +269,24 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         )
 
     def _parse_float_entity(self, entity_id: str | None) -> float | None:
-        """Best-effort float from a configured entity state, or None."""
+        """Best-effort float from a configured entity state, manual value, or None."""
+        if entity_id is None:
+            return None
+        if isinstance(entity_id, (int, float)):
+            return float(entity_id)
         if not isinstance(entity_id, str):
             return None
-        state = self.hass.states.get(entity_id)
-        if state is None or state.state in {"unknown", "unavailable"}:
+        if not entity_id.strip():
             return None
+        state = self.hass.states.get(entity_id)
+        if state is not None and state.state not in {"unknown", "unavailable"}:
+            try:
+                return float(state.state)
+            except (TypeError, ValueError):
+                return None
+        # Not a state entity (e.g. manual kWh/W value) — try direct parse
         try:
-            return float(state.state)
+            return float(entity_id)
         except (TypeError, ValueError):
             return None
 
@@ -458,7 +476,12 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
     # ------------------------------------------------------------------ #
 
     def _is_incomplete(self) -> bool:
-        """Return True when required entities are missing or empty."""
+        """Return True when required entities are missing or empty.
+
+        Existing entries created before v0.1.3 may lack the manual-capacity and
+        manual-power keys entirely — treat a missing key the same as an empty
+        string so that entity values still validate the entry.
+        """
         data = self._entry.data
 
         # Core entities that must always be present
@@ -477,18 +500,14 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         cap_entity = data.get(CONF_BATTERY_CAPACITY_ENTITY)
         cap_manual = data.get(CONF_BATTERY_MANUAL_CAPACITY_KWH)
         if not cap_entity or (isinstance(cap_entity, str) and not cap_entity.strip()):
-            if not cap_manual or (
-                isinstance(cap_manual, str) and not cap_manual.strip()
-            ):
+            if not cap_manual or (isinstance(cap_manual, str) and not cap_manual.strip()):
                 return True
 
         # Max charge power: either entity or manual W
         max_entity = data.get(CONF_MAX_CHARGE_POWER_ENTITY)
         max_manual = data.get(CONF_MAX_CHARGE_MANUAL_POWER_W)
         if not max_entity or (isinstance(max_entity, str) and not max_entity.strip()):
-            if not max_manual or (
-                isinstance(max_manual, str) and not max_manual.strip()
-            ):
+            if not max_manual or (isinstance(max_manual, str) and not max_manual.strip()):
                 return True
 
         return False

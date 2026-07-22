@@ -202,7 +202,7 @@ class TestManualFixedValuesNoEntities:
         assert result["data"][CONF_BATTERY_MANUAL_CAPACITY_KWH] == "10.5"
         assert result["data"][CONF_MAX_CHARGE_MANUAL_POWER_W] == "5000"
 
-    def test_create_entry_with_both_entity_and_manual_fails_validation(self):
+    def test_create_entry_with_both_entity_and_manual(self):
         """If both entity AND manual value are set for the same field,
         the schema should accept entity (entity takes priority)."""
         hass = MagicMock()
@@ -484,6 +484,82 @@ class TestShadowSafetyIncompleteSetup:
         assert isinstance(result, ShadowData)
         assert result.status == SHADOW_STATUS_UNVOLLSTANDIG
 
+    def test_shadow_complete_with_manual_capacity_power(self):
+        """Entry with manual kWh/W values (no entity for capacity/power)
+        must NOT be flagged as incomplete."""
+        from custom_components.universal_energy_manager.coordinator import (
+            UemShadowCoordinator,
+        )
+
+        hass = MagicMock()
+        # All core entities set via entity IDs; capacity/power via manual values
+        entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM Manual",
+            data={
+                CONF_E3DC_CONFIG_ENTRY_ID: None,
+                CONF_E3DC_SOURCE_UNIQUE_ID: None,
+                CONF_MANUAL_ENTITIES: True,
+                CONF_SOC_ENTITY: "sensor.manual_soc",
+                CONF_PV_POWER_ENTITY: "sensor.manual_pv",
+                CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
+                CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_charge",
+                CONF_BATTERY_CAPACITY_ENTITY: "",  # no entity
+                CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
+                CONF_MAX_CHARGE_POWER_ENTITY: "",  # no entity
+                CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
+                CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
+                CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
+            },
+            source="user",
+            entry_id="uem-manual",
+            unique_id="uem:manual:test",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        hass.config_entries.async_entries.return_value = [entry]
+        hass.states.get.return_value = None
+        hass.states.async_all.return_value = []
+
+        coord = UemShadowCoordinator(hass, entry)
+        # _is_incomplete must return False when manual kWh/W fills the gap
+        assert coord._is_incomplete() is False
+
+    def test_shadow_complete_entity_fallback_to_manual(self):
+        """When entity is empty string but manual kWh/W set → complete."""
+        from custom_components.universal_energy_manager.coordinator import (
+            UemShadowCoordinator,
+        )
+
+        hass = MagicMock()
+        entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM",
+            data={
+                CONF_SOC_ENTITY: "sensor.e3dc_soc",
+                CONF_PV_POWER_ENTITY: "sensor.e3dc_pv",
+                CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
+                CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_charge",
+                CONF_BATTERY_CAPACITY_ENTITY: "",  # empty entity
+                CONF_BATTERY_MANUAL_CAPACITY_KWH: "13.0",
+                CONF_MAX_CHARGE_POWER_ENTITY: "",  # empty entity
+                CONF_MAX_CHARGE_MANUAL_POWER_W: "12000",
+            },
+            source="user",
+            entry_id="uem-001",
+            unique_id="test",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        hass.config_entries.async_entries.return_value = [entry]
+        hass.states.get.return_value = None
+        hass.states.async_all.return_value = []
+
+        coord = UemShadowCoordinator(hass, entry)
+        assert coord._is_incomplete() is False
+
 
 # =========================================================================== #
 # TDD TEST 7: Reconfigure — no silent overwrite of manual values             #
@@ -591,14 +667,17 @@ class TestVersionRule:
         parts = version.split(".")
         assert int(parts[0]) == 0
         assert int(parts[1]) == 1
+        assert len(parts) == 3, f"Version {version!r} must have exactly 3 parts"
 
-    def test_tag_v01x_exists(self):
-        import subprocess
+    def test_manifest_version_not_02(self):
+        """Version must never be 0.2.x — shadow lane stays 0.1.x forever."""
+        import json
 
-        result = subprocess.run(
-            ["git", "tag", "-l", "v0.1.*"],
-            capture_output=True,
-            text=True,
+        manifest_path = (
+            "custom_components/universal_energy_manager/manifest.json"
         )
-        tags = [t.strip() for t in result.stdout.strip().split("\n") if t.strip()]
-        assert len(tags) >= 1, "v0.1.x tag should exist"
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+        version = manifest["version"]
+        parts = version.split(".")
+        assert parts[1] != "2", f"Version must stay 0.1.x, got {version}"

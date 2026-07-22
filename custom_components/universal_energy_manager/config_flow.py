@@ -477,6 +477,10 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if isinstance(do_edit, str):
             do_edit = do_edit.lower() in ("true", "1", "yes")
 
+        if not do_rescan and not do_edit:
+            # No action taken — go back to reconfigure form
+            return await self.async_step_reconfigure()
+
         if do_edit:
             # Show edit form for manual entities
             return await self._show_reconfigure_edit(entry, current_data)
@@ -490,9 +494,6 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title="UEM – Universal Energy Manager",
                 data=new_data,
             )
-
-        # No action taken — go back to reconfigure form
-        return await self.async_step_reconfigure()
 
     async def _show_reconfigure_edit(
         self, entry: config_entries.ConfigEntry, current_data: dict

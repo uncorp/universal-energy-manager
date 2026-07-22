@@ -104,6 +104,13 @@ class TestManifestStructure:
             f"name {expected_dir!r}"
         )
 
+    def test_version_stays_01x(self) -> None:
+        """Shadow lane: version must stay 0.1.x forever."""
+        version = self.manifest["version"]
+        parts = version.split(".")
+        assert int(parts[0]) == 0
+        assert int(parts[1]) == 1
+
 
 class TestHacsMetadata:
     """Validate hacs.json structure."""
