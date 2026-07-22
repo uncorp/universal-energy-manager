@@ -95,6 +95,13 @@ class ConfigEntry:
             except Exception:
                 pass
 
+class _FlowResult(dict):
+    """A dict subclass with a .type attribute for FlowResult compatibility."""
+    def __init__(self, type_, **kwargs):
+        super().__init__(**kwargs)
+        self["type"] = type_
+        self.type = type_
+
 class ConfigFlow:
     """Stub that accepts domain= keyword in __init_subclass__ and provides flow methods."""
     domain = None
@@ -108,57 +115,79 @@ class ConfigFlow:
         cls.domain = domain
 
     def _async_current_entries(self):
+        if hasattr(self, 'domain') and self.domain and hasattr(self, 'hass'):
+            return self.hass.config_entries.async_entries(self.domain)
         return self._async_current_entries_data
 
-    async def async_step_user(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_user(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_step_init(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_init(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_step_reconfigure(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_reconfigure(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_step_confirm(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_confirm(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_step_no_e3dc_choice(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_no_e3dc_choice(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_step_manual_mapping(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_manual_mapping(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_step_source(self, user_input=None):
-        return self._flow_result or MagicMock()
+    def async_step_source(self, user_input=None):
+        return self._flow_result or _FlowResult("form")
 
-    async def async_get_progress(self):
+    def async_get_progress(self):
         return []
 
-    async def async_show_form(
-        self, *, step_id, errors=None, description_placeholders=None, last_step=None
+    def async_show_form(
+        self, *, step_id, errors=None, description_placeholders=None,
+        last_step=None, data_schema=None
     ):
-        return MagicMock(
-            type=FlowResultType.FORM,
+        return _FlowResult(
+            FlowResultType.FORM,
             step_id=step_id,
             errors=errors or {},
             description_placeholders=description_placeholders or {},
+            data_schema=data_schema,
         )
 
-    async def async_create_entry(self, title=None, data=None):
-        return MagicMock(
-            type=FlowResultType.CREATE,
+    def async_create_entry(self, title=None, data=None):
+        return _FlowResult(
+            FlowResultType.CREATE_ENTRY,
             title=title or "",
             data=data or {},
         )
 
-    async def async_abort(self, *, reason):
-        return MagicMock(
-            type=FlowResultType.ABORT,
+    def async_abort(self, *, reason, description_placeholders=None):
+        return _FlowResult(
+            FlowResultType.ABORT,
             reason=reason,
+            description_placeholders=description_placeholders or {},
         )
 
-    async def async_forward_entry_setup(self, hass, entry):
+    def async_forward_entry_setup(self, hass, entry):
         return True
+
+    async def async_set_unique_id(self, unique_id=None):
+        self._unique_id = unique_id
+
+    def _abort_if_unique_id_configured(self, *, upload_content=None):
+        # In real HA this checks hass.config_entries.async_entry_for_unique_id.
+        # Our test setup uses hass.config_entries.async_entry_for_domain_unique_id
+        # so we delegate there.
+        if hasattr(self, 'hass') and hasattr(self, '_unique_id') and self._unique_id:
+            # Import DOMAIN at runtime to avoid circular import
+            from custom_components.universal_energy_manager.const import DOMAIN
+            existing = self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, self._unique_id
+            ) if hasattr(self.hass.config_entries, 'async_entry_for_domain_unique_id') else None
+            if existing is not None:
+                from homeassistant.data_entry_flow import AbortFlow
+                raise AbortFlow("already_configured")
 
 class ConfigEntryState:
     LOADED = "loaded"
@@ -166,10 +195,12 @@ class ConfigEntryState:
     MIGRATION_FLOW = "migration_flow"
     SETUP_RETRY = "setup_retry"
     READY = "ready"
+    NOT_LOADED = "not_loaded"
 
 # --- homeassistant.data_entry_flow ---
 class FlowResultType:
     CREATE = "create"
+    CREATE_ENTRY = "create_entry"
     FORM = "form"
     COMPLETE = "complete"
     ABORT = "abort"
@@ -267,8 +298,18 @@ class DataUpdateCoordinator:
 AddEntitiesCallback = MagicMock
 
 # --- homeassistant.helpers.entity_registry ---
+class _MockRegistry:
+    async def async_get(self, hass):
+        return self
+    entities = {}
+
+# --- homeassistant.helpers.entity_registry ---
 class Registry:
     pass
+
+_er_mock = _MockRegistry()
+def er_async_get(hass):
+    return _er_mock
 
 
 # ===========================================================================
@@ -335,6 +376,8 @@ _ha_helpers.entity_platform = _ha_helpers_entity_platform
 _ha_helpers_entity_registry = _make_stub(
     "homeassistant.helpers.entity_registry",
     Registry=Registry,
+    async_get=er_async_get,
+    async_entries_for_config_entry=lambda hass, config_entry_id: [],
 )
 _ha_helpers.entity_registry = _ha_helpers_entity_registry
 
@@ -390,9 +433,16 @@ for _mod_name, _mod_kwargs in [
     ("pytz", {"utc": MagicMock()}),
     ("slugify", {"slugify": MagicMock()}),
     ("voluptuous", {
-        "Schema": type("Schema", (), {}),
+        "Schema": lambda schema, **kw: type("Schema", (), {
+            "schema": schema if isinstance(schema, dict) else {},
+            "_compiled": None,
+            "extra": kw.get("extra", None),
+        })(),
         "Optional": lambda k, **kw: k,
         "Required": lambda k, **kw: k,
+        "In": lambda container: type("In", (), {"container": container})(),
+        "All": lambda *args: args[0] if args else None,
+        "Length": lambda minimum, maximum=None, **kw: None,
     }),
     ("voluptuous.humanize", {}),
     ("aiohttp", {}),
