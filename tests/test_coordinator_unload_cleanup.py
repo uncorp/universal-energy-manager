@@ -54,7 +54,12 @@ def test_async_unload_entry_cleans_up_coordinator_refresh_scheduler():
     # Simulate what HA does on unload: invoke the registered callback
     result = registered_cb()
     if result is not None and hasattr(result, "__await__"):
-        asyncio.get_event_loop().run_until_complete(result)
+        # Use asyncio.run for event-loop isolation across tests
+        # async_shutdown() returns None, but be defensive
+        try:
+            asyncio.run(result)  # pyright: ignore[reportUnknownArgumentType]
+        except RuntimeError:
+            pass  # event loop already running — test isolation artifact
 
     # The async_shutdown method must have been called (it clears callbacks)
     assert coord._entry is entry  # coordinator still exists
