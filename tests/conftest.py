@@ -1,12 +1,10 @@
 """Pytest conftest – provide thin mock Home Assistant helpers for unit tests.
 
-Strategy: import the *real* Home Assistant installation (HA 2024.3.3 is
-installed in the venv) so that classes like ``ConfigFlow``,
-``SensorEntity`` and ``CoordinatorEntity`` work correctly.  The
-``DataUpdateCoordinator`` is replaced by a lightweight stub so that
-``_async_update_data`` (which would call ``build_live_state`` with
-``MagicMock`` values) is never executed during collection.  The
-``hass`` fixture provides a lightweight mock object.
+Strategy: inject a complete homeassistant stub into sys.modules *before* any
+test module (or custom_components code) tries to import real HA.  This
+conftest runs at the very start of pytest collection, so all submodules are
+available before custom_components/universal_energy_manager/__init__.py is
+imported.
 """
 
 from __future__ import annotations
@@ -27,42 +25,161 @@ def _make_stub(name: str, **kwargs) -> ModuleType:
     return mod
 
 
-# ---------------------------------------------------------------------------
-# 1. Import real HA modules so their classes are available.
-# ---------------------------------------------------------------------------
-_real_ha_ok = False
-try:
-    import homeassistant  # noqa: F401
-    from homeassistant import (
-        config_entries,  # noqa: F401
-        const,  # noqa: F401
-        core,  # noqa: F401
-    )
-    from homeassistant.components import sensor as _sensor_mod  # noqa: F401
-    from homeassistant.components.sensor import SensorEntity  # noqa: F401
-    from homeassistant.config_entries import ConfigFlow  # noqa: F401
-    from homeassistant.helpers import entity as _ent_mod  # noqa: F401
-    from homeassistant.helpers import entity_platform as _ep_mod  # noqa: F401
-    from homeassistant.helpers import entity_registry as _er_mod  # noqa: F401
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback  # noqa: F401
-    from homeassistant.helpers.update_coordinator import (
-        CoordinatorEntity as _RealCE,  # noqa: F401
-    )
-    from homeassistant.helpers.update_coordinator import (
-        DataUpdateCoordinator as _RealDUC,  # noqa: F401
-    )
-    from homeassistant.util import dt as _dt_mod  # noqa: F401
-    _real_ha_ok = True
-except Exception:
+# ===========================================================================
+# 0. Stub modules — these MUST be injected before any HA import
+# ===========================================================================
+
+# --- homeassistant.const ---
+class _Platform:
+    SENSOR = "sensor"
+Platform = _Platform
+
+ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
+class _UnitOfPower:
+    WATT = "W"
+UnitOfPower = _UnitOfPower
+
+# --- homeassistant.core ---
+HomeAssistant = MagicMock
+
+class _State:
+    """Minimal State stub that stores entity_id, state, attributes."""
+    def __init__(self, entity_id: str, state: str, attributes: dict | None = None):
+        self.entity_id = entity_id
+        self.state = state
+        self.attributes = attributes or {}
+        self.last_changed = datetime.now(UTC)
+        self.last_updated = datetime.now(UTC)
+
+State = _State
+
+def callback(f):
+    """HA callback decorator – just return the function."""
+    return f
+
+# --- homeassistant.config_entries ---
+class ConfigEntry:
+    """Minimal ConfigEntry that accepts keyword args like the real one."""
+    def __init__(self, *, version, minor_version, domain, title, data,
+                 source, entry_id, unique_id=None, options=None,
+                 pref_disable_new_entities=None, pref_disable_polling=None,
+                 options_version=None, released=False,
+                 **kwargs):
+        self.version = version
+        self.minor_version = minor_version
+        self.domain = domain
+        self.title = title
+        self.data = data
+        self.source = source
+        self.entry_id = entry_id
+        self.unique_id = unique_id
+        self.options = options or {}
+        self.pref_disable_new_entities = pref_disable_new_entities
+        self.pref_disable_polling = pref_disable_polling
+        self.options_version = options_version
+        self._on_unload = []
+
+    def async_on_unload(self, fn):
+        self._on_unload.append(fn)
+
+    def async_will_remove_from_hass(self):
+        for fn in self._on_unload:
+            try:
+                fn()
+            except Exception:
+                pass
+
+class ConfigFlow:
+    """Stub that accepts domain= keyword in __init_subclass__ and provides flow methods."""
+    domain = None
+    handler = None
+    context = {}
+    step_id = "user"
+    _flow_result = None
+
+    def __init_subclass__(cls, domain=None, **kwargs):
+        cls.domain = domain
+
+    async def async_step_user(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_step_init(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_step_reconfigure(self, user_input=None):
+        return self._flow_result or MagicMock()
+
+    async def async_show_form(
+        self, *, step_id, errors=None, description_placeholders=None, last_step=None
+    ):
+        return MagicMock(
+            type=FlowResultType.FORM,
+            step_id=step_id,
+            errors=errors or {},
+            description_placeholders=description_placeholders or {},
+        )
+
+    async def async_create_entry(self, title=None, data=None):
+        return MagicMock(
+            type=FlowResultType.CREATE,
+            title=title or "",
+            data=data or {},
+        )
+
+    async def async_abort(self, *, reason):
+        return MagicMock(
+            type=FlowResultType.ABORT,
+            reason=reason,
+        )
+
+    async def async_forward_entry_setup(self, hass, entry):
+        return True
+
+class ConfigEntryState:
+    LOADED = "loaded"
+    SETUP_ERROR = "setup_error"
+    MIGRATION_FLOW = "migration_flow"
+    SETUP_RETRY = "setup_retry"
+    READY = "ready"
+
+# --- homeassistant.data_entry_flow ---
+class FlowResultType:
+    CREATE = "create"
+    FORM = "form"
+    COMPLETE = "complete"
+    ABORT = "abort"
+
+class FlowResult:
     pass
 
-# ---------------------------------------------------------------------------
-# 2. Lightweight DataUpdateCoordinator stub – no _async_update_data
-# ---------------------------------------------------------------------------
+# --- homeassistant.util.dt ---
+class _DtMod:
+    utc = MagicMock()
+    async_get_time_zone = MagicMock(return_value=None)
+    now = MagicMock()
+    parse_datetime = MagicMock()
+    utcnow = MagicMock()
 
-class _DataUpdateCoordinator:
-    """Minimal DUC stub. Calls _async_update_data if defined by subclass."""
+dt_util = _DtMod()
 
+# --- homeassistant.helpers ---
+class SensorEntity:
+    pass
+
+class CoordinatorEntity:
+    _attr_has_entity_name = True
+    def __init__(self, coordinator=None, *args, **kwargs):
+        self.coordinator = coordinator
+        self.name = None
+        self._attr_name = None
+
+    @classmethod
+    def __class_getitem__(cls, item):
+        return cls
+
+class DataUpdateCoordinator:
+    """Stub DUC supporting __class_getitem__ for type hints."""
     def __init__(self, hass=None, *args, **kwargs):
         self.hass = hass
         self.data = None
@@ -101,34 +218,98 @@ class _DataUpdateCoordinator:
     def __class_getitem__(cls, item):
         return cls
 
+AddEntitiesCallback = MagicMock
 
-class _CoordinatorEntity:
-    """Minimal CoordinatorEntity stub supporting generic subscript."""
-
-    def __init__(self, coordinator=None, *args, **kwargs):
-        self.coordinator = coordinator
-        self._attr_has_entity_name = True
-        self.name = None
-        self._attr_name = None
-
-    @classmethod
-    def __class_getitem__(cls, item):
-        return cls
+# --- homeassistant.helpers.entity_registry ---
+class Registry:
+    pass
 
 
-# Install the stub in sys.modules so any import of the real module
-# (which was imported above) gets replaced by the stub.
-if _real_ha_ok:
-    sys.modules["homeassistant.helpers.update_coordinator"] = _make_stub(
-        "homeassistant.helpers.update_coordinator",
-        DataUpdateCoordinator=_DataUpdateCoordinator,
-        CoordinatorEntity=_CoordinatorEntity,
-    )
+# ===========================================================================
+# 1. Inject stubs into sys.modules
+# ===========================================================================
+
+_ha_root = _make_stub("homeassistant")
+
+_ha_const = _make_stub("homeassistant.const",
+    Platform=Platform,
+    ATTR_UNIT_OF_MEASUREMENT=ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfPower=UnitOfPower,
+)
+_ha_root.const = _ha_const
+
+_ha_core = _make_stub("homeassistant.core",
+    HomeAssistant=HomeAssistant,
+    State=State,
+    callback=callback,
+)
+_ha_root.core = _ha_core
+
+_ha_config_entries = _make_stub("homeassistant.config_entries",
+    ConfigEntry=ConfigEntry,
+    ConfigFlow=ConfigFlow,
+    ConfigEntryState=ConfigEntryState,
+)
+_ha_root.config_entries = _ha_config_entries
+
+_ha_data_entry_flow = _make_stub("homeassistant.data_entry_flow",
+    FlowResultType=FlowResultType,
+    FlowResult=FlowResult,
+    AbortFlow=Exception,
+)
+_ha_root.data_entry_flow = _ha_data_entry_flow
+
+_ha_util = _make_stub("homeassistant.util")
+_ha_util_dt = _make_stub("homeassistant.util.dt",
+    dt=_DtMod(),
+    utc=_DtMod().utc,
+)
+_ha_util.dt = _DtMod()
+_ha_root.util = _ha_util
+
+_ha_components = _make_stub("homeassistant.components")
+_ha_components_sensor = _make_stub("homeassistant.components.sensor",
+    SensorEntity=SensorEntity,
+)
+_ha_components.sensor = _ha_components_sensor
+_ha_root.components = _ha_components
+
+_ha_helpers = _make_stub("homeassistant.helpers")
+_ha_helpers_entity = _make_stub("homeassistant.helpers.entity",
+    Entity=MagicMock,
+)
+_ha_helpers.entity = _ha_helpers_entity
+
+_ha_helpers_entity_platform = _make_stub(
+    "homeassistant.helpers.entity_platform",
+    AddEntitiesCallback=AddEntitiesCallback,
+)
+_ha_helpers.entity_platform = _ha_helpers_entity_platform
+
+_ha_helpers_entity_registry = _make_stub(
+    "homeassistant.helpers.entity_registry",
+    Registry=Registry,
+)
+_ha_helpers.entity_registry = _ha_helpers_entity_registry
+
+_ha_helpers_uc = _make_stub("homeassistant.helpers.update_coordinator",
+    DataUpdateCoordinator=DataUpdateCoordinator,
+    CoordinatorEntity=CoordinatorEntity,
+)
+_ha_helpers.update_coordinator = _ha_helpers_uc
+
+# Register all
+for _mod in [_ha_root, _ha_const, _ha_core, _ha_config_entries,
+             _ha_data_entry_flow, _ha_util, _ha_util_dt, _ha_components,
+             _ha_components_sensor, _ha_helpers, _ha_helpers_entity,
+             _ha_helpers_entity_platform, _ha_helpers_entity_registry,
+             _ha_helpers_uc]:
+    sys.modules[_mod.__name__] = _mod
 
 
-# ---------------------------------------------------------------------------
-# 3. pytest-homeassistant-custom_component stub
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# 2. pytest-homeassistant-custom_component stub
+# ===========================================================================
 _phacc = _make_stub("pytest_homeassistant_custom_component")
 _phacc_common = _make_stub("pytest_homeassistant_custom_component.common")
 _phacc_common.MockConfigEntry = MagicMock
@@ -136,13 +317,16 @@ _phacc_common.mock_entity_picture = MagicMock
 sys.modules["pytest_homeassistant_custom_component"] = _phacc
 sys.modules["pytest_homeassistant_custom_component.common"] = _phacc_common
 
-# Transitive deps
 for _mod_name, _mod_kwargs in [
     ("async_interrupt", {"interrupt": MagicMock}),
     ("awesomeversion", {"AwesomeVersion": MagicMock}),
     ("pytz", {"utc": MagicMock()}),
     ("slugify", {"slugify": MagicMock()}),
-    ("voluptuous", {"Schema": type("Schema", (), {})}),
+    ("voluptuous", {
+        "Schema": type("Schema", (), {}),
+        "Optional": lambda k, **kw: k,
+        "Required": lambda k, **kw: k,
+    }),
     ("voluptuous.humanize", {}),
     ("aiohttp", {}),
     ("propcache", {}),
@@ -154,32 +338,22 @@ for _mod_name, _mod_kwargs in [
         sys.modules[_mod_name] = _make_stub(_mod_name, **_mod_kwargs)
 
 
-# ---------------------------------------------------------------------------
-# Minimal hass fixture
-# ---------------------------------------------------------------------------
-
+# ===========================================================================
+# 3. hass fixture
+# ===========================================================================
 
 class _MockStates:
-    """Minimal mock for hass.states that returns usable State-like objects."""
     def __init__(self):
         self._states: dict[str, MagicMock] = {}
 
     def async_set(self, entity_id: str, state: str, attributes: dict | None = None) -> None:
-        attrs = attributes or {}
-        uom = attrs.get("unit_of_measurement", None)
         self._states[entity_id] = MagicMock(
             entity_id=entity_id,
             state=str(state),
-            attributes=attrs,
+            attributes=attributes or {},
             last_changed=datetime.now(UTC),
             last_updated=datetime.now(UTC),
-            _uom=uom,
         )
-        # Make state convertible to float for numeric sensors
-        try:
-            float(state)
-        except (ValueError, TypeError):
-            pass
 
     def get(self, entity_id: str) -> MagicMock | None:
         return self._states.get(entity_id)
@@ -192,7 +366,6 @@ class _MockStates:
 
 
 class _MockConfig:
-    """Minimal mock for hass.config."""
     time_zone = MagicMock()
     location_name = "Test Home"
     country = "DE"
@@ -202,7 +375,6 @@ class _MockConfig:
 
 
 class _MockConfigEntries:
-    """Minimal mock for hass.config_entries."""
     def __init__(self):
         self._entries: list[MagicMock] = []
         self.flow = AsyncMock()
@@ -223,19 +395,15 @@ class _MockConfigEntries:
 
 
 class _MockServices:
-    """Minimal mock for hass.services."""
     def async_call(self, *args, **kwargs):
         pass
-
     def call(self, *args, **kwargs):
         pass
-
     def fire(self, *args, **kwargs):
         pass
 
 
 class MockHass:
-    """Minimal HomeAssistant fixture replacement."""
     def __init__(self):
         self.states = _MockStates()
         self.config = _MockConfig()
@@ -246,12 +414,9 @@ class MockHass:
 
 @pytest.fixture()
 def hass():
-    """Provide a minimal hass fixture without full HA installation."""
-    h = MockHass()
-    return h
+    return MockHass()
 
 
 @pytest.fixture()
 def enable_custom_integrations(hass):
-    """Enable custom integrations for config_flow tests."""
     return None
