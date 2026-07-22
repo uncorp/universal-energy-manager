@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4 – Test-Infrastruktur: vollständiger HA-Stub, Shadow-Safety-Tests, Integrationstests
+
+- **Bugfix:** conftest.py bietet vollständigen Home-Assistant-Stub ohne native HA-Abhängigkeit — ermöglicht Tests in jeder isolierten Umgebung.
+- **Bugfix:** config_flow integration tests aligned with conftest mock pattern — alle 5 Tests grün.
+- **Bugfix:** async_unload_entry lifecycle vollständig getestet (test_integration_unload, test_coordinator_unload_cleanup).
+- **TDD:** 30+ neue Tests durch verbesserten conftest-Stub (State, SensorEntity, FlowResult, dt_util, voluptuous).
+- **Shadow-Safety:** Keine aktiven Steuerbefehle, keine Netz/HTTP, keine Switches/Selects — strikt lesend.
+
 ## 0.1.2 – UEM universal: e3dc_rscp optional, manual mapping, reconfigure, power modes
 
 - **Bugfix:** UEM config flow no longer aborts with `e3dc_rscp_not_configured` when e3dc_rscp is not installed. Instead, the user is presented with a clear choice: cancel (set up adapter first) or continue with manual entity mapping.
