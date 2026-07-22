@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3 – Coordinator: manuelle Fallbacks, unvollständige Einrichtung erkennen
+
+- **Bugfix:** `_build_storage_capabilities` fällt auf manuelle kWh-/W-Werte zurück, wenn Entitätswerte fehlen oder leer sind (Fix für alte Einträge ab v0.1.2).
+- **Bugfix:** `_parse_float_entity` parst auch reine Zahlenstrings direkt (manuelle kWh/W-Werte, keine HA-Entitäten).
+- **Bugfix:** `_is_incomplete` erkennt auch fehlende manual-capacity/power Keys von Einträgen vor v0.1.3.
+- **Bugfix:** Reconfigure-Flow verarbeitet Klick ohne Checkbox ohne Absturz.
+- **TDD:** 3 neue Tests (manuelle Kapazität/Stromstärke → vollständig, Entität-Fallback auf manuell, Version ≠ 0.2).
+
 ## 0.1.4 – Test-Infrastruktur: vollständiger HA-Stub, Shadow-Safety-Tests, Integrationstests
 
 - **Bugfix:** conftest.py bietet vollständigen Home-Assistant-Stub ohne native HA-Abhängigkeit — ermöglicht Tests in jeder isolierten Umgebung.
