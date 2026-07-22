@@ -1,10 +1,9 @@
 """Pytest conftest – provide thin mock Home Assistant helpers for unit tests.
 
-Strategy: inject a complete homeassistant stub into sys.modules *before* any
-test module (or custom_components code) tries to import real HA.  This
-conftest runs at the very start of pytest collection, so all submodules are
-available before custom_components/universal_energy_manager/__init__.py is
-imported.
+Strategy: Real HA is installed in the venv. Only inject stubs for modules
+that do NOT exist in the real HA install. Real HA modules are left untouched
+so the pytest-homeassistant-custom-component plugin can traverse the
+homeassistant.helpers hierarchy without hitting a stub ModuleType.
 """
 
 from __future__ import annotations
@@ -26,10 +25,9 @@ def _make_stub(name: str, **kwargs) -> ModuleType:
 
 
 # ===========================================================================
-# 0. Stub modules — these MUST be injected before any HA import
+# 0. Stub classes / functions (no injection yet)
 # ===========================================================================
 
-# --- homeassistant.const ---
 class _Platform:
     SENSOR = "sensor"
 Platform = _Platform
@@ -40,7 +38,6 @@ class _UnitOfPower:
     WATT = "W"
 UnitOfPower = _UnitOfPower
 
-# --- homeassistant.core ---
 HomeAssistant = MagicMock
 
 class _State:
@@ -63,7 +60,6 @@ def callback(f):
     """HA callback decorator – just return the function."""
     return f
 
-# --- homeassistant.config_entries ---
 class ConfigEntry:
     """Minimal ConfigEntry that accepts keyword args like the real one."""
     def __init__(self, *, version, minor_version, domain, title, data,
@@ -176,11 +172,7 @@ class ConfigFlow:
         self._unique_id = unique_id
 
     def _abort_if_unique_id_configured(self, *, upload_content=None):
-        # In real HA this checks hass.config_entries.async_entry_for_unique_id.
-        # Our test setup uses hass.config_entries.async_entry_for_domain_unique_id
-        # so we delegate there.
         if hasattr(self, 'hass') and hasattr(self, '_unique_id') and self._unique_id:
-            # Import DOMAIN at runtime to avoid circular import
             from custom_components.universal_energy_manager.const import DOMAIN
             existing = self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, self._unique_id
@@ -197,7 +189,6 @@ class ConfigEntryState:
     READY = "ready"
     NOT_LOADED = "not_loaded"
 
-# --- homeassistant.data_entry_flow ---
 class FlowResultType:
     CREATE = "create"
     CREATE_ENTRY = "create_entry"
@@ -208,7 +199,6 @@ class FlowResultType:
 class FlowResult:
     pass
 
-# util
 class _DtMod:
     utc = MagicMock()
     def now(self):
@@ -220,11 +210,9 @@ class _DtMod:
         return pytz.timezone(tz) if tz else UTC
     def parse_datetime(self, s):
         return None
-_dt_mod_local = _DtMod()
 
 dt_util = _DtMod()
 
-# --- homeassistant.helpers ---
 class SensorEntity:
     """Minimal SensorEntity that maps _attr_native_* to public properties."""
     _attr_native_unit_of_measurement = None
@@ -297,13 +285,11 @@ class DataUpdateCoordinator:
 
 AddEntitiesCallback = MagicMock
 
-# --- homeassistant.helpers.entity_registry ---
 class _MockRegistry:
     async def async_get(self, hass):
         return self
     entities = {}
 
-# --- homeassistant.helpers.entity_registry ---
 class Registry:
     pass
 
@@ -313,92 +299,77 @@ def er_async_get(hass):
 
 
 # ===========================================================================
-# 1. Inject stubs into sys.modules
+# 1. Inject stubs ONLY for modules that do NOT exist in real HA
 # ===========================================================================
 
-_ha_root = _make_stub("homeassistant")
-
-_ha_const = _make_stub("homeassistant.const",
-    Platform=Platform,
-    ATTR_UNIT_OF_MEASUREMENT=ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfPower=UnitOfPower,
-)
-_ha_root.const = _ha_const
-
-_ha_core = _make_stub("homeassistant.core",
-    HomeAssistant=HomeAssistant,
-    State=State,
-    callback=callback,
-)
-_ha_root.core = _ha_core
-
-_ha_config_entries = _make_stub("homeassistant.config_entries",
-    ConfigEntry=ConfigEntry,
-    ConfigFlow=ConfigFlow,
-    ConfigEntryState=ConfigEntryState,
-)
-_ha_root.config_entries = _ha_config_entries
-
-_ha_data_entry_flow = _make_stub("homeassistant.data_entry_flow",
-    FlowResultType=FlowResultType,
-    FlowResult=FlowResult,
-    AbortFlow=Exception,
-)
-_ha_root.data_entry_flow = _ha_data_entry_flow
-
-_ha_util = _make_stub("homeassistant.util")
-_ha_util_dt = _make_stub("homeassistant.util.dt",
-    dt=_DtMod(),
-    utc=_DtMod().utc,
-)
-_ha_util.dt = _DtMod()
-_ha_root.util = _ha_util
-
-_ha_components = _make_stub("homeassistant.components")
-_ha_components_sensor = _make_stub("homeassistant.components.sensor",
-    SensorEntity=SensorEntity,
-)
-_ha_components.sensor = _ha_components_sensor
-_ha_root.components = _ha_components
-
-_ha_helpers = _make_stub("homeassistant.helpers")
-_ha_helpers_entity = _make_stub("homeassistant.helpers.entity",
-    Entity=MagicMock,
-)
-_ha_helpers.entity = _ha_helpers_entity
-
-_ha_helpers_entity_platform = _make_stub(
+# List of real HA modules that already exist — we MUST NOT replace them.
+_REAL_HA_MODULES = {
+    "homeassistant",
+    "homeassistant.const",
+    "homeassistant.core",
+    "homeassistant.config_entries",
+    "homeassistant.data_entry_flow",
+    "homeassistant.util",
+    "homeassistant.util.dt",
+    "homeassistant.util.logging",
+    "homeassistant.components",
+    "homeassistant.components.sensor",
+    "homeassistant.helpers",
+    "homeassistant.helpers.entity",
     "homeassistant.helpers.entity_platform",
-    AddEntitiesCallback=AddEntitiesCallback,
-)
-_ha_helpers.entity_platform = _ha_helpers_entity_platform
-
-_ha_helpers_entity_registry = _make_stub(
     "homeassistant.helpers.entity_registry",
-    Registry=Registry,
-    async_get=er_async_get,
-    async_entries_for_config_entry=lambda hass, config_entry_id: [],
-)
-_ha_helpers.entity_registry = _ha_helpers_entity_registry
+    "homeassistant.helpers.update_coordinator",
+}
 
-_ha_helpers_uc = _make_stub("homeassistant.helpers.update_coordinator",
-    DataUpdateCoordinator=DataUpdateCoordinator,
-    CoordinatorEntity=CoordinatorEntity,
-)
-_ha_helpers.update_coordinator = _ha_helpers_uc
-
-# Register all
-for _mod in [_ha_root, _ha_const, _ha_core, _ha_config_entries,
-             _ha_data_entry_flow, _ha_util, _ha_util_dt, _ha_components,
-             _ha_components_sensor, _ha_helpers, _ha_helpers_entity,
-             _ha_helpers_entity_platform, _ha_helpers_entity_registry,
-             _ha_helpers_uc]:
-    sys.modules[_mod.__name__] = _mod
+# --- homeassistant root stub (only injected if homeassistant doesn't exist) ---
+if "homeassistant" not in _REAL_HA_MODULES or "homeassistant" not in sys.modules:
+    _ha_root = _make_stub("homeassistant")
+else:
+    import homeassistant  # noqa: F401  # real HA already in sys.modules
 
 
-# ===========================================================================
-# 2. pytest-homeassistant-custom_component stub
-# ===========================================================================
+# --- homeassistant.util.logging stub ---
+# pytest-homeassistant-custom-component monkeypatches
+# "homeassistant.util.logging.log_exception" in its fail_on_log_exception fixture.
+# We ensure the real module is accessible via that path.
+try:
+    import homeassistant.util.logging as _real_ha_logging
+    # Ensure it's in sys.modules for importlib lookups
+    sys.modules["homeassistant.util.logging"] = _real_ha_logging
+except ImportError:
+    _ha_util_logging = _make_stub(
+        "homeassistant.util.logging",
+        log_exception=lambda *a, **k: None,
+        catch_log_exception=lambda *a, **k: None,
+        catch_log_coro_exception=lambda *a, **k: None,
+        async_create_catching_coro=lambda *a, **k: None,
+        async_activate_log_queue_handler=lambda *a, **k: None,
+    )
+    sys.modules["homeassistant.util.logging"] = _ha_util_logging
+
+
+# --- homeassistant.helpers.script stub ---
+# pytest-homeassistant-custom-component patches
+# "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown".
+# In HA 2024.3.x helpers.script is lazily loaded; provide a stub if absent.
+if "homeassistant.helpers.script" not in sys.modules:
+    try:
+        import importlib.util
+        _has_script = importlib.util.find_spec("homeassistant.helpers.script") is not None
+        if _has_script:
+            import homeassistant.helpers.script  # noqa: F401  # side-effect load
+        else:
+            raise ImportError("no spec")
+    except ImportError:
+        _ha_helpers_script = _make_stub(
+            "homeassistant.helpers.script",
+            _schedule_stop_scripts_after_shutdown=lambda *a, **k: None,
+        )
+        sys.modules["homeassistant.helpers.script"] = _ha_helpers_script
+
+
+# --- pytest-homeassistant-custom_component stub ---
+# This module does NOT exist in real HA — we must provide it.
 _phacc = _make_stub("pytest_homeassistant_custom_component")
 _phacc_common = _make_stub("pytest_homeassistant_custom_component.common")
 
@@ -427,6 +398,7 @@ _phacc_common.mock_entity_picture = MagicMock
 sys.modules["pytest_homeassistant_custom_component"] = _phacc
 sys.modules["pytest_homeassistant_custom_component.common"] = _phacc_common
 
+# --- Other non-HA third-party stubs (only if not already present) ---
 for _mod_name, _mod_kwargs in [
     ("async_interrupt", {"interrupt": MagicMock}),
     ("awesomeversion", {"AwesomeVersion": MagicMock}),
@@ -456,7 +428,7 @@ for _mod_name, _mod_kwargs in [
 
 
 # ===========================================================================
-# 3. hass fixture
+# 2. hass fixture
 # ===========================================================================
 
 class _MockStates:
