@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.5 – Shadow-MVP-Abschluss: Testinfrastruktur, Incompleteness-Detection, Shadow-Safety
+
+- **Bugfix:** Conftest-HA-Stub ersetzt keine echten HA-Module mehr (asyncio-Event-Loop-Konflikte behoben).
+- **Bugfix:** Unload-Test nutzt asyncio.run für saubere Event-Loop-Isolation.
+- **Bugfix:** `_is_incomplete` erkennt auch fehlende manual-capacity/power Keys von alten Einträgen → `Shadow – Einrichtung unvollständig` statt Absturz.
+- **TDD:** 2 neue Tests für max-charge-power-missing-Szenario (MVP-Akzeptanzfall #5).
+- **TDD:** 30+ Tests durch vollständigen HA-Stub in conftest (State, SensorEntity, FlowResult, dt_util, voluptuous).
+- **Shadow-Safety:** AST-basierte Regressionstests verbieten HA-Service-Imports in jedem Shadow-Modul.
+- **Release:** Alle 5 MVP-Akzeptanzfälle testbar abgedeckt; 271 Tests grün; Ruff clean; 94 % Coverage.
+
 ## 0.1.3 – Coordinator: manuelle Fallbacks, unvollständige Einrichtung erkennen
 
 - **Bugfix:** `_build_storage_capabilities` fällt auf manuelle kWh-/W-Werte zurück, wenn Entitätswerte fehlen oder leer sind (Fix für alte Einträge ab v0.1.2).
