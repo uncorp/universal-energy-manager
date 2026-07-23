@@ -7,6 +7,7 @@ __pycache__/
 htmlcov/
 .venv/
 .venv-ha/
+*.egg-info/
 
 # Home Assistant / private installation data
 .storage/
