@@ -299,10 +299,11 @@ def er_async_get(hass):
 
 
 # ===========================================================================
-# 1. Inject stubs ONLY for modules that do NOT exist in real HA
+# 1. Inject HA stubs ONLY when real HA is NOT installed
 # ===========================================================================
 
-# List of real HA modules that already exist — we MUST NOT replace them.
+# List of real HA submodules that already exist in sys.modules.
+# When real HA is installed, these are real modules and must NOT be replaced.
 _REAL_HA_MODULES = {
     "homeassistant",
     "homeassistant.const",
@@ -321,51 +322,106 @@ _REAL_HA_MODULES = {
     "homeassistant.helpers.update_coordinator",
 }
 
-# --- homeassistant root stub (only injected if homeassistant doesn't exist) ---
-if "homeassistant" not in _REAL_HA_MODULES or "homeassistant" not in sys.modules:
+# Check if real HA is available
+_HA_AVAILABLE = "homeassistant" in sys.modules
+
+# --- Inject HA stubs when real HA is NOT installed ---
+if not _HA_AVAILABLE:
     _ha_root = _make_stub("homeassistant")
-else:
-    import homeassistant  # noqa: F401  # real HA already in sys.modules
+    sys.modules["homeassistant"] = _ha_root
 
-
-# --- homeassistant.util.logging stub ---
-# pytest-homeassistant-custom-component monkeypatches
-# "homeassistant.util.logging.log_exception" in its fail_on_log_exception fixture.
-# We ensure the real module is accessible via that path.
-try:
-    import homeassistant.util.logging as _real_ha_logging
-    # Ensure it's in sys.modules for importlib lookups
-    sys.modules["homeassistant.util.logging"] = _real_ha_logging
-except ImportError:
-    _ha_util_logging = _make_stub(
+    # Build parent chain: homeassistant.config_entries etc.
+    for _sub in [
+        "homeassistant.const",
+        "homeassistant.core",
+        "homeassistant.config_entries",
+        "homeassistant.data_entry_flow",
+        "homeassistant.util",
+        "homeassistant.util.dt",
         "homeassistant.util.logging",
-        log_exception=lambda *a, **k: None,
-        catch_log_exception=lambda *a, **k: None,
-        catch_log_coro_exception=lambda *a, **k: None,
-        async_create_catching_coro=lambda *a, **k: None,
-        async_activate_log_queue_handler=lambda *a, **k: None,
-    )
-    sys.modules["homeassistant.util.logging"] = _ha_util_logging
+        "homeassistant.components",
+        "homeassistant.components.sensor",
+        "homeassistant.helpers",
+        "homeassistant.helpers.entity",
+        "homeassistant.helpers.entity_platform",
+        "homeassistant.helpers.entity_registry",
+        "homeassistant.helpers.update_coordinator",
+        "homeassistant.helpers.script",
+    ]:
+        if _sub not in sys.modules:
+            sys.modules[_sub] = _make_stub(_sub)
 
+    # Populate namespace packages
+    _ha_const = sys.modules.get("homeassistant.const")
+    if _ha_const:
+        _ha_const.Platform = Platform
+        _ha_const.ATTR_UNIT_OF_MEASUREMENT = ATTR_UNIT_OF_MEASUREMENT
+        _ha_const.UnitOfPower = UnitOfPower
 
-# --- homeassistant.helpers.script stub ---
-# pytest-homeassistant-custom-component patches
-# "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown".
-# In HA 2024.3.x helpers.script is lazily loaded; provide a stub if absent.
-if "homeassistant.helpers.script" not in sys.modules:
-    try:
-        import importlib.util
-        _has_script = importlib.util.find_spec("homeassistant.helpers.script") is not None
-        if _has_script:
-            import homeassistant.helpers.script  # noqa: F401  # side-effect load
-        else:
-            raise ImportError("no spec")
-    except ImportError:
-        _ha_helpers_script = _make_stub(
-            "homeassistant.helpers.script",
-            _schedule_stop_scripts_after_shutdown=lambda *a, **k: None,
-        )
-        sys.modules["homeassistant.helpers.script"] = _ha_helpers_script
+    _ha_core = sys.modules.get("homeassistant.core")
+    if _ha_core:
+        _ha_core.HomeAssistant = HomeAssistant
+        _ha_core.callback = callback
+        _ha_core.State = State
+
+    _ha_config_entries = sys.modules.get("homeassistant.config_entries")
+    if _ha_config_entries:
+        _ha_config_entries.ConfigEntry = ConfigEntry
+        _ha_config_entries.ConfigEntryState = ConfigEntryState
+        _ha_config_entries.ConfigFlow = ConfigFlow
+
+    _ha_data_entry_flow = sys.modules.get("homeassistant.data_entry_flow")
+    if _ha_data_entry_flow:
+        _ha_data_entry_flow.FlowResult = FlowResult
+        _ha_data_entry_flow.FlowResultType = FlowResultType
+        _ha_data_entry_flow.AbortFlow = Exception
+
+    _ha_helpers = sys.modules.get("homeassistant.helpers")
+    if _ha_helpers:
+        pass
+
+    _ha_helpers_entity = sys.modules.get("homeassistant.helpers.entity")
+    if _ha_helpers_entity:
+        _ha_helpers_entity.SensorEntity = SensorEntity
+        _ha_helpers_entity.CoordinatorEntity = CoordinatorEntity
+
+    _ha_helpers_upd = sys.modules.get("homeassistant.helpers.update_coordinator")
+    if _ha_helpers_upd:
+        _ha_helpers_upd.DataUpdateCoordinator = DataUpdateCoordinator
+        _ha_helpers_upd.CoordinatorEntity = CoordinatorEntity
+
+    _ha_helpers_er = sys.modules.get("homeassistant.helpers.entity_registry")
+    if _ha_helpers_er:
+        _ha_helpers_er.Registry = Registry
+        _ha_helpers_er.async_get = er_async_get
+        _ha_helpers_er.async_entries_for_config_entry = MagicMock(return_value=[])
+
+    _ha_helpers_ep = sys.modules.get("homeassistant.helpers.entity_platform")
+    if _ha_helpers_ep:
+        _ha_helpers_ep.AddEntitiesCallback = AddEntitiesCallback
+
+    _ha_components_sensor = sys.modules.get("homeassistant.components.sensor")
+    if _ha_components_sensor:
+        _ha_components_sensor.SensorEntity = SensorEntity
+
+    _ha_util = sys.modules.get("homeassistant.util")
+    if _ha_util:
+        pass
+    _ha_util_dt = sys.modules.get("homeassistant.util.dt")
+    if _ha_util_dt:
+        _ha_util_dt.utc = dt_util.utc
+        _ha_util_dt.now = dt_util.now
+        _ha_util_dt.utcnow = dt_util.utcnow
+        _ha_util_dt.async_get_time_zone = dt_util.async_get_time_zone
+        _ha_util_dt.parse_datetime = dt_util.parse_datetime
+
+    _ha_util_logging = sys.modules.get("homeassistant.util.logging")
+    if _ha_util_logging:
+        _ha_util_logging.log_exception = lambda *a, **k: None
+        _ha_util_logging.catch_log_exception = lambda *a, **k: None
+        _ha_util_logging.catch_log_coro_exception = lambda *a, **k: None
+        _ha_util_logging.async_create_catching_coro = lambda *a, **k: None
+        _ha_util_logging.async_activate_log_queue_handler = lambda *a, **k: None
 
 
 # --- pytest-homeassistant-custom_component stub ---
