@@ -279,11 +279,11 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         if not entity_id.strip():
             return None
         state = self.hass.states.get(entity_id)
-        if state is not None and state.state not in {"unknown", "unavailable"}:
-            try:
+        try:
+            if state is not None and state.state not in {"unknown", "unavailable"}:
                 return float(state.state)
-            except (TypeError, ValueError):
-                return None
+        except (TypeError, ValueError):
+            return None
         # Not a state entity (e.g. manual kWh/W value) — try direct parse
         try:
             return float(entity_id)

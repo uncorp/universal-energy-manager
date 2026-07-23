@@ -228,3 +228,112 @@ def test_parse_float_entity_handles_none_key(hass) -> None:
 
     result = coordinator._parse_float_entity(None)
     assert result is None
+
+
+def test_parse_float_entity_handles_int_input(hass) -> None:
+    """_parse_float_entity must handle an int directly (line 276)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    result = coordinator._parse_float_entity(42)
+    assert result == 42.0
+
+
+def test_parse_float_entity_handles_float_input(hass) -> None:
+    """_parse_float_entity must handle a float directly (line 276)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    result = coordinator._parse_float_entity(3.14)
+    assert result == 3.14
+
+
+def test_parse_float_entity_handles_non_string_non_numeric(hass) -> None:
+    """_parse_float_entity must return None for a non-string, non-numeric type (line 278)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    result = coordinator._parse_float_entity(["not", "a", "string"])
+    assert result is None
+
+
+def test_parse_float_entity_handles_empty_string(hass) -> None:
+    """_parse_float_entity must return None for an empty string (line 280)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    result = coordinator._parse_float_entity("")
+    assert result is None
+
+    result = coordinator._parse_float_entity("   ")
+    assert result is None
+
+
+def test_parse_float_entity_handles_manual_value_string(hass) -> None:
+    """_parse_float_entity must parse a pure numeric string as manual value (line 288-289)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    # A string that's a valid float is treated as a manual value
+    result = coordinator._parse_float_entity("123.45")
+    assert result == 123.45
+
+    # A string that's not a valid float falls through ValueError and returns None
+    result = coordinator._parse_float_entity("abc")
+    assert result is None
+
+
+def test_parse_float_entity_handles_numeric_string_but_not_entity_state(hass) -> None:
+    """_parse_float_entity: numeric string not matching a real entity → manual parse."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    for entity_id, (state, unit) in values.items():
+        hass.states.async_set(entity_id, state, {"unit_of_measurement": unit})
+
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    # "sensor.e3dc_capacity" exists with state "13.0" — should parse from state
+    result = coordinator._parse_float_entity("sensor.e3dc_capacity")
+    assert result == 13.0
+
+    # Nonexistent entity with numeric string → manual parse
+    result = coordinator._parse_float_entity("99.99")
+    assert result == 99.99
+
+
+def test_parse_float_entity_handles_unavailable_entity(hass) -> None:
+    """_parse_float_entity must return None for unavailable/unknown states (line 282-283)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    for entity_id, (state, unit) in values.items():
+        hass.states.async_set(entity_id, state, {"unit_of_measurement": unit})
+
+    # Override to unavailable
+    hass.states.async_set("sensor.e3dc_capacity", "unavailable", {"unit_of_measurement": "kWh"})
+
+    coordinator = UemShadowCoordinator(hass, entry)
+    result = coordinator._parse_float_entity("sensor.e3dc_capacity")
+    assert result is None
+
+    # Override to unknown
+    hass.states.async_set("sensor.e3dc_capacity", "unknown", {"unit_of_measurement": "kWh"})
+    result = coordinator._parse_float_entity("sensor.e3dc_capacity")
+    assert result is None
+
+
+def test_parse_float_entity_handles_corrupt_state_type(hass) -> None:
+    """_parse_float_entity must handle a state whose state attribute is not
+    convertible to float (line 284-285)."""
+    entry, values = _make_full_entry(pv_power="2.5")
+    for entity_id, (state, unit) in values.items():
+        hass.states.async_set(entity_id, state, {"unit_of_measurement": unit})
+
+    from unittest.mock import MagicMock, patch
+
+    mock_state = MagicMock()
+    mock_state.state = {"not": "a number"}  # dict, cannot convert to float
+    mock_state.attributes = {}
+    coordinator = UemShadowCoordinator(hass, entry)
+
+    with patch.object(coordinator.hass.states, "get", return_value=mock_state):
+        result = coordinator._parse_float_entity("sensor.e3dc_capacity")
+    assert result is None
+
