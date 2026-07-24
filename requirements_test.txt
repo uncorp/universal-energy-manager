@@ -1,4 +1,5 @@
 homeassistant==2024.3.3
+home-assistant-bluetooth==1.12.0
 pytest-homeassistant-custom-component==0.13.109
 ruff==0.15.22
 tzdata
