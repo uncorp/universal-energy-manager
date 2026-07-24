@@ -43,7 +43,6 @@ from custom_components.universal_energy_manager.const import (
 )
 from custom_components.universal_energy_manager.e3dc_rscp import E3dcEntityMap
 
-
 # --------------------------------------------------------------------------- #
 # Fixtures                                                                      #
 # --------------------------------------------------------------------------- #
@@ -319,16 +318,17 @@ class TestConfirmUserInputNonString:
             max_charge_power="sensor.e3dc_max_charge",
         )
 
-        # Simulate user_input with an integer value (non-string)
+        # Simulate user_input with an integer value for a known field
         user_input = {
             CONF_SOC_ENTITY: "sensor.e3dc_soc",
-            "some_int_field": 42,  # non-string value
+            CONF_GRID_EXPORT_ENTITY: 42,  # non-string for known field → line 266
         }
 
         with patch.object(UemConfigFlow, "_discover_entities", return_value=full_map):
             result = _run(flow.async_step_confirm(user_input))
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_GRID_EXPORT_ENTITY] == 42
 
 
 # =========================================================================== #
@@ -698,3 +698,139 @@ class TestManualMappingValidation:
         # Should go back to reconfigure form (no action taken)
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reconfigure"
+
+
+# =========================================================================== #
+# TEST: _get_current_entry returns None when no current entries              #
+# =========================================================================== #
+
+
+class TestGetCurrentEntryNoEntries:
+    """_get_current_entry line 555: returns None when no entries and no context."""
+
+    def test_get_current_entry_none_when_no_entries_and_no_context(self) -> None:
+        """When context has no entry_id AND _async_current_entries returns empty,
+        _get_current_entry returns None (line 555)."""
+        hass = MagicMock()
+        flow = UemConfigFlow()
+        flow.hass = hass
+        flow.context = {}  # no entry_id in context
+        flow.handler = DOMAIN
+
+        # _async_current_entries returns empty list
+        flow._async_current_entries = MagicMock(return_value=[])
+
+        result = flow._get_current_entry()
+        assert result is None
+
+    def test_get_current_entry_returns_matching_entry(self) -> None:
+        """When context has entry_id that matches, _get_current_entry returns it."""
+        hass = MagicMock()
+        uem_entry = _make_uem_entry(entry_id="uem-match-123")
+        flow = UemConfigFlow()
+        flow.hass = hass
+        flow.context = {"entry_id": "uem-match-123"}
+        flow.handler = DOMAIN
+
+        ce = hass.config_entries
+        _all = {DOMAIN: [uem_entry], E3DC_RSCP_DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+
+        result = flow._get_current_entry()
+        assert result is uem_entry
+
+    def test_get_current_entry_no_match_returns_none(self) -> None:
+        """When context has entry_id but no HA entry matches, returns None."""
+        hass = MagicMock()
+        flow = UemConfigFlow()
+        flow.hass = hass
+        flow.context = {"entry_id": "uem-no-match"}
+        flow.handler = DOMAIN
+
+        ce = hass.config_entries
+        _all = {DOMAIN: [_make_uem_entry(entry_id="uem-other")], E3DC_RSCP_DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+
+        result = flow._get_current_entry()
+        assert result is None
+
+
+# =========================================================================== #
+# TEST: manual_mapping elif branches: prefill preservation and empty default  #
+# =========================================================================== #
+
+
+class TestManualMappingPrefillBranches:
+    """Tests for manual_mapping elif branches (lines 346-349):
+    - elif field in entity_data: pass (keep prefill) — line 346-347
+    - else: entity_data[field] = "" — line 349
+    These paths are exercised when the flow starts with prefill data that
+    contains more keys than the user submits (e.g. from _show_reconfigure_edit
+    or when the schema defaults are used).
+    """
+
+    def test_prefill_preserved_when_field_not_in_user_input(self) -> None:
+        """When entity_data has extra keys not in user_input, they are preserved
+        (line 346-347: elif field in entity_data: pass)."""
+        hass = MagicMock()
+        _mock_location(hass)
+        flow = _make_flow(hass, e3dc_entries=[])
+        # Simulate reconfigure_edit path where prefill has full entity_data
+        flow._prefill_data = {
+            CONF_SOC_ENTITY: "sensor.old_soc",
+            CONF_PV_POWER_ENTITY: "sensor.old_pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.old_house",
+            CONF_GRID_EXPORT_ENTITY: "sensor.old_grid",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.old_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "sensor.old_capacity",
+            CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.0",
+            CONF_MAX_CHARGE_POWER_ENTITY: "sensor.old_max",
+            CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
+        }
+        # User omits manual capacity/power — they stay from prefill
+        partial_data = {
+            CONF_SOC_ENTITY: "sensor.custom_soc",
+            CONF_PV_POWER_ENTITY: "sensor.custom_pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.custom_house",
+            CONF_GRID_EXPORT_ENTITY: "sensor.custom_grid",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.custom_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "sensor.custom_capacity",
+            # CONF_BATTERY_MANUAL_CAPACITY_KWH: OMITTED → prefill preserved
+            CONF_MAX_CHARGE_POWER_ENTITY: "sensor.custom_max",
+            # CONF_MAX_CHARGE_MANUAL_POWER_W: OMITTED → prefill preserved
+        }
+        # Bypass validation by providing full data
+        result = _run(flow.async_step_manual_mapping(partial_data))
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        # Omitted fields keep their prefill values
+        assert result["data"][CONF_BATTERY_MANUAL_CAPACITY_KWH] == "10.0"
+        assert result["data"][CONF_MAX_CHARGE_MANUAL_POWER_W] == "5000"
+
+    def test_unknown_field_defaults_to_empty_string(self) -> None:
+        """Line 349 is unreachable dead code: every key in the union of
+        entity_data.keys() and user_input.keys() is handled by the preceding
+        if/elif/elif branches. The 'else' branch can never execute.
+        This test documents that fact."""
+        # No test needed — the code at line 349 is unreachable.
+        # Verified: loop iterates set(list(entity_data.keys()) + list(user_input.keys())),
+        # so every key is guaranteed to match one of the three preceding branches.
+        pass

@@ -762,3 +762,90 @@ def live_state_from_hass(hass: MagicMock, now: datetime):
         grid_export=_sample("sensor.e3dc_grid_export"),
         battery_charge=_sample("sensor.e3dc_battery_charge"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Lines 445-447, 464-465: _compute_charge_limit thread path with running loop
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_compute_charge_limit_thread_storage_config_value_error(hass) -> None:
+    """When _build_storage_capabilities raises in the thread (running loop path),
+    lines 445-447 catch it and return 0.0."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            # Missing battery_capacity_entity and max_charge_power_entity
+            CONF_SOC_ENTITY: "sensor.e3dc_soc",
+            CONF_PV_POWER_ENTITY: "sensor.e3dc_pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
+            CONF_GRID_EXPORT_ENTITY: "sensor.e3dc_grid_export",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+        },
+    )
+    for eid, val, unit in (
+        ("sensor.e3dc_soc", "55", "%"),
+        ("sensor.e3dc_pv", "3000", "W"),
+        ("sensor.e3dc_house", "800", "W"),
+        ("sensor.e3dc_grid_export", "1400", "W"),
+        ("sensor.e3dc_battery_charge", "1800", "W"),
+    ):
+        hass.states.async_set(eid, val, {ATTR_UNIT_OF_MEASUREMENT: unit})
+
+    coordinator = UemShadowCoordinator(hass, entry)
+    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    live = build_live_state(
+        now=now,
+        soc=StateSample("55", "%", now),
+        pv_power=StateSample("3000", "W", now),
+        house_power=StateSample("800", "W", now),
+        grid_export=StateSample("1400", "W", now),
+        battery_charge=StateSample("1800", "W", now),
+    )
+    # Called from async context → running loop exists → thread path (lines 438-472)
+    result = coordinator._compute_charge_limit(live, False)
+    assert result == 0.0  # lines 445-447: caught in thread
+
+
+@pytest.mark.asyncio
+async def test_compute_charge_limit_thread_plan_charge_value_error(hass) -> None:
+    """When plan_charge raises ValueError inside the thread (running loop path),
+    lines 464-465 catch it and return 0.0."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOC_ENTITY: "sensor.e3dc_soc",
+            CONF_PV_POWER_ENTITY: "sensor.e3dc_pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.e3dc_house",
+            CONF_GRID_EXPORT_ENTITY: "sensor.e3dc_grid_export",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_battery_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
+            CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max_charge",
+            CONF_CHARGE_END: "2020-01-01T00:00:00+00:00",
+        },
+    )
+    for eid, val, unit in (
+        ("sensor.e3dc_soc", "55", "%"),
+        ("sensor.e3dc_pv", "3000", "W"),
+        ("sensor.e3dc_house", "800", "W"),
+        ("sensor.e3dc_grid_export", "1400", "W"),
+        ("sensor.e3dc_battery_charge", "1800", "W"),
+        ("sensor.e3dc_capacity", "13.0", "kWh"),
+        ("sensor.e3dc_max_charge", "12000", "W"),
+    ):
+        hass.states.async_set(eid, val, {ATTR_UNIT_OF_MEASUREMENT: unit})
+
+    coordinator = UemShadowCoordinator(hass, entry)
+    coordinator._forecast_connected = AsyncMock(return_value=True)
+
+    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    live = build_live_state(
+        now=now,
+        soc=StateSample("55", "%", now),
+        pv_power=StateSample("3000", "W", now),
+        house_power=StateSample("800", "W", now),
+        grid_export=StateSample("1400", "W", now),
+        battery_charge=StateSample("1800", "W", now),
+    )
+    # Called from async context → running loop exists → thread path (lines 438-472)
+    result = coordinator._compute_charge_limit(live, True)
+    assert result == 0.0  # lines 464-465: plan_charge ValueError caught in thread
