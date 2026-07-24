@@ -345,8 +345,6 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entity_data[field] = user_input[field]
             elif field in entity_data:
                 pass  # keep prefill value
-            else:
-                entity_data[field] = ""
 
         # Validate: core entities required
         for field in _CORE_REQUIRED:
