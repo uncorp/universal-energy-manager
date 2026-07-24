@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.6 – Shadow-MVP-Release: 100 % Coverage, 318 Tests, Ruff clean
+
+- **Bugfix:** `_parse_float_entity` fängt `unhashable type: 'State.state'` ab (Coordinator crashed bei nicht-hashbarem state.state).
+- **Bugfix:** Unreachable-else-Branch in `entity_data`-Merge entfernt → 100 % Coverage.
+- **Bugfix:** `home-assistant-bluetooth==1.13.0` Resolver-Konflikt behoben (explizite Abhängigkeit).
+- **Test:** 16 neue Tests für Reconfigure-Flow, Schema-Helfer, Coordinator-Exception-Pfade, Sensor-Setup (`test_config_flow_reconfigure_detailed`, `test_coordinator`).
+- **Test:** 6 neue Tests für `UemCurrentGenerationSensor` und `UemTotalLoadSensor` (`test_sensors_generation_load`).
+- **Test:** 3 neue Tests für Thread-Pfad-Exceptions in `_compute_charge_limit` (`test_coordinator`).
+- **Test:** Lifecycle-Tests für `async_setup_entry` und `async_unload_entry` (`test_init_setup_entry`).
+- **Test:** `.gitignore` ergänzt `*.egg-info/`.
+- **Release:** Alle 5 MVP-Akzeptanzfälle testbar; 318 Tests grün; Ruff clean; 100 % Coverage.
+
 ## 0.1.5 – Shadow-MVP-Abschluss: Testinfrastruktur, Incompleteness-Detection, Shadow-Safety
 
 - **Bugfix:** Conftest-HA-Stub ersetzt keine echten HA-Module mehr (asyncio-Event-Loop-Konflikte behoben).
