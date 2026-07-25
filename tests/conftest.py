@@ -334,6 +334,7 @@ if not _HA_AVAILABLE:
     for _sub in [
         "homeassistant.const",
         "homeassistant.core",
+        "homeassistant.config",
         "homeassistant.config_entries",
         "homeassistant.data_entry_flow",
         "homeassistant.util",
@@ -363,6 +364,10 @@ if not _HA_AVAILABLE:
         _ha_core.HomeAssistant = HomeAssistant
         _ha_core.callback = callback
         _ha_core.State = State
+
+    _ha_config = sys.modules.get("homeassistant.config")
+    if _ha_config:
+        _ha_config.async_hass_config_yaml = MagicMock()
 
     _ha_config_entries = sys.modules.get("homeassistant.config_entries")
     if _ha_config_entries:
@@ -470,7 +475,7 @@ for _mod_name, _mod_kwargs in [
         "Required": lambda k, **kw: k,
         "In": lambda container: type("In", (), {"container": container})(),
         "All": lambda *args: args[0] if args else None,
-        "Length": lambda minimum, maximum=None, **kw: None,
+        "Length": lambda *a, **kw: None,
     }),
     ("voluptuous.humanize", {}),
     ("aiohttp", {}),
