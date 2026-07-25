@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.6 – Shadow-MVP-Release: 99 % Coverage, 325 Tests, Ruff clean
+## 0.1.7 – Shadow-MVP-Release: 100 % Statement Coverage, 327 Tests, Ruff clean
 
 - **Bugfix:** `_parse_float_entity` fängt `unhashable type: 'State.state'` ab (Coordinator crashed bei nicht-hashbarem state.state).
 - **Bugfix:** Unreachable-else-Branch in `entity_data`-Merge entfernt (4 Branch-Parts verbleiben als dokumentierte Edge-Cases).
