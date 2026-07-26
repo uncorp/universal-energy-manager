@@ -5,6 +5,8 @@ __pycache__/
 .ruff_cache/
 venv/
 .coverage
+.coverage.*
+coverage.*
 htmlcov/
 .venv/
 .venv-ha/
