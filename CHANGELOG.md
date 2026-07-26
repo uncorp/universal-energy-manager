@@ -1,16 +1,17 @@
 # Changelog
 
-## 0.1.7 – Shadow-MVP-Release: 100 % Statement Coverage, 327 Tests, Ruff clean
+## 0.1.7 – Shadow-MVP-Release: 100 % Statement Coverage, 328 Tests, Ruff clean
 
 - **Bugfix:** `_parse_float_entity` fängt `unhashable type: 'State.state'` ab (Coordinator crashed bei nicht-hashbarem state.state).
-- **Bugfix:** Unreachable-else-Branch in `entity_data`-Merge entfernt (4 Branch-Parts verbleiben als dokumentierte Edge-Cases).
+- **Bugfix:** Unreachable-else-Branch in `entity_data`-Merge entfernt (2 Branch-Parts verbleiben als dokumentierte, provably-unreachable Edge-Cases).
 - **Bugfix:** `home-assistant-bluetooth==1.13.0` Resolver-Konflikt behoben (explizite Abhängigkeit).
+- **Test:** 1 neuer Test für `entity_data`-Merge elif-Pflicht (config_flow.py:346) — `test_config_flow_branch346_prefill`.
 - **Test:** 16 neue Tests für Reconfigure-Flow, Schema-Helfer, Coordinator-Exception-Pfade, Sensor-Setup (`test_config_flow_reconfigure_detailed`, `test_coordinator`).
 - **Test:** 6 neue Tests für `UemCurrentGenerationSensor` und `UemTotalLoadSensor` (`test_sensors_generation_load`).
 - **Test:** 3 neue Tests für Thread-Pfad-Exceptions in `_compute_charge_limit` (`test_coordinator`).
 - **Test:** Lifecycle-Tests für `async_setup_entry` und `async_unload_entry` (`test_init_setup_entry`).
 - **Test:** `.gitignore` ergänzt `*.egg-info/`.
-- **Release:** Alle 5 MVP-Akzeptanzfälle testbar; 325 Tests grün; Ruff clean; 99 % Coverage (4 Branch-Parts: config_flow entity_data merge, reconfigure edit flow, rescan blank-key skip, coordinator forecast exception).
+- **Release:** Alle 5 MVP-Akzeptanzfälle testbar; 328 Tests grün; Ruff clean; 99 % Coverage (2 provably-unreachable Branch-Parts: config_flow.py:346 field-not-in-prefill (durch Schema-All-Fields unmöglich), config_flow.py:486 do_rescan-false (durch vorherige if-Guards unmöglich)).
 
 ## 0.1.5 – Shadow-MVP-Abschluss: Testinfrastruktur, Incompleteness-Detection, Shadow-Safety
 
