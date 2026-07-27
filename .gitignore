@@ -25,5 +25,8 @@ backups/
 .idea/
 .DS_Store
 
+# Coverage report artifacts
+*.cover
+
 # Orchestrator state
 .hermes/
