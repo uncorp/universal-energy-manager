@@ -27,6 +27,7 @@ backups/
 
 # Coverage report artifacts
 *.cover
+*,cover
 
 # Orchestrator state
 .hermes/
