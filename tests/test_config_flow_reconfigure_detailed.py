@@ -24,13 +24,12 @@ from custom_components.universal_energy_manager.config_flow import UemConfigFlow
 from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_DISCHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_IMPORT_ENTITY,
+    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
@@ -417,10 +416,7 @@ class TestBuildFullSchema:
         assert CONF_BATTERY_MANUAL_CAPACITY_KWH in schema
         assert CONF_MAX_CHARGE_POWER_ENTITY in schema
         assert CONF_MAX_CHARGE_MANUAL_POWER_W in schema
-        assert CONF_BATTERY_DISCHARGE_ENTITY in schema
-        assert CONF_GRID_IMPORT_ENTITY in schema
-        assert "battery_power_mode" in schema  # using the const key name
-        assert "grid_power_mode" in schema
+        assert CONF_GRID_POWER_SIGN_CONVENTION in schema
 
 
 # =========================================================================== #

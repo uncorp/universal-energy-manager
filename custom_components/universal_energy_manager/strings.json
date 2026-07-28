@@ -15,23 +15,30 @@
       },
       "manual_mapping": {
         "title": "Manuelle Entitätszuordnung",
-        "description": "Alle Felder sind optional. UEM verwendet nur die vorhandenen, plausiblen Messwerte. Solange für eine Berechnung Daten fehlen, zeigt UEM **Einrichtung unvollständig** und bleibt vollständig im Shadow-Modus – ohne Steuerung.\n\nBei Batterie und Netz ist **eine Leistungsentität** der übliche Standard: Ein Wert wechselt je nach Richtung das Vorzeichen. Wähle **zwei Entitäten** nur, wenn dein System getrennte Sensoren für Laden/Entladen bzw. Bezug/Einspeisung liefert.",
+        "description": "Alle Felder sind optional. UEM verwendet nur die vorhandenen, plausiblen Messwerte. Solange für eine Berechnung Daten fehlen, zeigt UEM **Einrichtung unvollständig** und bleibt vollständig im Shadow-Modus – ohne Steuerung.",
         "data": {
           "soc_entity": "Batterieladestand (SoC)",
           "pv_power_entity": "PV-Leistung",
           "house_power_entity": "Hausverbrauch",
-          "battery_power_mode": "Batterieleistung kommt von",
-          "battery_charge_entity": "Batterieleistung (eine Entität) / Ladeleistung",
-          "battery_discharge_entity": "Batterie-Entladeleistung (nur bei zwei Entitäten)",
-          "battery_power_sign_convention": "Bei einer Batterie-Entität: Was bedeutet ein positiver Wert?",
+          "battery_charge_entity": "Batterieleistung",
           "battery_capacity_entity": "Batteriekapazität als Entität (kWh)",
           "battery_manual_capacity_kwh": "Batteriekapazität als fester Wert (kWh)",
           "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
           "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
-          "grid_power_mode": "Netzleistung kommt von",
-          "grid_export_entity": "Netzleistung (eine Entität) / Netzeinspeisung",
-          "grid_import_entity": "Netzbezug (nur bei zwei Entitäten)",
-          "grid_power_sign_convention": "Bei einer Netz-Entität: Was bedeutet ein positiver Wert?"
+          "grid_export_entity": "Netzleistung",
+          "grid_power_sign_convention": "Was bedeutet ein positiver Wert bei der Netzleistung?"
+        },
+        "data_description": {
+          "soc_entity": "Die Entität, die den aktuellen Ladestand der Batterie meldet (z. B. 50 = 50 %).",
+          "pv_power_entity": "Die Entität der PV-Anlage, die die aktuelle erzeugte Leistung meldet.",
+          "house_power_entity": "Die Entität des Hausverbrauchs. Ein negativer Wert ist zulässig und bedeutet, dass z. B. ein Balkonkraftwerk momentan mehr produziert als das Haus verbraucht.",
+          "battery_charge_entity": "Die Entität der Batterieleistung. Ein einziger Sensor, der je nach Richtung (laden/entladen) positive oder negative Werte liefern kann.",
+          "battery_capacity_entity": "Die Entität, die die installierte Batteriekapazität in kWh meldet. Optional — alternativ kannst du einen festen Wert eingeben.",
+          "battery_manual_capacity_kwh": "Die installierte Batteriekapazität als fester Wert in kWh. Optional — alternativ kannst du eine Entität wählen.",
+          "max_charge_power_entity": "Die Entität, die die maximale Ladeleistung der Batterie in Watt meldet. Optional — alternativ kannst du einen festen Wert eingeben.",
+          "max_charge_manual_power_w": "Die maximale Ladeleistung als fester Wert in Watt. Optional — alternativ kannst du eine Entität wählen.",
+          "grid_export_entity": "Die Entität der Netzleistung. Ein einziger Sensor, der Import und Export über eine einzige signed Zahl abbildet.",
+          "grid_power_sign_convention": "Die Vorzeichenkonvention für die Netzleistungs-Entität."
         }
       },
       "reconfigure": {

@@ -473,7 +473,11 @@ for _mod_name, _mod_kwargs in [
         })(),
         "Optional": lambda k, **kw: k,
         "Required": lambda k, **kw: k,
-        "In": lambda container: type("In", (), {"container": container})(),
+        "In": type("In", (), {
+            "__call__": lambda self, container: type("InInstance", (type("In", (), {}),), {
+                "container": container
+            })(),
+        }),
         "All": lambda *args: args[0] if args else None,
         "Length": lambda *a, **kw: None,
     }),

@@ -1,13 +1,13 @@
-"""TDD: Cover config_flow.py:346 elif branch (prefill preservation).
+"""TDD: Cover config_flow.py elif branch (prefill preservation).
 
-The entity_data merge loop at lines 341-347 has this structure:
+The entity_data merge loop has this structure:
     for field in set(list(entity_data.keys()) + list(user_input.keys())):
         if field in user_input and isinstance(user_input[field], str):
             entity_data[field] = user_input[field].strip()
         elif field in user_input:
             entity_data[field] = user_input[field]
         elif field in entity_data:
-            pass  # keep prefill value  <-- line 346 (uncovered branch)
+            pass  # keep prefill value  <-- uncovered branch
 
 This branch is taken when a field exists in the prefill (entity_data)
 but is NOT submitted by the user in user_input. Previously, tests always
@@ -31,13 +31,13 @@ from custom_components.universal_energy_manager.config_flow import (
 from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_POWER_MODE,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_MODE,
+    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
+    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
 )
 
 
@@ -78,8 +78,8 @@ class TestConfigFlowBranch346PrefillPreservation:
     """Line 346: elif field in entity_data → pass (keep prefill).
 
     This test submits ONLY core entities, leaving all optional fields
-    (battery_discharge_entity, grid_import_entity, battery_power_mode,
-    grid_power_mode, battery_manual_capacity_kwh, max_charge_manual_power_w)
+    (grid_power_sign_convention, battery_manual_capacity_kwh,
+    max_charge_manual_power_w, etc.)
     to be filled from the prefill. The elif branch at line 346 must
     preserve those prefill values.
     """
@@ -96,7 +96,7 @@ class TestConfigFlowBranch346PrefillPreservation:
 
         # Step 2: manual_mapping with ONLY core entities.
         # The prefill from no_e3dc_choice includes all optional fields
-        # with defaults (mode='separate', sign_convention, etc.).
+        # with defaults (grid_power_sign_convention, etc.).
         # By omitting optional fields from user_input, the elif branch
         # at line 346 (elif field in entity_data: pass) must preserve them.
         minimal_data = {
@@ -114,6 +114,7 @@ class TestConfigFlowBranch346PrefillPreservation:
         # Core entities submitted
         assert result["data"][CONF_SOC_ENTITY] == "sensor.manual_soc"
         # Optional fields must have been preserved from prefill (elif branch)
-        # The prefill sets battery_power_mode to 'signed' by default
-        assert result["data"].get(CONF_BATTERY_POWER_MODE) == "signed"
-        assert result["data"].get(CONF_GRID_POWER_MODE) == "signed"
+        # The prefill sets grid_power_sign_convention to default
+        expected = SIGNED_CONVENTION_POS_CHARGE_EXPORT
+        actual = result["data"].get(CONF_GRID_POWER_SIGN_CONVENTION)
+        assert actual == expected

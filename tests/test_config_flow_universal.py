@@ -19,16 +19,11 @@ from custom_components.universal_energy_manager.config_flow import (
 from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_DISCHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
-    CONF_BATTERY_POWER_MODE,
-    CONF_BATTERY_POWER_SIGN_CONVENTION,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_IMPORT_ENTITY,
-    CONF_GRID_POWER_MODE,
     CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MANUAL_ENTITIES,
@@ -286,11 +281,9 @@ class TestManualMappingCreation:
             CONF_PV_POWER_ENTITY,
             CONF_HOUSE_POWER_ENTITY,
             CONF_BATTERY_CHARGE_ENTITY,
-            CONF_BATTERY_DISCHARGE_ENTITY,
             CONF_BATTERY_CAPACITY_ENTITY,
             CONF_MAX_CHARGE_POWER_ENTITY,
             CONF_GRID_EXPORT_ENTITY,
-            CONF_GRID_IMPORT_ENTITY,
         ):
             assert result["data"][field] == ""
 
@@ -304,21 +297,17 @@ class TestManualMappingCreation:
         )
         schema_fields = list(dict(result["data_schema"].schema))
 
+        # Expected order: general measurements, then battery group, then grid group
         assert schema_fields == [
             CONF_SOC_ENTITY,
             CONF_PV_POWER_ENTITY,
             CONF_HOUSE_POWER_ENTITY,
-            CONF_BATTERY_POWER_MODE,
             CONF_BATTERY_CHARGE_ENTITY,
-            CONF_BATTERY_DISCHARGE_ENTITY,
-            CONF_BATTERY_POWER_SIGN_CONVENTION,
             CONF_BATTERY_CAPACITY_ENTITY,
             CONF_BATTERY_MANUAL_CAPACITY_KWH,
             CONF_MAX_CHARGE_POWER_ENTITY,
             CONF_MAX_CHARGE_MANUAL_POWER_W,
-            CONF_GRID_POWER_MODE,
             CONF_GRID_EXPORT_ENTITY,
-            CONF_GRID_IMPORT_ENTITY,
             CONF_GRID_POWER_SIGN_CONVENTION,
         ]
 

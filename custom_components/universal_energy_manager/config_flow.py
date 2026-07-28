@@ -7,8 +7,9 @@ Forecast.Solar is optional, Solar/PV-only, unlimited sources supported.
 New in v0.1.2:
 - Battery capacity: entity in kWh OR manual kWh value
 - Max charge power: entity in W OR manual W value
-- Battery power: signed entity with explicit sign convention OR separate charge/discharge
-- Grid power: signed entity with explicit sign convention OR separate import/export
+- Battery power: single signed entity (Batterieleistung)
+- Grid power: single signed entity (Netzleistung) with sign convention
+- Hausverbrauch: single entity, negative values allowed (e.g. Balkonkraftwerk)
 - No direction guessing — always explicit
 """
 
@@ -24,20 +25,13 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import (
     _ENT_MAP_LOOKUP,
-    BATTERY_POWER_MODE_SEPARATE,
-    BATTERY_POWER_MODE_SIGNED,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_DISCHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
-    CONF_BATTERY_POWER_MODE,
-    CONF_BATTERY_POWER_SIGN_CONVENTION,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_IMPORT_ENTITY,
-    CONF_GRID_POWER_MODE,
     CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MANUAL_ENTITIES,
@@ -48,10 +42,6 @@ from .const import (
     DOMAIN,
     E3DC_RSCP_DOMAIN,
     FORECAST_SOLAR_DOMAIN,
-    GRID_POWER_MODE_SEPARATE,
-    GRID_POWER_MODE_SIGNED,
-    SIGNED_CONVENTION_NEG_CHARGE_EXPORT,
-    SIGNED_CONVENTION_NEG_DISCHARGE_IMPORT,
     SIGNED_CONVENTION_POS_CHARGE_EXPORT,
     SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
@@ -73,39 +63,6 @@ _CORE_REQUIRED = (
 
 # Backward-compatible alias for tests that reference _REQUIRED_FIELDS
 _REQUIRED_FIELDS = _CORE_REQUIRED
-
-# Human-readable labels for the manual entity selection form
-_ENTITY_LABELS = {
-    CONF_SOC_ENTITY: "Battery State of Charge (SoC)",
-    CONF_PV_POWER_ENTITY: "PV / Solar Power",
-    CONF_HOUSE_POWER_ENTITY: "House Consumption",
-    CONF_GRID_EXPORT_ENTITY: "Grid Export / Feed-in Power",
-    CONF_GRID_IMPORT_ENTITY: "Grid Import / Consumption from Grid",
-    CONF_BATTERY_CHARGE_ENTITY: "Battery Charge Power",
-    CONF_BATTERY_DISCHARGE_ENTITY: "Battery Discharge Power",
-    CONF_BATTERY_CAPACITY_ENTITY: "Battery Installed Capacity",
-    CONF_MAX_CHARGE_POWER_ENTITY: "Maximum Battery Charge Power",
-    CONF_BATTERY_MANUAL_CAPACITY_KWH: "Battery Installed Capacity (kWh, manuell)",
-    CONF_MAX_CHARGE_MANUAL_POWER_W: "Max. Charge Power (W, manuell)",
-}
-
-# Labels for power-mode dropdowns
-_POWER_MODE_LABELS = {
-    BATTERY_POWER_MODE_SIGNED: "Vorzeichen-behaftete Entität (ein Sensor, Vorzeichen wählen)",
-    BATTERY_POWER_MODE_SEPARATE: "Getrennte Entitäten (Laden + Entladen)",
-}
-
-_GRID_MODE_LABELS = {
-    GRID_POWER_MODE_SIGNED: "Vorzeichen-behaftete Entität (ein Sensor, Vorzeichen wählen)",
-    GRID_POWER_MODE_SEPARATE: "Getrennte Entitäten (Bezug + Einspeisung)",
-}
-
-_SIGN_CONVENTION_LABELS = {
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiv = Laden / Einspeisen",
-    SIGNED_CONVENTION_NEG_CHARGE_EXPORT: "Negativ = Laden / Einspeisen",
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiv = Entladen / Bezug",
-    SIGNED_CONVENTION_NEG_DISCHARGE_IMPORT: "Negativ = Entladen / Bezug",
-}
 
 
 class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -247,14 +204,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_BATTERY_CHARGE_ENTITY: self._e3dc_map.battery_charge,
             CONF_BATTERY_CAPACITY_ENTITY: self._e3dc_map.battery_capacity,
             CONF_MAX_CHARGE_POWER_ENTITY: self._e3dc_map.max_charge_power,
-            CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
-            CONF_BATTERY_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_BATTERY_DISCHARGE_ENTITY: "",
-            CONF_GRID_IMPORT_ENTITY: "",
+            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
         }
         self._prefill_data = entity_data
 
@@ -545,17 +497,12 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SOC_ENTITY: "",
             CONF_PV_POWER_ENTITY: "",
             CONF_HOUSE_POWER_ENTITY: "",
-            CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
             CONF_BATTERY_CHARGE_ENTITY: "",
-            CONF_BATTERY_DISCHARGE_ENTITY: "",
-            CONF_BATTERY_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
             CONF_BATTERY_CAPACITY_ENTITY: "",
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
             CONF_GRID_EXPORT_ENTITY: "",
-            CONF_GRID_IMPORT_ENTITY: "",
             CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
         }
 
@@ -564,21 +511,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         values = self._mapping_defaults()
         values.update(prefill or {})
 
-        battery_modes = {
-            BATTERY_POWER_MODE_SIGNED: "Eine Batterieleistungs-Entität",
-            BATTERY_POWER_MODE_SEPARATE: "Zwei Entitäten: Laden und Entladen",
-        }
-        grid_modes = {
-            GRID_POWER_MODE_SIGNED: "Eine Netzleistungs-Entität",
-            GRID_POWER_MODE_SEPARATE: "Zwei Entitäten: Bezug und Einspeisung",
-        }
-        battery_signs = {
-            SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiver Wert = Batterie lädt",
-            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiver Wert = Batterie entlädt",
-        }
         grid_signs = {
-            SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiver Wert = Einspeisung",
             SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiver Wert = Netzbezug",
+            SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiver Wert = Einspeisung",
         }
 
         return {
@@ -586,23 +521,11 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_SOC_ENTITY, default=values[CONF_SOC_ENTITY]): str,
             vol.Optional(CONF_PV_POWER_ENTITY, default=values[CONF_PV_POWER_ENTITY]): str,
             vol.Optional(CONF_HOUSE_POWER_ENTITY, default=values[CONF_HOUSE_POWER_ENTITY]): str,
-            # Batterie: alle Batterie-Felder bleiben zusammen und optional.
-            vol.Optional(
-                CONF_BATTERY_POWER_MODE,
-                default=values[CONF_BATTERY_POWER_MODE],
-            ): vol.In(battery_modes),
+            # Batterie: alle Batterie-Felder zusammen und optional.
             vol.Optional(
                 CONF_BATTERY_CHARGE_ENTITY,
                 default=values[CONF_BATTERY_CHARGE_ENTITY],
             ): str,
-            vol.Optional(
-                CONF_BATTERY_DISCHARGE_ENTITY,
-                default=values[CONF_BATTERY_DISCHARGE_ENTITY],
-            ): str,
-            vol.Optional(
-                CONF_BATTERY_POWER_SIGN_CONVENTION,
-                default=values[CONF_BATTERY_POWER_SIGN_CONVENTION],
-            ): vol.In(battery_signs),
             vol.Optional(
                 CONF_BATTERY_CAPACITY_ENTITY,
                 default=values[CONF_BATTERY_CAPACITY_ENTITY],
@@ -619,18 +542,10 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MAX_CHARGE_MANUAL_POWER_W,
                 default=values[CONF_MAX_CHARGE_MANUAL_POWER_W],
             ): str,
-            # Netz: Bezug und Einspeisung stehen direkt beieinander.
-            vol.Optional(
-                CONF_GRID_POWER_MODE,
-                default=values[CONF_GRID_POWER_MODE],
-            ): vol.In(grid_modes),
+            # Netz: eine Netzleistungs-Entität mit Vorzeichenkonvention.
             vol.Optional(
                 CONF_GRID_EXPORT_ENTITY,
                 default=values[CONF_GRID_EXPORT_ENTITY],
-            ): str,
-            vol.Optional(
-                CONF_GRID_IMPORT_ENTITY,
-                default=values[CONF_GRID_IMPORT_ENTITY],
             ): str,
             vol.Optional(
                 CONF_GRID_POWER_SIGN_CONVENTION,
