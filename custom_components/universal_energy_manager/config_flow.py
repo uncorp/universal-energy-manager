@@ -26,7 +26,6 @@ from .const import (
     _ENT_MAP_LOOKUP,
     BATTERY_POWER_MODE_SEPARATE,
     BATTERY_POWER_MODE_SIGNED,
-    BATTERY_POWER_MODES,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_DISCHARGE_ENTITY,
@@ -51,7 +50,6 @@ from .const import (
     FORECAST_SOLAR_DOMAIN,
     GRID_POWER_MODE_SEPARATE,
     GRID_POWER_MODE_SIGNED,
-    GRID_POWER_MODES,
     SIGNED_CONVENTION_NEG_CHARGE_EXPORT,
     SIGNED_CONVENTION_NEG_DISCHARGE_IMPORT,
     SIGNED_CONVENTION_POS_CHARGE_EXPORT,
@@ -155,7 +153,8 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Required("confirm"): vol.In(
                             {
                                 "cancel": "Abbrechen – e3dc_rscp zuerst einrichten",
-                                "continue": "Mit manueller Zuordnung fortfahren",
+                                "continue": "Entitäten jetzt manuell zuordnen",
+                                "later": "Später einrichten (sicherer Shadow-Modus)",
                             }
                         )
                     }
@@ -203,9 +202,12 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={},
             )
 
-        # "continue" → go to manual mapping
-        # Start with empty prefill (no adapter available)
+        # "later" persists an explicitly incomplete, safe Shadow entry.
         self._prefill_data = {}
+        if choice == "later":
+            return await self.async_step_manual_mapping({})
+
+        # "continue" opens the optional one-page mapping form.
         return await self.async_step_manual_mapping()
 
     # ------------------------------------------------------------------ #
@@ -336,73 +338,12 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(self._build_full_schema(self._prefill_data)),
             )
 
-        # Collect all values: start from prefill, then overlay user_input
-        entity_data = dict(self._prefill_data) if self._prefill_data else {}
-        for field in set(list(entity_data.keys()) + list(user_input.keys())):
-            if field in user_input and isinstance(user_input[field], str):
-                entity_data[field] = user_input[field].strip()
-            elif field in user_input:
-                entity_data[field] = user_input[field]
-            elif field in entity_data:
-                pass  # keep prefill value
-
-        # Validate: core entities required
-        for field in _CORE_REQUIRED:
-            val = entity_data.get(field, "")
-            if not val or (isinstance(val, str) and not val.strip()):
-                return self.async_show_form(
-                    step_id="manual_mapping",
-                    errors={"base": "missing_required_entities"},
-                    description_placeholders={
-                        "missing": ", ".join(
-                            f for f in _CORE_REQUIRED
-                            if not entity_data.get(f, "")
-                            or (
-                                isinstance(entity_data.get(f, ""), str)
-                                and not entity_data.get(f, "").strip()
-                            )
-                        )
-                    },
-                    data_schema=vol.Schema(self._build_full_schema(entity_data)),
-                )
-
-        # Validate battery capacity: either entity or manual kWh
-        cap_entity = entity_data.get(CONF_BATTERY_CAPACITY_ENTITY, "")
-        cap_manual = entity_data.get(CONF_BATTERY_MANUAL_CAPACITY_KWH, "")
-        if not cap_entity or (isinstance(cap_entity, str) and not cap_entity.strip()):
-            if not cap_manual or (isinstance(cap_manual, str) and not cap_manual.strip()):
-                return self.async_show_form(
-                    step_id="manual_mapping",
-                    errors={"base": "missing_required_entities"},
-                    description_placeholders={
-                        "missing": CONF_BATTERY_CAPACITY_ENTITY
-                    },
-                    data_schema=vol.Schema(self._build_full_schema(entity_data)),
-                )
-
-        # Validate max charge power: either entity or manual W
-        max_entity = entity_data.get(CONF_MAX_CHARGE_POWER_ENTITY, "")
-        max_manual = entity_data.get(CONF_MAX_CHARGE_MANUAL_POWER_W, "")
-        if not max_entity or (isinstance(max_entity, str) and not max_entity.strip()):
-            if not max_manual or (isinstance(max_manual, str) and not max_manual.strip()):
-                return self.async_show_form(
-                    step_id="manual_mapping",
-                    errors={"base": "missing_required_entities"},
-                    description_placeholders={
-                        "missing": CONF_MAX_CHARGE_POWER_ENTITY
-                    },
-                    data_schema=vol.Schema(self._build_full_schema(entity_data)),
-                )
-
-        # Validate battery power mode
-        bat_mode = entity_data.get(CONF_BATTERY_POWER_MODE, "")
-        if bat_mode not in (BATTERY_POWER_MODE_SIGNED, BATTERY_POWER_MODE_SEPARATE):
-            entity_data[CONF_BATTERY_POWER_MODE] = BATTERY_POWER_MODE_SIGNED
-
-        # Validate grid power mode
-        grid_mode = entity_data.get(CONF_GRID_POWER_MODE, "")
-        if grid_mode not in (GRID_POWER_MODE_SIGNED, GRID_POWER_MODE_SEPARATE):
-            entity_data[CONF_GRID_POWER_MODE] = GRID_POWER_MODE_SIGNED
+        # Keep every field optional. An incomplete entry is intentional: the
+        # coordinator stays in safe Shadow status until it has enough data.
+        entity_data = self._mapping_defaults()
+        entity_data.update(self._prefill_data or {})
+        for field, value in user_input.items():
+            entity_data[field] = value.strip() if isinstance(value, str) else value
 
         # Collect optional forecast_solar entries
         forecast_solar_entry_ids = [
@@ -506,6 +447,27 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(self._build_full_schema(entity_data)),
         )
 
+    async def async_step_reconfigure_edit(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Save a complete or intentionally incomplete manual mapping."""
+        entry = self._get_current_entry()
+        if entry is None:
+            return self.async_abort(reason="not_configured")
+        if user_input is None:
+            return await self._show_reconfigure_edit(entry, dict(entry.data))
+
+        updated_data = self._mapping_defaults()
+        updated_data.update(entry.data)
+        for field, value in user_input.items():
+            updated_data[field] = value.strip() if isinstance(value, str) else value
+
+        return self.async_update_reload_and_abort(
+            entry,
+            data=updated_data,
+            reason="reconfigure_successful",
+        )
+
     async def _rescan_e3dc(
         self, entry: config_entries.ConfigEntry, current_data: dict
     ) -> dict | None:
@@ -577,89 +539,104 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return schema
 
+    def _mapping_defaults(self) -> dict[str, Any]:
+        """Return the complete optional manual-mapping data shape."""
+        return {
+            CONF_SOC_ENTITY: "",
+            CONF_PV_POWER_ENTITY: "",
+            CONF_HOUSE_POWER_ENTITY: "",
+            CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
+            CONF_BATTERY_CHARGE_ENTITY: "",
+            CONF_BATTERY_DISCHARGE_ENTITY: "",
+            CONF_BATTERY_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+            CONF_BATTERY_CAPACITY_ENTITY: "",
+            CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+            CONF_MAX_CHARGE_POWER_ENTITY: "",
+            CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
+            CONF_GRID_EXPORT_ENTITY: "",
+            CONF_GRID_IMPORT_ENTITY: "",
+            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+        }
+
     def _build_full_schema(self, prefill: dict[str, Any] | None = None) -> dict:
-        """Build the complete manual mapping schema with all new fields."""
-        if prefill is None:
-            prefill = {}
+        """Build one optional, grouped manual-mapping form."""
+        values = self._mapping_defaults()
+        values.update(prefill or {})
 
-        schema = {}
+        battery_modes = {
+            BATTERY_POWER_MODE_SIGNED: "Eine Batterieleistungs-Entität",
+            BATTERY_POWER_MODE_SEPARATE: "Zwei Entitäten: Laden und Entladen",
+        }
+        grid_modes = {
+            GRID_POWER_MODE_SIGNED: "Eine Netzleistungs-Entität",
+            GRID_POWER_MODE_SEPARATE: "Zwei Entitäten: Bezug und Einspeisung",
+        }
+        battery_signs = {
+            SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiver Wert = Batterie lädt",
+            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiver Wert = Batterie entlädt",
+        }
+        grid_signs = {
+            SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiver Wert = Einspeisung",
+            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiver Wert = Netzbezug",
+        }
 
-        # Core entities
-        for field in _CORE_REQUIRED:
-            default_val = prefill.get(field) or ""
-            schema[vol.Optional(field, default=default_val)] = str
-
-        # Grid export
-        grid_export_def = prefill.get(CONF_GRID_EXPORT_ENTITY) or ""
-        schema[
-            vol.Optional(CONF_GRID_EXPORT_ENTITY, default=grid_export_def)
-        ] = str
-
-        # Battery mode
-        bat_mode = prefill.get(CONF_BATTERY_POWER_MODE, BATTERY_POWER_MODE_SIGNED)
-        schema[
-            vol.Optional(CONF_BATTERY_POWER_MODE, default=bat_mode)
-        ] = vol.In(BATTERY_POWER_MODES)
-
-        # Battery sign convention (for signed mode)
-        bat_sign = prefill.get(
-            CONF_BATTERY_POWER_SIGN_CONVENTION, SIGNED_CONVENTION_POS_CHARGE_EXPORT
-        )
-        schema[
-            vol.Optional(CONF_BATTERY_POWER_SIGN_CONVENTION, default=bat_sign)
-        ] = str
-
-        # Battery discharge (only shown when mode = separate)
-        bat_discharge = prefill.get(CONF_BATTERY_DISCHARGE_ENTITY) or ""
-        schema[
-            vol.Optional(CONF_BATTERY_DISCHARGE_ENTITY, default=bat_discharge)
-        ] = str
-
-        # Battery capacity: entity
-        cap_def = prefill.get(CONF_BATTERY_CAPACITY_ENTITY) or ""
-        schema[
-            vol.Optional(CONF_BATTERY_CAPACITY_ENTITY, default=cap_def)
-        ] = str
-
-        # Battery capacity: manual kWh
-        cap_manual_def = prefill.get(CONF_BATTERY_MANUAL_CAPACITY_KWH) or ""
-        schema[
-            vol.Optional(CONF_BATTERY_MANUAL_CAPACITY_KWH, default=cap_manual_def)
-        ] = str
-
-        # Max charge power: entity
-        max_def = prefill.get(CONF_MAX_CHARGE_POWER_ENTITY) or ""
-        schema[
-            vol.Optional(CONF_MAX_CHARGE_POWER_ENTITY, default=max_def)
-        ] = str
-
-        # Max charge power: manual W
-        max_manual_def = prefill.get(CONF_MAX_CHARGE_MANUAL_POWER_W) or ""
-        schema[
-            vol.Optional(CONF_MAX_CHARGE_MANUAL_POWER_W, default=max_manual_def)
-        ] = str
-
-        # Grid mode
-        grid_mode = prefill.get(CONF_GRID_POWER_MODE, GRID_POWER_MODE_SIGNED)
-        schema[
-            vol.Optional(CONF_GRID_POWER_MODE, default=grid_mode)
-        ] = vol.In(GRID_POWER_MODES)
-
-        # Grid sign convention (for signed mode)
-        grid_sign = prefill.get(
-            CONF_GRID_POWER_SIGN_CONVENTION, SIGNED_CONVENTION_POS_CHARGE_EXPORT
-        )
-        schema[
-            vol.Optional(CONF_GRID_POWER_SIGN_CONVENTION, default=grid_sign)
-        ] = str
-
-        # Grid import (only shown when mode = separate)
-        grid_import = prefill.get(CONF_GRID_IMPORT_ENTITY) or ""
-        schema[
-            vol.Optional(CONF_GRID_IMPORT_ENTITY, default=grid_import)
-        ] = str
-
-        return schema
+        return {
+            # Allgemeine Messwerte
+            vol.Optional(CONF_SOC_ENTITY, default=values[CONF_SOC_ENTITY]): str,
+            vol.Optional(CONF_PV_POWER_ENTITY, default=values[CONF_PV_POWER_ENTITY]): str,
+            vol.Optional(CONF_HOUSE_POWER_ENTITY, default=values[CONF_HOUSE_POWER_ENTITY]): str,
+            # Batterie: alle Batterie-Felder bleiben zusammen und optional.
+            vol.Optional(
+                CONF_BATTERY_POWER_MODE,
+                default=values[CONF_BATTERY_POWER_MODE],
+            ): vol.In(battery_modes),
+            vol.Optional(
+                CONF_BATTERY_CHARGE_ENTITY,
+                default=values[CONF_BATTERY_CHARGE_ENTITY],
+            ): str,
+            vol.Optional(
+                CONF_BATTERY_DISCHARGE_ENTITY,
+                default=values[CONF_BATTERY_DISCHARGE_ENTITY],
+            ): str,
+            vol.Optional(
+                CONF_BATTERY_POWER_SIGN_CONVENTION,
+                default=values[CONF_BATTERY_POWER_SIGN_CONVENTION],
+            ): vol.In(battery_signs),
+            vol.Optional(
+                CONF_BATTERY_CAPACITY_ENTITY,
+                default=values[CONF_BATTERY_CAPACITY_ENTITY],
+            ): str,
+            vol.Optional(
+                CONF_BATTERY_MANUAL_CAPACITY_KWH,
+                default=values[CONF_BATTERY_MANUAL_CAPACITY_KWH],
+            ): str,
+            vol.Optional(
+                CONF_MAX_CHARGE_POWER_ENTITY,
+                default=values[CONF_MAX_CHARGE_POWER_ENTITY],
+            ): str,
+            vol.Optional(
+                CONF_MAX_CHARGE_MANUAL_POWER_W,
+                default=values[CONF_MAX_CHARGE_MANUAL_POWER_W],
+            ): str,
+            # Netz: Bezug und Einspeisung stehen direkt beieinander.
+            vol.Optional(
+                CONF_GRID_POWER_MODE,
+                default=values[CONF_GRID_POWER_MODE],
+            ): vol.In(grid_modes),
+            vol.Optional(
+                CONF_GRID_EXPORT_ENTITY,
+                default=values[CONF_GRID_EXPORT_ENTITY],
+            ): str,
+            vol.Optional(
+                CONF_GRID_IMPORT_ENTITY,
+                default=values[CONF_GRID_IMPORT_ENTITY],
+            ): str,
+            vol.Optional(
+                CONF_GRID_POWER_SIGN_CONVENTION,
+                default=values[CONF_GRID_POWER_SIGN_CONVENTION],
+            ): vol.In(grid_signs),
+        }
 
     def _discover_entities(self, config_entry_id: str):
         """Read only source entities belonging to the selected e3dc_rscp entry."""

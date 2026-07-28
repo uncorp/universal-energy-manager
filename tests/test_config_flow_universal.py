@@ -19,12 +19,20 @@ from custom_components.universal_energy_manager.config_flow import (
 from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
+    CONF_BATTERY_DISCHARGE_ENTITY,
+    CONF_BATTERY_MANUAL_CAPACITY_KWH,
+    CONF_BATTERY_POWER_MODE,
+    CONF_BATTERY_POWER_SIGN_CONVENTION,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
+    CONF_GRID_IMPORT_ENTITY,
+    CONF_GRID_POWER_MODE,
+    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MANUAL_ENTITIES,
+    CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
@@ -195,8 +203,7 @@ class TestNoE3dcShowsChoice:
         assert result["reason"] == "e3dc_rscp_optional_cancel"
 
     def test_user_choice_continue_goes_to_manual(self) -> None:
-        """Selecting 'continue' on the choice form should go to manual mapping
-        with empty prefill (no adapter entities available)."""
+        """Selecting 'continue' opens the one-page optional mapping form."""
         hass = MagicMock()
         flow = _make_flow(hass, [])
 
@@ -219,6 +226,20 @@ class TestNoE3dcShowsChoice:
             CONF_MAX_CHARGE_POWER_ENTITY,
         ]:
             assert field in schema_dict, f"Missing field: {field}"
+
+    def test_user_choice_later_creates_an_empty_safe_entry(self) -> None:
+        """Later configuration must not force the user through any fields."""
+        hass = MagicMock()
+        _mock_location(hass)
+        flow = _make_flow(hass, [])
+
+        result = _run_flow_coroutine(
+            flow.async_step_no_e3dc_choice({"confirm": "later"})
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_MANUAL_ENTITIES] is True
+        assert result["data"][CONF_SOC_ENTITY] == ""
 
 
 # =========================================================================== #
@@ -249,19 +270,57 @@ class TestManualMappingCreation:
         assert result["data"].get(CONF_MANUAL_ENTITIES) is True
         assert result["data"][CONF_SOC_ENTITY] == "sensor.manual_soc"
 
-    def test_manual_mapping_aborts_on_missing_entities(self) -> None:
-        """Empty manual mapping should show errors for all required fields."""
+    def test_manual_mapping_allows_an_empty_shadow_entry(self) -> None:
+        """An empty mapping must be savable for safe later configuration."""
         hass = MagicMock()
+        _mock_location(hass)
         flow = _make_flow(hass, [])
 
         _run_flow_coroutine(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
-
         result = _run_flow_coroutine(flow.async_step_manual_mapping({}))
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "manual_mapping"
-        assert "errors" in result
-        assert result["errors"]["base"] == "missing_required_entities"
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_MANUAL_ENTITIES] is True
+        for field in (
+            CONF_SOC_ENTITY,
+            CONF_PV_POWER_ENTITY,
+            CONF_HOUSE_POWER_ENTITY,
+            CONF_BATTERY_CHARGE_ENTITY,
+            CONF_BATTERY_DISCHARGE_ENTITY,
+            CONF_BATTERY_CAPACITY_ENTITY,
+            CONF_MAX_CHARGE_POWER_ENTITY,
+            CONF_GRID_EXPORT_ENTITY,
+            CONF_GRID_IMPORT_ENTITY,
+        ):
+            assert result["data"][field] == ""
+
+    def test_manual_mapping_groups_battery_and_grid_fields(self) -> None:
+        """A one-page mapping keeps each measurement group together."""
+        hass = MagicMock()
+        flow = _make_flow(hass, [])
+
+        result = _run_flow_coroutine(
+            flow.async_step_no_e3dc_choice({"confirm": "continue"})
+        )
+        schema_fields = list(dict(result["data_schema"].schema))
+
+        assert schema_fields == [
+            CONF_SOC_ENTITY,
+            CONF_PV_POWER_ENTITY,
+            CONF_HOUSE_POWER_ENTITY,
+            CONF_BATTERY_POWER_MODE,
+            CONF_BATTERY_CHARGE_ENTITY,
+            CONF_BATTERY_DISCHARGE_ENTITY,
+            CONF_BATTERY_POWER_SIGN_CONVENTION,
+            CONF_BATTERY_CAPACITY_ENTITY,
+            CONF_BATTERY_MANUAL_CAPACITY_KWH,
+            CONF_MAX_CHARGE_POWER_ENTITY,
+            CONF_MAX_CHARGE_MANUAL_POWER_W,
+            CONF_GRID_POWER_MODE,
+            CONF_GRID_EXPORT_ENTITY,
+            CONF_GRID_IMPORT_ENTITY,
+            CONF_GRID_POWER_SIGN_CONVENTION,
+        ]
 
 
 # =========================================================================== #

@@ -612,16 +612,15 @@ class TestSensorAsyncSetupEntry:
 
 
 # =========================================================================== #
-# TEST: manual_mapping validation for capacity/power                          #
+# TEST: optional manual mapping for capacity/power                            #
 # =========================================================================== #
 
 
-class TestManualMappingValidation:
-    """Tests for validation paths in manual_mapping that were uncovered."""
+class TestManualMappingOptionalFields:
+    """Manual fields may be saved empty for safe later configuration."""
 
-    def test_manual_mapping_rejects_missing_battery_capacity(self) -> None:
-        """When battery capacity (entity + manual) is missing, manual_mapping
-        returns error."""
+    def test_manual_mapping_allows_missing_battery_capacity(self) -> None:
+        """Missing capacity keeps the entry safely incomplete instead of blocking save."""
         hass = MagicMock()
         _mock_location(hass)
         flow = _make_flow(hass, e3dc_entries=[])
@@ -640,13 +639,12 @@ class TestManualMappingValidation:
         }
         result = _run(flow.async_step_manual_mapping(data))
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "manual_mapping"
-        assert result["errors"]["base"] == "missing_required_entities"
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_BATTERY_CAPACITY_ENTITY] == ""
+        assert result["data"][CONF_BATTERY_MANUAL_CAPACITY_KWH] == ""
 
-    def test_manual_mapping_rejects_missing_max_charge_power(self) -> None:
-        """When max charge power (entity + manual) is missing, manual_mapping
-        returns error."""
+    def test_manual_mapping_allows_missing_max_charge_power(self) -> None:
+        """Missing maximum charge power keeps the entry safely incomplete."""
         hass = MagicMock()
         _mock_location(hass)
         flow = _make_flow(hass, e3dc_entries=[])
@@ -665,9 +663,9 @@ class TestManualMappingValidation:
         }
         result = _run(flow.async_step_manual_mapping(data))
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "manual_mapping"
-        assert result["errors"]["base"] == "missing_required_entities"
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_MAX_CHARGE_POWER_ENTITY] == ""
+        assert result["data"][CONF_MAX_CHARGE_MANUAL_POWER_W] == ""
 
     def test_reconfigure_no_action_goes_back_to_form(self) -> None:
         """Reconfigure with neither rescan nor edit should show the form again."""
@@ -698,6 +696,22 @@ class TestManualMappingValidation:
         # Should go back to reconfigure form (no action taken)
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reconfigure"
+
+    def test_reconfigure_edit_saves_optional_mapping(self) -> None:
+        """Later configuration must save an empty or partial mapping and reload."""
+        hass = MagicMock()
+        entry = _make_uem_entry(data={CONF_MANUAL_ENTITIES: True})
+        flow = _make_flow(hass, e3dc_entries=[], uem_entry=entry)
+        flow.context = {"entry_id": entry.entry_id}
+
+        result = _run(flow.async_step_reconfigure_edit({CONF_SOC_ENTITY: "sensor.soc"}))
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        hass.config_entries.async_update_entry.assert_called_once()
+        assert hass.config_entries.async_update_entry.call_args.kwargs["data"][
+            CONF_SOC_ENTITY
+        ] == "sensor.soc"
 
 
 # =========================================================================== #

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.8 – Optionale, gruppierte manuelle Entitätszuordnung
+
+- **UX:** Manuelle Zuordnung ist weiterhin eine Seite, aber Messwerte sind verständlich gruppiert: allgemeine Werte, alle Batterie-Felder zusammen und alle Netz-Felder zusammen.
+- **UX:** Batterie und Netz verwenden standardmäßig jeweils eine Leistungsentität. Die Auswahl erklärt in Klartext, ob positive Werte Laden/Entladen bzw. Einspeisung/Netzbezug bedeuten. Zwei getrennte Entitäten bleiben optional verfügbar.
+- **UX:** Keine Entität ist beim Speichern Pflicht. „Später einrichten“ legt einen sicheren, bewusst unvollständigen Shadow-Eintrag an; UEM berechnet oder steuert ohne genügend Daten nichts.
+- **Fix:** Der bisher fehlende Speicherschritt für „Konfigurieren → Manuelle Zuordnung bearbeiten“ aktualisiert und lädt den Eintrag jetzt korrekt neu.
+- **Test:** Regressionstests decken leeres Speichern, spätere Einrichtung, optionale Kapazitäts-/Leistungsfelder, Feldgruppierung und das spätere Speichern ab.
+
 ## 0.1.7 – Shadow-MVP-Release: 100 % Statement Coverage, 328 Tests, Ruff clean
 
 - **Bugfix:** `_parse_float_entity` fängt `unhashable type: 'State.state'` ab (Coordinator crashed bei nicht-hashbarem state.state).

@@ -11,11 +11,28 @@
       },
       "no_e3dc_choice": {
         "title": "Kein E3DC-RSCP-Adapter gefunden",
-        "description": "UEM kann ohne Adapter nur mit manueller Entitätszuordnung eingerichtet werden. Möchtest du:\n\n• **Abbrechen**: Richte zuerst die E3DC-RSCP-Integration ein (empfohlen)\n• **Fortfahren**: Weise Sensoren manuell zu (universell, auch ohne Adapter)"
+        "description": "Du kannst die Messwerte jetzt manuell zuordnen oder UEM ohne Eingaben im sicheren Shadow-Modus anlegen. Eine unvollständige Einrichtung berechnet und steuert nichts und lässt sich später über **Konfigurieren** ergänzen."
       },
       "manual_mapping": {
         "title": "Manuelle Entitätszuordnung",
-        "description": "Wähle die Home Assistant-Sensoren für UEM. {detected} Vorschläge verfügbar. Batteriekapazität und maximale Ladeleistung können auch als feste Werte eingegeben werden. Leistungsfluss kann als vorzeichenbehafteter Sensor oder als separate Entitäten konfiguriert werden."
+        "description": "Alle Felder sind optional. UEM verwendet nur die vorhandenen, plausiblen Messwerte. Solange für eine Berechnung Daten fehlen, zeigt UEM **Einrichtung unvollständig** und bleibt vollständig im Shadow-Modus – ohne Steuerung.\n\nBei Batterie und Netz ist **eine Leistungsentität** der übliche Standard: Ein Wert wechselt je nach Richtung das Vorzeichen. Wähle **zwei Entitäten** nur, wenn dein System getrennte Sensoren für Laden/Entladen bzw. Bezug/Einspeisung liefert.",
+        "data": {
+          "soc_entity": "Batterieladestand (SoC)",
+          "pv_power_entity": "PV-Leistung",
+          "house_power_entity": "Hausverbrauch",
+          "battery_power_mode": "Batterieleistung kommt von",
+          "battery_charge_entity": "Batterieleistung (eine Entität) / Ladeleistung",
+          "battery_discharge_entity": "Batterie-Entladeleistung (nur bei zwei Entitäten)",
+          "battery_power_sign_convention": "Bei einer Batterie-Entität: Was bedeutet ein positiver Wert?",
+          "battery_capacity_entity": "Batteriekapazität als Entität (kWh)",
+          "battery_manual_capacity_kwh": "Batteriekapazität als fester Wert (kWh)",
+          "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
+          "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
+          "grid_power_mode": "Netzleistung kommt von",
+          "grid_export_entity": "Netzleistung (eine Entität) / Netzeinspeisung",
+          "grid_import_entity": "Netzbezug (nur bei zwei Entitäten)",
+          "grid_power_sign_convention": "Bei einer Netz-Entität: Was bedeutet ein positiver Wert?"
+        }
       },
       "reconfigure": {
         "title": "UEM konfigurieren",
@@ -31,7 +48,8 @@
       "e3dc_rscp_not_configured": "Es wurde keine E3DC-RSCP-Integration gefunden.",
       "e3dc_rscp_optional_cancel": "Einrichtung abgebrochen. Bitte richte zuerst den E3DC-RSCP-Adapter ein und versuche dann erneut, UEM hinzuzufügen.",
       "already_configured": "Ein Eintrag mit dieser Konfiguration existiert bereits.",
-      "not_configured": "Konfigurationseintrag nicht gefunden."
+      "not_configured": "Konfigurationseintrag nicht gefunden.",
+      "reconfigure_successful": "Konfiguration gespeichert. UEM wurde neu geladen."
     },
     "error": {
       "missing_required_entities": "Erforderliche Entitätszuordnungen fehlen: {missing}. Bitte weise alle Sensoren zu. Für Batteriekapazität und maximale Ladeleistung kannst du entweder Entitäten oder feste Werte (kWh/W) eingeben."
