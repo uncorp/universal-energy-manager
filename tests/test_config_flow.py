@@ -217,7 +217,8 @@ class TestConfirmStep:
         # Confirm now auto-submits to manual_mapping when core entities are missing
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "manual_mapping"
-        assert "detected" in result.get("description_placeholders", {})
+        # description_placeholders now includes per-field German descriptions
+        assert "soc_entity_desc" in result.get("description_placeholders", {})
 
     def test_confirm_step_aborts_when_unique_id_already_configured(self) -> None:
         """When a UEM entry with the same unique ID exists, confirm should abort."""

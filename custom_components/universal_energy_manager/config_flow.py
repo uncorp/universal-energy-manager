@@ -255,13 +255,15 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual_mapping()
 
         # Default: show form with prefill in data_schema (editable fields)
+        description_placeholders = {
+            **self._build_description_placeholders(entity_data),
+            "detected": str(
+                sum(1 for v in entity_data.values() if isinstance(v, str) and v.strip())
+            )
+        }
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={
-                "detected": str(
-                    sum(1 for v in entity_data.values() if isinstance(v, str) and v.strip())
-                )
-            },
+            description_placeholders=description_placeholders,
             data_schema=vol.Schema(self._build_full_schema(entity_data)),
         )
 
@@ -280,13 +282,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Show the manual mapping form with prefill suggestions
             return self.async_show_form(
                 step_id="manual_mapping",
-                description_placeholders={
-                    "detected": str(
-                        sum(1 for v in self._prefill_data.values() if v)
-                    )
-                    if self._prefill_data
-                    else "0"
-                },
+                description_placeholders=self._build_description_placeholders(
+                    self._prefill_data
+                ),
                 data_schema=vol.Schema(self._build_full_schema(self._prefill_data)),
             )
 
@@ -396,6 +394,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure_edit",
+            description_placeholders=self._build_description_placeholders(
+                entity_data
+            ),
             data_schema=vol.Schema(self._build_full_schema(entity_data)),
         )
 
@@ -473,6 +474,72 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # ------------------------------------------------------------------ #
     # Helpers                                                              #
     # ------------------------------------------------------------------ #
+
+    def _build_description_placeholders(
+        self, prefill: dict[str, Any] | None = None
+    ) -> dict[str, str]:
+        """Return a description_placeholders dict for HA 2024.3.x rendering.
+
+        HA 2024.3.3 does NOT support ``data_description`` in config_flow
+        strings.json — that was added in 2024.7+.  For this pinned version,
+        per-field descriptions are delivered via the ``description`` field
+        in strings.json together with ``description_placeholders`` passed
+        to ``async_show_form()``.  The placeholders are substituted by the
+        HA frontend at render time.
+
+        Returns keys like ``soc_entity_desc``, ``house_power_entity_desc``,
+        etc., with German explanation text.
+        """
+        return {
+            "soc_entity_desc": (
+                "Batterieladestand (SoC): Die Entität, die den aktuellen "
+                "Ladestand der Batterie meldet (z. B. 50 = 50 %)."
+            ),
+            "pv_power_entity_desc": (
+                "PV-Leistung: Die Entität der PV-Anlage, die die aktuelle "
+                "erzeugte Leistung meldet."
+            ),
+            "house_power_entity_desc": (
+                "Hausverbrauch: Die Entität des Hausverbrauchs. Ein negativer "
+                "Wert ist zulässig und bedeutet, dass z. B. ein "
+                "Balkonkraftwerk momentan mehr produziert als das Haus "
+                "verbraucht."
+            ),
+            "battery_charge_entity_desc": (
+                "Batterieleistung: Die Entität der Batterieleistung. Ein "
+                "einziger Sensor, der je nach Richtung (laden/entladen) "
+                "positive oder negative Werte liefern kann."
+            ),
+            "battery_capacity_entity_desc": (
+                "Batteriekapazität (Entität): Die Entität, die die installierte "
+                "Batteriekapazität in kWh meldet. Optional — alternativ kannst "
+                "du einen festen Wert eingeben."
+            ),
+            "battery_manual_capacity_kwh_desc": (
+                "Batteriekapazität (fester Wert): Die installierte "
+                "Batteriekapazität als fester Wert in kWh. Optional — "
+                "alternativ kannst du eine Entität wählen."
+            ),
+            "max_charge_power_entity_desc": (
+                "Max. Ladeleistung (Entität): Die Entität, die die maximale "
+                "Ladeleistung der Batterie in Watt meldet. Optional — "
+                "alternativ kannst du einen festen Wert eingeben."
+            ),
+            "max_charge_manual_power_w_desc": (
+                "Max. Ladeleistung (fester Wert): Die maximale Ladeleistung "
+                "als fester Wert in Watt. Optional — alternativ kannst du "
+                "eine Entität wählen."
+            ),
+            "grid_export_entity_desc": (
+                "Netzleistung: Die Entität der Netzleistung. Ein einziger "
+                "Sensor, der Import und Export über eine einzige Zahl "
+                "abbildet."
+            ),
+            "grid_power_sign_convention_desc": (
+                "Vorzeichenkonvention Netzleistung: Legt fest, was ein "
+                "positiver Wert bedeutet — Netzbezug oder Einspeisung."
+            ),
+        }
 
     def _mapping_defaults(self) -> dict[str, Any]:
         """Return the complete optional manual-mapping data shape."""
