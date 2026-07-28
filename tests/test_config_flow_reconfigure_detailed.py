@@ -394,119 +394,118 @@ class TestCoordinatorExceptionPaths:
     """Test that exceptions in the threaded plan_charge path are handled."""
 
     def test_coordinator_handles_build_planner_config_value_error(self) -> None:
-        def test_coordinator_handles_build_planner_config_value_error(self) -> None:
-            """When _build_planner_config raises ValueError, the thread should
-            catch it and return 0.0 charge_limit_w instead of crashing."""
-            from custom_components.universal_energy_manager.coordinator import (
-                UemShadowCoordinator,
+        """When _build_planner_config raises ValueError, the thread should
+        catch it and return 0.0 charge_limit_w instead of crashing."""
+        from custom_components.universal_energy_manager.coordinator import (
+            UemShadowCoordinator,
+        )
+
+        hass = MagicMock()
+        entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM",
+            data={
+                CONF_SOC_ENTITY: "sensor.fake_soc",
+                CONF_PV_POWER_ENTITY: "sensor.fake_pv",
+                CONF_HOUSE_POWER_ENTITY: "sensor.fake_house",
+                CONF_BATTERY_CHARGE_ENTITY: "sensor.fake_charge",
+                CONF_BATTERY_CAPACITY_ENTITY: "",
+                CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.0",
+                CONF_MAX_CHARGE_POWER_ENTITY: "",
+                CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
+                CONF_E3DC_CONFIG_ENTRY_ID: None,
+                CONF_E3DC_SOURCE_UNIQUE_ID: None,
+                CONF_FORECAST_SOLAR_ENTRY_IDS: [],
+                CONF_MANUAL_ENTITIES: True,
+            },
+            source="user",
+            entry_id="uem-test",
+            unique_id="uem:manual:test",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        hass.config_entries.async_entries.return_value = [entry]
+        hass.states.get.return_value = None
+
+        coord = UemShadowCoordinator(hass, entry)
+
+        live_data = MagicMock()
+        live_data.soc_pct = 50
+        live_data.pv_power_w = 1000
+        live_data.house_power_w = 500
+        live_data.grid_power_w = 0
+
+        # Force _build_planner_config to raise
+        with patch.object(
+            coord, "_build_planner_config", side_effect=ValueError("test")
+        ):
+            result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+                coord._compute_charge_limit_async(live_data, False)
             )
 
-            hass = MagicMock()
-            entry = config_entries.ConfigEntry(
-                version=1,
-                minor_version=1,
-                domain=DOMAIN,
-                title="UEM",
-                data={
-                    CONF_SOC_ENTITY: "sensor.fake_soc",
-                    CONF_PV_POWER_ENTITY: "sensor.fake_pv",
-                    CONF_HOUSE_POWER_ENTITY: "sensor.fake_house",
-                    CONF_BATTERY_CHARGE_ENTITY: "sensor.fake_charge",
-                    CONF_BATTERY_CAPACITY_ENTITY: "",
-                    CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.0",
-                    CONF_MAX_CHARGE_POWER_ENTITY: "",
-                    CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-                    CONF_E3DC_CONFIG_ENTRY_ID: None,
-                    CONF_E3DC_SOURCE_UNIQUE_ID: None,
-                    CONF_FORECAST_SOLAR_ENTRY_IDS: [],
-                    CONF_MANUAL_ENTITIES: True,
-                },
-                source="user",
-                entry_id="uem-test",
-                unique_id="uem:manual:test",
-                state=config_entries.ConfigEntryState.LOADED,
-            )
-            hass.config_entries.async_entries.return_value = [entry]
-            hass.states.get.return_value = None
+        # Should not crash; returns 0.0
+        assert result == 0.0
 
-            coord = UemShadowCoordinator(hass, entry)
+    def test_coordinator_handles_plan_charge_value_error(self) -> None:
+        """When plan_charge raises ValueError, the thread catches it and
+        returns 0.0 charge_limit_w."""
+        from custom_components.universal_energy_manager.coordinator import (
+            UemShadowCoordinator,
+        )
 
-            live_data = MagicMock()
-            live_data.soc_pct = 50
-            live_data.pv_power_w = 1000
-            live_data.house_power_w = 500
-            live_data.grid_power_w = 0
+        hass = MagicMock()
+        entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=DOMAIN,
+            title="UEM",
+            data={
+                CONF_SOC_ENTITY: "sensor.fake_soc",
+                CONF_PV_POWER_ENTITY: "sensor.fake_pv",
+                CONF_HOUSE_POWER_ENTITY: "sensor.fake_house",
+                CONF_BATTERY_CHARGE_ENTITY: "sensor.fake_charge",
+                CONF_BATTERY_CAPACITY_ENTITY: "",
+                CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.0",
+                CONF_MAX_CHARGE_POWER_ENTITY: "",
+                CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
+                CONF_E3DC_CONFIG_ENTRY_ID: None,
+                CONF_E3DC_SOURCE_UNIQUE_ID: None,
+                CONF_FORECAST_SOLAR_ENTRY_IDS: [],
+                CONF_MANUAL_ENTITIES: True,
+            },
+            source="user",
+            entry_id="uem-test",
+            unique_id="uem:manual:test",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        hass.config_entries.async_entries.return_value = [entry]
+        hass.states.get.return_value = None
 
-            # Force _build_planner_config to raise
-            with patch.object(
-                coord, "_build_planner_config", side_effect=ValueError("test")
-            ):
-                result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
-                    coord._compute_charge_limit_async(live_data, False)
-                )
+        coord = UemShadowCoordinator(hass, entry)
 
-            # Should not crash; returns 0.0
-            assert result == 0.0
+        live_data = MagicMock()
+        live_data.soc_pct = 50
+        live_data.pv_power_w = 1000
+        live_data.house_power_w = 500
+        live_data.grid_power_w = 0
 
-        def test_coordinator_handles_plan_charge_value_error(self) -> None:
-            """When plan_charge raises ValueError, the thread catches it and
-            returns 0.0 charge_limit_w."""
-            from custom_components.universal_energy_manager.coordinator import (
-                UemShadowCoordinator,
-            )
+        # Make storage and config fine, but plan_charge raise
+        def _raise_plan(*args, **kwargs):
+            raise ValueError("planning error")
 
-            hass = MagicMock()
-            entry = config_entries.ConfigEntry(
-                version=1,
-                minor_version=1,
-                domain=DOMAIN,
-                title="UEM",
-                data={
-                    CONF_SOC_ENTITY: "sensor.fake_soc",
-                    CONF_PV_POWER_ENTITY: "sensor.fake_pv",
-                    CONF_HOUSE_POWER_ENTITY: "sensor.fake_house",
-                    CONF_BATTERY_CHARGE_ENTITY: "sensor.fake_charge",
-                    CONF_BATTERY_CAPACITY_ENTITY: "",
-                    CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.0",
-                    CONF_MAX_CHARGE_POWER_ENTITY: "",
-                    CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-                    CONF_E3DC_CONFIG_ENTRY_ID: None,
-                    CONF_E3DC_SOURCE_UNIQUE_ID: None,
-                    CONF_FORECAST_SOLAR_ENTRY_IDS: [],
-                    CONF_MANUAL_ENTITIES: True,
-                },
-                source="user",
-                entry_id="uem-test",
-                unique_id="uem:manual:test",
-                state=config_entries.ConfigEntryState.LOADED,
-            )
-            hass.config_entries.async_entries.return_value = [entry]
-            hass.states.get.return_value = None
+        with patch.object(coord, "_build_storage_capabilities"):
+            with patch.object(coord, "_build_planner_config"):
+                with patch(
+                    "custom_components.universal_energy_manager.coordinator.plan_charge",
+                    _raise_plan,
+                ):
+                    loop = asyncio.get_event_loop_policy().new_event_loop()
+                    result = loop.run_until_complete(
+                        coord._compute_charge_limit_async(live_data, False)
+                    )
 
-            coord = UemShadowCoordinator(hass, entry)
-
-            live_data = MagicMock()
-            live_data.soc_pct = 50
-            live_data.pv_power_w = 1000
-            live_data.house_power_w = 500
-            live_data.grid_power_w = 0
-
-            # Make storage and config fine, but plan_charge raise
-            def _raise_plan(*args, **kwargs):
-                raise ValueError("planning error")
-
-            with patch.object(coord, "_build_storage_capabilities"):
-                with patch.object(coord, "_build_planner_config"):
-                    with patch(
-                        "custom_components.universal_energy_manager.coordinator.plan_charge",
-                        _raise_plan,
-                    ):
-                        loop = asyncio.get_event_loop_policy().new_event_loop()
-                        result = loop.run_until_complete(
-                            coord._compute_charge_limit_async(live_data, False)
-                        )
-
-            assert result == 0.0
+        assert result == 0.0
 
 
 # =========================================================================== #
