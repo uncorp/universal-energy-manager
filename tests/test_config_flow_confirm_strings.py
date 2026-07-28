@@ -1,10 +1,20 @@
-"""Regression test: confirm step in strings.json must have data_description.
+"""Regression test: confirm step in strings.json provides field descriptions.
 
 Requirement 5: Jede sichtbare Zeile braucht einen klaren deutschen Titel
-UND eine kurze Erklärung direkt darunter. Die HA-UI-Mechanik (data_description
-in strings.json) muss für DENSELBEN Fields in confirm wie in manual_mapping
-vorhanden sein, da der confirm-Schritt dieselben Felder aus _build_full_schema
-nutzt.
+UND eine kurze Erklärung direkt darunter.
+
+HA 2024.3.3 (pinned version) does NOT support ``data_description`` in
+config-flow strings.json — it was added in HA 2024.7+.  The actual
+mechanism is:
+- The step's ``description`` text contains ``{*_desc}`` placeholder tokens.
+- The config flow passes ``description_placeholders`` with the real German
+  text for each placeholder to ``async_show_form()``.
+- The HA frontend substitutes placeholders at render time.
+
+This test verifies that:
+1. The confirm step has a ``data`` dict with German field titles.
+2. The confirm step's ``description`` contains all ``{*_desc}`` placeholder tokens.
+3. All field descriptions are present (mirroring manual_mapping).
 """
 
 from __future__ import annotations
@@ -39,191 +49,170 @@ def _load_strings() -> dict:
 
 
 # =========================================================================== #
-# TEST 1: confirm step has data_description                                  #
+# TEST 1: confirm step has German field titles (data key)                    #
 # =========================================================================== #
 
 
-class TestConfirmStepDataDescription:
-    """The confirm step must have a data_description for every schema field."""
+class TestConfirmStepDataTitles:
+    """The confirm step must have a data dict with German field titles."""
 
-    def test_confirm_has_data_description_key(self):
-        """strings.json confirm step must have a data_description key."""
+    def test_confirm_has_data_key(self):
+        """strings.json confirm step must have a data key."""
         strings = _load_strings()
         confirm = (
             strings.get("config", {})
             .get("step", {})
             .get("confirm", {})
         )
-        assert "data_description" in confirm, (
-            "confirm step must have a data_description section"
+        assert "data" in confirm, (
+            "confirm step must have a 'data' key with field titles"
         )
 
-    def test_confirm_data_description_has_soc(self):
+    def test_confirm_data_has_soc(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_SOC_ENTITY in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_SOC_ENTITY in data
 
-    def test_confirm_data_description_has_pv_power(self):
+    def test_confirm_data_has_pv_power(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_PV_POWER_ENTITY in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_PV_POWER_ENTITY in data
 
-    def test_confirm_data_description_has_house_power(self):
+    def test_confirm_data_has_house_power(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_HOUSE_POWER_ENTITY in dd
-        # Must explain negative values for house power
-        desc_text = dd[CONF_HOUSE_POWER_ENTITY]
-        assert (
-            "negativ" in desc_text.lower()
-            or "balkonkraftwerk" in desc_text.lower()
-        ), (
-            "confirm data_description for house_power_entity must explain "
-            "negative values (Balkonkraftwerk)"
-        )
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_HOUSE_POWER_ENTITY in data
 
-    def test_confirm_data_description_has_battery_charge(self):
+    def test_confirm_data_has_battery_charge(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_BATTERY_CHARGE_ENTITY in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_BATTERY_CHARGE_ENTITY in data
 
-    def test_confirm_data_description_has_grid_export(self):
+    def test_confirm_data_has_grid_export(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_GRID_EXPORT_ENTITY in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_GRID_EXPORT_ENTITY in data
 
-    def test_confirm_data_description_has_grid_sign_convention(self):
+    def test_confirm_data_has_grid_sign_convention(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_GRID_POWER_SIGN_CONVENTION in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_GRID_POWER_SIGN_CONVENTION in data
 
-    def test_confirm_data_description_has_battery_capacity(self):
+    def test_confirm_data_has_battery_capacity(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_BATTERY_CAPACITY_ENTITY in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_BATTERY_CAPACITY_ENTITY in data
 
-    def test_confirm_data_description_has_battery_manual_capacity(self):
+    def test_confirm_data_has_battery_manual_capacity(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_BATTERY_MANUAL_CAPACITY_KWH in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_BATTERY_MANUAL_CAPACITY_KWH in data
 
-    def test_confirm_data_description_has_max_charge_power_entity(self):
+    def test_confirm_data_has_max_charge_power_entity(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_MAX_CHARGE_POWER_ENTITY in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_MAX_CHARGE_POWER_ENTITY in data
 
-    def test_confirm_data_description_has_max_charge_manual_power(self):
+    def test_confirm_data_has_max_charge_manual_power(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        assert CONF_MAX_CHARGE_MANUAL_POWER_W in dd
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_MAX_CHARGE_MANUAL_POWER_W in data
 
-    def test_confirm_data_description_values_are_german(self):
-        """All data_description values in confirm must be in German."""
+    def test_confirm_data_values_are_german(self):
+        """All data values in confirm must be in German."""
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-            .get("data_description", {})
-        )
-        for key, val in dd.items():
-            assert len(val.strip()) > 5, (
-                f"data_description for {key} must be a meaningful German sentence"
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        for key, val in data.items():
+            assert len(val.strip()) > 2, (
+                f"data title for {key} must be a meaningful German string"
             )
             val_lower = val.lower()
             assert any(
                 kw in val_lower
                 for kw in ["entität", "leistung", "batterie", "netz", "haus",
                            "verbrauch", "ladestand", "kapazität", "vorzeichen",
-                           "bedeutet", "kann", "soll", "messwert", "anlage"]
-            ), f"confirm data_description for {key} must be in German, got: {val}"
+                           "positiv", "bedeutet", "messwert", "anlage", "pv",
+                           "einspeisung", "bezug"]
+            ), f"confirm data for {key} must be in German, got: {val}"
 
 
 # =========================================================================== #
-# TEST 2: confirm data_description mirrors manual_mapping                    #
+# TEST 2: confirm step description contains placeholder tokens               #
 # =========================================================================== #
 
 
-class TestConfirmManualMappingDataDescriptionConsistency:
-    """data_description in confirm should match manual_mapping (same fields)."""
+class TestConfirmStepDescriptionPlaceholders:
+    """The confirm step's description must contain {*_desc} tokens for
+    field explanations.  These are substituted by HA at render time
+    via description_placeholders passed by the config flow."""
 
-    def _dd_for_step(self, step_name: str) -> dict:
+    def _description_tokens(self, step_name: str) -> list[str]:
         strings = _load_strings()
-        return (
-            strings.get("config", {})
-            .get("step", {})
-            .get(step_name, {})
-            .get("data_description", {})
+        desc = strings.get("config", {}).get("step", {}).get(step_name, {}).get("description", "")
+        # Find all {token} patterns
+        import re
+        return re.findall(r"\{(\w+)_desc\}", desc)
+
+    def test_confirm_has_all_placeholder_tokens(self):
+        """confirm description must contain all 10 field-description tokens."""
+        tokens = self._description_tokens("confirm")
+        expected_tokens = [
+            "soc_entity",
+            "pv_power_entity",
+            "house_power_entity",
+            "battery_charge_entity",
+            "battery_capacity_entity",
+            "battery_manual_capacity_kwh",
+            "max_charge_power_entity",
+            "max_charge_manual_power_w",
+            "grid_export_entity",
+            "grid_power_sign_convention",
+        ]
+        for t in expected_tokens:
+            assert t in tokens, (
+                f"confirm description must contain {{{t}_desc}} placeholder, "
+                f"found: {tokens}"
+            )
+
+    def test_confirm_and_manual_mapping_share_all_placeholder_tokens(self):
+        """Both steps must define placeholders for the same fields."""
+        confirm_tokens = set(self._description_tokens("confirm"))
+        manual_tokens = set(self._description_tokens("manual_mapping"))
+        expected = {
+            "soc_entity", "pv_power_entity", "house_power_entity",
+            "battery_charge_entity", "battery_capacity_entity",
+            "battery_manual_capacity_kwh", "max_charge_power_entity",
+            "max_charge_manual_power_w", "grid_export_entity",
+            "grid_power_sign_convention",
+        }
+        assert confirm_tokens == expected, (
+            f"confirm placeholder tokens mismatch: missing={expected - confirm_tokens}"
+        )
+        assert manual_tokens == expected, (
+            f"manual_mapping placeholder tokens mismatch: missing={expected - manual_tokens}"
         )
 
-    def test_confirm_and_manual_mapping_share_all_fields(self):
-        """Both steps must define data_description for the same fields."""
-        dd_confirm = self._dd_for_step("confirm")
-        dd_manual = self._dd_for_step("manual_mapping")
 
-        confirm_keys = set(dd_confirm.keys())
-        manual_keys = set(dd_manual.keys())
+# =========================================================================== #
+# TEST 3: data_description is dead code (removed)                             #
+# =========================================================================== #
 
-        # confirm should have at least all the fields that manual_mapping has
-        assert manual_keys.issubset(confirm_keys), (
-            f"confirm data_description missing fields: {manual_keys - confirm_keys}"
+
+class TestConfirmNoDeadDataDescription:
+    """HA 2024.3.3 does not support data_description — it must be removed."""
+
+    def test_confirm_has_no_data_description_key(self):
+        """confirm step must not have data_description (dead code)."""
+        strings = _load_strings()
+        confirm = strings.get("config", {}).get("step", {}).get("confirm", {})
+        assert "data_description" not in confirm, (
+            "confirm step must not have data_description (HA 2024.3.3 unsupported)"
         )
 
-    def test_confirm_and_manual_mapping_house_power_description_match(self):
-        """House power explanation must be identical in both steps."""
-        dd_confirm = self._dd_for_step("confirm")
-        dd_manual = self._dd_for_step("manual_mapping")
-
-        assert dd_confirm[CONF_HOUSE_POWER_ENTITY] == dd_manual[CONF_HOUSE_POWER_ENTITY], (
-            "house_power_entity data_description must be identical in confirm and manual_mapping"
+    def test_manual_mapping_has_no_data_description_key(self):
+        """manual_mapping step must not have data_description (dead code)."""
+        strings = _load_strings()
+        mapping = strings.get("config", {}).get("step", {}).get("manual_mapping", {})
+        assert "data_description" not in mapping, (
+            "manual_mapping must not have data_description (HA 2024.3.3 unsupported)"
         )

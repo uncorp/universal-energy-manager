@@ -1,10 +1,14 @@
-"""Regression test: reconfigure/reconfigure_edit steps use HA data_description.
+"""Regression test: reconfigure/reconfigure_edit steps use description_placeholders.
 
 Requirements:
-- reconfigure and reconfigure_edit steps in strings.json have data_description entries
-- The data_description for reconfigure_edit mirrors the manual_mapping one
+- reconfigure and reconfigure_edit steps in strings.json have description
+  text with {*_desc} placeholder tokens
+- The config flow passes description_placeholders for all fields
 - No references to removed fields (battery_power_mode, grid_power_mode, etc.)
-- Each field in data_description has a German explanation
+- Each field in description_placeholders has a German explanation
+
+HA 2024.3.3 (pinned version) does NOT support data_description — the
+working mechanism is description_placeholders passed to async_show_form().
 """
 
 from __future__ import annotations
@@ -74,105 +78,106 @@ def _make_flow_with_uem(hass: MagicMock, uem_entry) -> UemConfigFlow:
 
 
 # =========================================================================== #
-# TEST 1: reconfigure step has data_description                              #
+# TEST 1: reconfigure step has no data_description (dead code)                #
 # =========================================================================== #
 
 
-class TestReconfigureStepDataDescription:
-    """The reconfigure step must have a data_description section in strings.json."""
+class TestReconfigureStepNoDeadCode:
+    """The reconfigure step must not have data_description (HA 2024.3.3 unsupported)."""
 
-    def test_reconfigure_step_has_data_description_key(self):
-        """strings.json reconfigure step must have a data_description key."""
+    def test_reconfigure_has_no_data_description_key(self):
         strings = _load_strings()
-        reconfigure = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("reconfigure", {})
-        )
-        assert "data_description" in reconfigure, (
-            "reconfigure step must have a data_description section"
-        )
+        reconfigure = strings.get("config", {}).get("step", {}).get("reconfigure", {})
+        assert "data_description" not in reconfigure
 
-    def test_reconfigure_data_description_exists(self):
-        """data_description for reconfigure should exist (may be empty since
-        the reconfigure form only has checkboxes, not entity fields)."""
+    def test_reconfigure_edit_has_no_data_description_key(self):
         strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("reconfigure", {})
-            .get("data_description", {})
+        reconfigure_edit = strings.get("config", {}).get("step", {}).get(
+            "reconfigure_edit", {}
         )
-        # The reconfigure form only shows rescan/edit checkboxes, no entity fields
-        # An empty dict is acceptable here. The key just needs to exist.
-        assert isinstance(dd, dict)
+        assert "data_description" not in reconfigure_edit
 
 
 # =========================================================================== #
-# TEST 2: reconfigure_edit step has data_description                         #
+# TEST 2: reconfigure_edit flow passes description_placeholders               #
 # =========================================================================== #
 
 
-class TestReconfigureEditStepDataDescription:
-    """The reconfigure_edit step must have a data_description section."""
+class TestReconfigureEditStepPlaceholders:
+    """The reconfigure_edit step must pass description_placeholders
+    covering all schema fields."""
 
-    def test_reconfigure_edit_has_data_description_key(self):
-        """strings.json reconfigure_edit step must have a data_description key."""
-        strings = _load_strings()
-        reconfigure_edit = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("reconfigure_edit", {})
-        )
-        assert "data_description" in reconfigure_edit, (
-            "reconfigure_edit step must have a data_description section"
+    def test_reconfigure_edit_passes_description_placeholders(self):
+        """Reconfigure → edit flow must pass description_placeholders."""
+        hass = MagicMock()
+        flow = UemConfigFlow()
+        flow.hass = hass
+        flow.context = {"entry_id": "uem-test"}
+        flow.handler = DOMAIN
+
+        uem_entry = MagicMock()
+        uem_entry.entry_id = "uem-test"
+        uem_entry.domain = DOMAIN
+        uem_entry.version = 1
+        uem_entry.minor_version = 1
+        uem_entry.title = "UEM"
+        uem_entry.data = {
+            CONF_E3DC_CONFIG_ENTRY_ID: "e3dc-001",
+            CONF_E3DC_SOURCE_UNIQUE_ID: "HW-999",
+            CONF_MANUAL_ENTITIES: False,
+            CONF_SOC_ENTITY: "sensor.e3dc_soc",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "",
+            CONF_MAX_CHARGE_POWER_ENTITY: "",
+        }
+        uem_entry.source = "user"
+        uem_entry.unique_id = "uem:manual:test"
+        uem_entry.state = MagicMock()
+
+        all_by_domain = {DOMAIN: [uem_entry], E3DC_RSCP_DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in all_by_domain.values():
+                    result.extend(entries)
+                return result
+            return all_by_domain.get(domain, [])
+
+        flow.hass.config_entries.async_entries = MagicMock(
+            side_effect=_async_entries
         )
 
-    def test_reconfigure_edit_data_description_has_all_fields(self):
-        """data_description for reconfigure_edit should have descriptions for all
-        schema fields — matching the manual_mapping set."""
-        strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("reconfigure_edit", {})
-            .get("data_description", {})
+        async def _go():
+            r = await flow.async_step_reconfigure({"edit_manual": "True"})
+            return r
+
+        result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            _go()
         )
-        # Must have at least the core fields
-        for field in (
-            CONF_SOC_ENTITY,
-            CONF_PV_POWER_ENTITY,
-            CONF_HOUSE_POWER_ENTITY,
-            CONF_BATTERY_CHARGE_ENTITY,
-            CONF_GRID_EXPORT_ENTITY,
-            CONF_GRID_POWER_SIGN_CONVENTION,
-        ):
-            assert field in dd, (
-                f"reconfigure_edit data_description must have entry for {field}"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reconfigure_edit"
+
+        placeholders = result.get("description_placeholders")
+        assert placeholders is not None
+
+        # All 10 schema fields must be present
+        _ALL_PLACEHOLDER_KEYS = {
+            "soc_entity_desc",
+            "pv_power_entity_desc",
+            "house_power_entity_desc",
+            "battery_charge_entity_desc",
+            "battery_capacity_entity_desc",
+            "battery_manual_capacity_kwh_desc",
+            "max_charge_power_entity_desc",
+            "max_charge_manual_power_w_desc",
+            "grid_export_entity_desc",
+            "grid_power_sign_convention_desc",
+        }
+        for key in _ALL_PLACEHOLDER_KEYS:
+            assert key in placeholders, (
+                f"description_placeholders must include '{key}'"
             )
-
-    def test_reconfigure_edit_data_description_is_german(self):
-        """All data_description values in reconfigure_edit must be in German."""
-        strings = _load_strings()
-        dd = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("reconfigure_edit", {})
-            .get("data_description", {})
-        )
-        for key, val in dd.items():
-            # Must not be empty
-            assert len(val.strip()) > 5, (
-                f"data_description for {key} must be a meaningful German sentence"
-            )
-            # Should not contain English-only technical terms
-            val_lower = val.lower()
-            # Should not be purely English
-            assert any(
-                kw in val_lower
-                for kw in ["entität", "leistung", "batterie", "netz", "haus", "verbrauch",
-                           "ladestand", "kapazität", "vorzeichen", "bedeutet", "soll", "kann"]
-            ), f"data_description for {key} must be in German, got: {val}"
 
 
 # =========================================================================== #
@@ -197,7 +202,6 @@ class TestReconfigureFlowSimplifiedSchema:
         return entry
 
     def test_reconfigure_flow_shows_form(self):
-        """Starting reconfigure should show the reconfigure step with form type."""
         hass = MagicMock()
         uem_entry = self._make_uem_entry(
             data={
@@ -227,8 +231,6 @@ class TestReconfigureFlowSimplifiedSchema:
         assert result["step_id"] == "reconfigure"
 
     def test_reconfigure_edit_shows_form_with_simplified_schema(self):
-        """Reconfigure → edit_manual should show reconfigure_edit form with
-        simplified schema (no battery_power_mode, grid_power_mode, etc.)."""
         hass = MagicMock()
         uem_entry = self._make_uem_entry(
             data={
@@ -248,7 +250,6 @@ class TestReconfigureFlowSimplifiedSchema:
         flow = _make_flow_with_uem(hass, uem_entry)
 
         async def _go():
-            # Trigger reconfigure → edit_manual
             result = await flow.async_step_reconfigure(
                 {"rescan_e3dc": False, "edit_manual": True}
             )
@@ -260,9 +261,7 @@ class TestReconfigureFlowSimplifiedSchema:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reconfigure_edit"
 
-        # Verify simplified schema — no removed fields
         schema_dict = result.get("data_schema", {})
-        # Schema is a voluptuous.Schema wrapping a dict; extract keys
         if hasattr(schema_dict, "schema"):
             schema_keys = set(schema_dict.schema.keys())
         elif hasattr(schema_dict, "keys"):
@@ -270,7 +269,6 @@ class TestReconfigureFlowSimplifiedSchema:
         else:
             schema_keys = set()
 
-        # These must NOT be in the schema
         from custom_components.universal_energy_manager.const import (
             CONF_BATTERY_DISCHARGE_ENTITY,
             CONF_BATTERY_POWER_MODE,
@@ -285,7 +283,6 @@ class TestReconfigureFlowSimplifiedSchema:
         assert CONF_GRID_POWER_MODE not in schema_keys
         assert CONF_GRID_IMPORT_ENTITY not in schema_keys
 
-        # These MUST be in the schema
         assert CONF_SOC_ENTITY in schema_keys
         assert CONF_PV_POWER_ENTITY in schema_keys
         assert CONF_HOUSE_POWER_ENTITY in schema_keys
@@ -294,7 +291,6 @@ class TestReconfigureFlowSimplifiedSchema:
         assert CONF_GRID_POWER_SIGN_CONVENTION in schema_keys
 
     def test_reconfigure_edit_save_updates_entry_data(self):
-        """Saving reconfigure_edit should update entry data and return abort."""
         hass = MagicMock()
         uem_entry = self._make_uem_entry(
             data={
@@ -333,7 +329,6 @@ class TestReconfigureFlowSimplifiedSchema:
         result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
             _go()
         )
-        # The stub returns ABORT, and the entry's data should be updated
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
 

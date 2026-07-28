@@ -1,18 +1,25 @@
 """Regression test: every flow step with entity fields needs both title
-(data) and description (data_description).
+(data) and description (via {placeholder} tokens in description text).
 
 Requirement 5: Jede sichtbare Zeile braucht einen klaren deutschen Titel UND
 eine kurze Erklärung direkt darunter. Die HA-UI-Mechanik dafür ist:
   - "data": { key: "Klarer deutscher Titel" }
-  - "data_description": { key: "Kurze Erklärung direkt darunter." }
+  - "description": text with {*_desc} placeholder tokens
+  - Config flow passes description_placeholders with German text.
+
+HA 2024.3.3 (pinned version) does NOT support ``data_description`` in
+strings.json — it was added in HA 2024.7+.  The working mechanism is
+``description_placeholders`` passed to ``async_show_form()``.
 
 Diese Tests prüfen, dass confirm, manual_mapping und reconfigure_edit alle
-beide Sektionen für alle 10 Schema-Felder haben.
+beide Sektionen haben: deutsche Titel ('data') und Erklärungs-Placeholder
+(im description-Text).
 """
 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from custom_components.universal_energy_manager.const import (
@@ -55,6 +62,11 @@ _SCHEMA_FIELDS = frozenset({
     CONF_GRID_POWER_SIGN_CONVENTION,
 })
 
+# Expected description placeholder base names (without _desc suffix).
+# _step_description_tokens strips the _desc suffix via the regex, so these
+# must match the raw field base names like 'soc_entity', 'house_power_entity', etc.
+_EXPECTED_TOKENS = frozenset(_SCHEMA_FIELDS)
+
 
 def _step_data(step_name: str) -> dict:
     """Return the 'data' (titles) dict for a given step."""
@@ -67,15 +79,18 @@ def _step_data(step_name: str) -> dict:
     )
 
 
-def _step_data_description(step_name: str) -> dict:
-    """Return the 'data_description' dict for a given step."""
+def _step_description_tokens(step_name: str) -> list[str]:
+    """Return all {*_desc} tokens found in the step's description text."""
     strings = _load_strings()
-    return (
-        strings.get("config", {})
-        .get("step", {})
-        .get(step_name, {})
-        .get("data_description", {})
-    )
+    desc = strings.get("config", {}).get("step", {}).get(step_name, {}).get("description", "")
+    return re.findall(r"\{(\w+)_desc\}", desc)
+
+
+def _step_no_data_description(step_name: str) -> bool:
+    """Return True if the step does NOT have data_description (dead code)."""
+    strings = _load_strings()
+    step = strings.get("config", {}).get("step", {}).get(step_name, {})
+    return "data_description" not in step
 
 
 # =========================================================================== #
@@ -109,14 +124,13 @@ class TestConfirmStepDataTitles:
             assert len(val.strip()) > 2, (
                 f"confirm/data[{key}] must be a meaningful title, got: {val!r}"
             )
-            # Titles should not contain English technical jargon as primary
             val_lower = val.lower()
             assert any(
                 kw in val_lower
                 for kw in ["entität", "leistung", "batterie", "netz", "haus",
                            "verbrauch", "ladestand", "kapazität", "vorzeichen",
                            "kann", "soll", "messwert", "anlage", "fest", "wahl",
-                           "bedeutet", "wahl", "konvention"]
+                           "bedeutet", "konvention"]
             ), (
                 f"confirm/data[{key}] = {val!r} is not a proper German title"
             )
@@ -179,35 +193,54 @@ class TestReconfigureEditDataTitles:
 
 
 # =========================================================================== #
-# TEST 4: Pairing — every field has BOTH title and description                #
+# TEST 4: Every step has description with placeholder tokens                  #
 # =========================================================================== #
 
 
-class TestDataDescriptionPairing:
-    """For every flow step with entity fields, each field must have both
-    a German title ('data') AND a German explanation ('data_description')."""
+class TestStepDescriptionPlaceholders:
+    """Each step with entity fields must have {*_desc} tokens in its
+    description text, matching all 10 schema fields."""
 
-    def _check_pairing(self, step_name: str) -> None:
-        """Assert both 'data' and 'data_description' exist and cover all fields."""
-        data = _step_data(step_name)
-        desc = _step_data_description(step_name)
-        missing_title = _SCHEMA_FIELDS - set(data.keys())
-        missing_desc = _SCHEMA_FIELDS - set(desc.keys())
-        assert not missing_title, (
-            f"{step_name}/data missing titles for: {missing_title}"
-        )
-        assert not missing_desc, (
-            f"{step_name}/data_description missing descriptions for: {missing_desc}"
+    def _check_tokens(self, step_name: str) -> None:
+        tokens = set(_step_description_tokens(step_name))
+        missing = _EXPECTED_TOKENS - tokens
+        assert not missing, (
+            f"{step_name} description missing tokens for: {missing}"
         )
 
-    def test_confirm_has_both_title_and_description(self) -> None:
-        """confirm step must have both 'data' and 'data_description' for all fields."""
-        self._check_pairing("confirm")
+    def test_confirm_has_all_description_tokens(self) -> None:
+        """confirm step must have all 10 {*_desc} tokens."""
+        self._check_tokens("confirm")
 
-    def test_manual_mapping_has_both_title_and_description(self) -> None:
-        """manual_mapping must have both 'data' and 'data_description' for all fields."""
-        self._check_pairing("manual_mapping")
+    def test_manual_mapping_has_all_description_tokens(self) -> None:
+        """manual_mapping must have all 10 {*_desc} tokens."""
+        self._check_tokens("manual_mapping")
 
-    def test_reconfigure_edit_has_both_title_and_description(self) -> None:
-        """reconfigure_edit must have both 'data' and 'data_description' for all fields."""
-        self._check_pairing("reconfigure_edit")
+    def test_reconfigure_edit_has_all_description_tokens(self) -> None:
+        """reconfigure_edit must have all 10 {*_desc} tokens."""
+        self._check_tokens("reconfigure_edit")
+
+
+# =========================================================================== #
+# TEST 5: data_description is dead code — removed from all steps              #
+# =========================================================================== #
+
+
+class TestNoDataDescriptionDeadCode:
+    """HA 2024.3.3 does not support data_description.  All steps must
+    not have this key (dead code)."""
+
+    def test_confirm_no_data_description(self) -> None:
+        assert _step_no_data_description("confirm"), (
+            "confirm must not have data_description (dead code)"
+        )
+
+    def test_manual_mapping_no_data_description(self) -> None:
+        assert _step_no_data_description("manual_mapping"), (
+            "manual_mapping must not have data_description (dead code)"
+        )
+
+    def test_reconfigure_edit_no_data_description(self) -> None:
+        assert _step_no_data_description("reconfigure_edit"), (
+            "reconfigure_edit must not have data_description (dead code)"
+        )

@@ -257,12 +257,19 @@ class TestEmptyFormCreatesEntry:
 
 
 # =========================================================================== #
-# TEST 5: Strings.json has data_description for house_power_entity            #
+# TEST 5: Strings.json has description placeholders for field explanations     #
 # =========================================================================== #
 
 
 class TestStringsJsonDescriptions:
-    """HA's data_description mechanism must be used for field explanations."""
+    """HA 2024.3.3 does NOT support data_description.  Field explanations
+    are delivered via {placeholder} tokens in the step's description text,
+    with the real German text provided via description_placeholders in
+    async_show_form().
+
+    This test verifies the placeholders are present AND that the description
+    text actually contains the required explanations (negative values for
+    house power, etc.)."""
 
     def _load_strings(self) -> dict:
         strings_path = (
@@ -274,50 +281,132 @@ class TestStringsJsonDescriptions:
         with open(strings_path, encoding="utf-8") as f:
             return json.load(f)
 
-    def test_house_power_has_data_description(self) -> None:
-        """house_power_entity must have a data_description explaining negative values."""
-        strings = self._load_strings()
-        manual_mapping = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("manual_mapping", {})
+    def test_house_power_placeholder_explains_negative_values(self) -> None:
+        """house_power_entity_desc placeholder must explain negative values
+        and Balkonkraftwerk.  The config flow passes this text via
+        description_placeholders."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from custom_components.universal_energy_manager.config_flow import (
+            DOMAIN,
+            E3DC_RSCP_DOMAIN,
+            UemConfigFlow,
         )
-        data_desc = manual_mapping.get("data_description", {})
+
+        flow = UemConfigFlow()
+        flow.hass = MagicMock()
+        flow.context = {}
+        flow.handler = DOMAIN
+        ce = flow.hass.config_entries
+        _all: dict[str, list] = {E3DC_RSCP_DOMAIN: [], DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+        ce.async_entry_for_domain_unique_id = MagicMock(return_value=None)
+
+        async def _go():
+            r = await flow.async_step_no_e3dc_choice({"confirm": "continue"})
+            return r
+
+        result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            _go()
+        )
+        placeholders = result["description_placeholders"]
+        house_desc = str(placeholders.get("house_power_entity_desc", ""))
         assert (
-            "house_power_entity" in data_desc
-        ), "house_power_entity must have a data_description"
-        desc_text = data_desc["house_power_entity"]
-        # Must mention negative values / Balkonkraftwerk
-        assert (
-            "negativ" in desc_text.lower()
-            or "balkonkraftwerk" in desc_text.lower()
-            or "produziert" in desc_text.lower()
+            "negativ" in house_desc.lower()
+            or "balkonkraftwerk" in house_desc.lower()
+            or "produziert" in house_desc.lower()
         ), (
-            "house_power_entity data_description must explain that negative "
-            "values are possible (e.g. Balkonkraftwerk)"
+            f"house_power_entity description_placeholder must explain negative "
+            f"values, got: {house_desc}"
         )
 
-    def test_battery_charge_has_data_description(self) -> None:
-        """battery_charge_entity must have a data_description."""
-        strings = self._load_strings()
-        manual_mapping = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("manual_mapping", {})
-        )
-        data_desc = manual_mapping.get("data_description", {})
-        assert "battery_charge_entity" in data_desc
+    def test_battery_charge_placeholder_present(self) -> None:
+        """battery_charge_entity_desc must be in description_placeholders."""
+        import asyncio
+        from unittest.mock import MagicMock
 
-    def test_grid_export_has_data_description(self) -> None:
-        """grid_export_entity must have a data_description."""
-        strings = self._load_strings()
-        manual_mapping = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("manual_mapping", {})
+        from custom_components.universal_energy_manager.config_flow import (
+            DOMAIN,
+            E3DC_RSCP_DOMAIN,
+            UemConfigFlow,
         )
-        data_desc = manual_mapping.get("data_description", {})
-        assert "grid_export_entity" in data_desc
+
+        flow = UemConfigFlow()
+        flow.hass = MagicMock()
+        flow.context = {}
+        flow.handler = DOMAIN
+        ce = flow.hass.config_entries
+        _all: dict[str, list] = {E3DC_RSCP_DOMAIN: [], DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+        ce.async_entry_for_domain_unique_id = MagicMock(return_value=None)
+
+        async def _go():
+            r = await flow.async_step_no_e3dc_choice({"confirm": "continue"})
+            return r
+
+        result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            _go()
+        )
+        placeholders = result["description_placeholders"]
+        assert "battery_charge_entity_desc" in placeholders
+
+    def test_grid_export_placeholder_present(self) -> None:
+        """grid_export_entity_desc must be in description_placeholders."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from custom_components.universal_energy_manager.config_flow import (
+            DOMAIN,
+            E3DC_RSCP_DOMAIN,
+            UemConfigFlow,
+        )
+
+        flow = UemConfigFlow()
+        flow.hass = MagicMock()
+        flow.context = {}
+        flow.handler = DOMAIN
+        ce = flow.hass.config_entries
+        _all: dict[str, list] = {E3DC_RSCP_DOMAIN: [], DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+        ce.async_entry_for_domain_unique_id = MagicMock(return_value=None)
+
+        async def _go():
+            r = await flow.async_step_no_e3dc_choice({"confirm": "continue"})
+            return r
+
+        result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            _go()
+        )
+        placeholders = result["description_placeholders"]
+        assert "grid_export_entity_desc" in placeholders
 
     def test_no_battery_power_mode_in_strings(self) -> None:
         """strings.json must not contain battery_power_mode or grid_power_mode labels."""
