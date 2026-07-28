@@ -8,6 +8,18 @@
       "confirm": {
         "title": "Erkannte Messwerte bestätigen",
         "description": "UEM kann erkannte Entitäten vorbefüllen. Beim ersten Start werden keine Steuerbefehle gesendet. Du kannst die Werte bearbeiten oder zur manuellen Zuordnung wechseln.",
+        "data": {
+          "soc_entity": "Batterieladestand (SoC)",
+          "pv_power_entity": "PV-Leistung",
+          "house_power_entity": "Hausverbrauch",
+          "battery_charge_entity": "Batterieleistung",
+          "battery_capacity_entity": "Batteriekapazität als Entität (kWh)",
+          "battery_manual_capacity_kwh": "Batteriekapazität als fester Wert (kWh)",
+          "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
+          "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
+          "grid_export_entity": "Netzleistung",
+          "grid_power_sign_convention": "Was bedeutet ein positiver Wert bei der Netzleistung?"
+        },
         "data_description": {
           "soc_entity": "Die Entität, die den aktuellen Ladestand der Batterie meldet (z. B. 50 = 50 %).",
           "pv_power_entity": "Die Entität der PV-Anlage, die die aktuelle erzeugte Leistung meldet.",
@@ -61,6 +73,18 @@
       "reconfigure_edit": {
         "title": "Entitäten bearbeiten",
         "description": "Ändere die Zuordnung der Sensoren. Leer lassen behält den aktuellen Wert.",
+        "data": {
+          "soc_entity": "Batterieladestand (SoC)",
+          "pv_power_entity": "PV-Leistung",
+          "house_power_entity": "Hausverbrauch",
+          "battery_charge_entity": "Batterieleistung",
+          "battery_capacity_entity": "Batteriekapazität als Entität (kWh)",
+          "battery_manual_capacity_kwh": "Batteriekapazität als fester Wert (kWh)",
+          "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
+          "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
+          "grid_export_entity": "Netzleistung",
+          "grid_power_sign_convention": "Was bedeutet ein positiver Wert bei der Netzleistung?"
+        },
         "data_description": {
           "soc_entity": "Die Entität, die den aktuellen Ladestand der Batterie meldet (z. B. 50 = 50 %).",
           "pv_power_entity": "Die Entität der PV-Anlage, die die aktuelle erzeugte Leistung meldet.",
