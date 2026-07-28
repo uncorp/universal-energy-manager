@@ -168,6 +168,29 @@ class ConfigFlow:
     def async_forward_entry_setup(self, hass, entry):
         return True
 
+    def async_update_reload_and_abort(
+        self,
+        entry,
+        *,
+        data=None,
+        reason=None,
+        title=None,
+        description_placeholders=None,
+    ):
+        """Stub for HA's ConfigFlow.async_update_reload_and_abort.
+
+        Updates the entry data, reloads the integration, and aborts the flow.
+        """
+        if data is not None and hasattr(entry, "data"):
+            entry.data.update(data)
+        # Attempt to call async_update_entry on hass if available
+        hass = getattr(self, "hass", None)
+        if hass is not None and hasattr(hass, "config_entries"):
+            ce = hass.config_entries
+            if hasattr(ce, "async_update_entry"):
+                ce.async_update_entry(entry, data=data)
+        return self.async_abort(reason=reason or "reconfigure_successful")
+
     async def async_set_unique_id(self, unique_id=None):
         self._unique_id = unique_id
 
@@ -473,10 +496,8 @@ for _mod_name, _mod_kwargs in [
         })(),
         "Optional": lambda k, **kw: k,
         "Required": lambda k, **kw: k,
-        "In": type("In", (), {
-            "__call__": lambda self, container: type("InInstance", (type("In", (), {}),), {
-                "container": container
-            })(),
+        "In": type("_InValidator", (), {
+            "__init__": lambda self, container: setattr(self, "container", container),
         }),
         "All": lambda *args: args[0] if args else None,
         "Length": lambda *a, **kw: None,
