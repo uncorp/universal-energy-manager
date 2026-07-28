@@ -474,23 +474,6 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # Helpers                                                              #
     # ------------------------------------------------------------------ #
 
-    def _build_entity_schema(
-        self,
-        prefill: dict[str, Any] | None = None,
-        allow_empty: bool = False,
-    ) -> dict:
-        """Build the entity selection schema for confirm or manual_mapping."""
-        if prefill is None:
-            prefill = {}
-
-        schema = {}
-        for field in _CORE_REQUIRED:
-            default_val = prefill.get(field) or ""
-            schema[vol.Optional(field, default=default_val)] = vol.All(
-                str, vol.Length(min=1 if not allow_empty else 0)
-            )
-        return schema
-
     def _mapping_defaults(self) -> dict[str, Any]:
         """Return the complete optional manual-mapping data shape."""
         return {

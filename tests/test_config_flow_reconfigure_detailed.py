@@ -1,15 +1,14 @@
 """TDD tests for remaining config_flow gaps: reconfigure detail paths and schema helpers.
 
 Covers:
-- _show_reconfigure_edit (config_flow.py:502-506)
-- _rescan_e3dc updating non-manual fields (config_flow.py:541-543)
-- _get_current_entry via context entry_id (config_flow.py:555, 559)
-- _build_entity_schema helper (config_flow.py:571-580)
-- _build_full_schema helper (config_flow.py:585)
-- confirm step user_input with non-string values (config_flow.py:263-264, 266)
-- manual_mapping elif branches for prefill preservation (config_flow.py:346-349)
+- _show_reconfigure_edit (config_flow.py:~395-399)
+- _rescan_e3dc updating non-manual fields (config_flow.py:~443-455)
+- _get_current_entry via context entry_id (config_flow.py:~459-471)
+- _build_full_schema helper (config_flow.py:~509)
+- confirm step user_input with non-string values (config_flow.py:~215-220)
+- manual_mapping elif branches for prefill preservation (config_flow.py:~346-349)
 - sensor.py async_setup_entry function itself (lines 22-23)
-- coordinator exception paths in threaded plan_charge (coordinator.py:445-447, 464-465)
+- coordinator exception paths in threaded plan_charge (coordinator.py:~445-447, 464-465)
 """
 
 from __future__ import annotations
@@ -358,39 +357,6 @@ class TestManualMappingPrefillPreservation:
         }
         result = _run(flow.async_step_manual_mapping(partial_data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
-
-
-# =========================================================================== #
-# TEST: _build_entity_schema helper                                           #
-# =========================================================================== #
-
-
-class TestBuildEntitySchema:
-    """_build_entity_schema should build a schema with core required fields."""
-
-    def test_build_entity_schema_has_core_fields(self) -> None:
-        """The helper schema must contain all core required fields."""
-        flow = UemConfigFlow()
-        schema = flow._build_entity_schema(prefill={"sensor.soc": "sensor.e3dc_soc"})
-
-        from custom_components.universal_energy_manager.config_flow import (
-            _CORE_REQUIRED,
-        )
-
-        for field in _CORE_REQUIRED:
-            assert field in schema
-
-    def test_build_entity_schema_allows_empty_when_flagged(self) -> None:
-        """When allow_empty=True, the schema allows empty strings."""
-        flow = UemConfigFlow()
-        schema = flow._build_entity_schema(allow_empty=True)
-
-        from custom_components.universal_energy_manager.config_flow import (
-            _CORE_REQUIRED,
-        )
-
-        for field in _CORE_REQUIRED:
-            assert field in schema
 
 
 # =========================================================================== #
