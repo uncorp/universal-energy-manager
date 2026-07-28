@@ -1,14 +1,16 @@
 """TDD tests for universal config flow with incomplete Shadow setup.
 
-Key rules:
+Key rules (post-simplified-schema):
 - e3dc_rscp is optional, never mandatory
 - Battery capacity: entity in kWh OR manual kWh value
 - Max charge power: entity in W OR manual W value
-- Battery power: signed entity with sign convention OR separate charge/discharge
-- Grid power: signed entity with sign convention OR separate import/export
+- Battery power: single signed entity (battery_charge_entity) only
+- Grid power: single signed entity (grid_export_entity) with sign convention
 - Solar/PV forecasts: optional, unlimited sources
 - No adapter + no entities → Shadow – Einrichtung unvollständig, never control
 - Version stays 0.1.x forever
+- No battery_power_mode, battery_discharge_entity, grid_power_mode,
+  grid_import_entity, battery_power_sign_convention anywhere in the UI.
 """
 
 from __future__ import annotations
@@ -26,19 +28,13 @@ from custom_components.universal_energy_manager.config_flow import (
     UemConfigFlow,
 )
 from custom_components.universal_energy_manager.const import (
-    BATTERY_POWER_MODE_SIGNED,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_DISCHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
-    CONF_BATTERY_POWER_MODE,
-    CONF_BATTERY_POWER_SIGN_CONVENTION,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_IMPORT_ENTITY,
-    CONF_GRID_POWER_MODE,
     CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
     CONF_MANUAL_ENTITIES,
@@ -46,14 +42,14 @@ from custom_components.universal_energy_manager.const import (
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
-    GRID_POWER_MODE_SIGNED,
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+    SHADOW_STATUS_UNVOLLSTANDIG,
 )
 from custom_components.universal_energy_manager.e3dc_rscp import E3dcEntityMap
 
 # --------------------------------------------------------------------------- #
 # Fixtures / helpers                                                          #
 # --------------------------------------------------------------------------- #
+
 
 def _make_e3dc_entry(
     entry_id: str = "e3dc-001",
@@ -138,8 +134,9 @@ def _mock_location(hass: MagicMock):
 
 
 # =========================================================================== #
-# TDD TEST 1: Fresh HA — no e3dc, no entities at all → manual flow works     #
+# TEST 1: Fresh HA — no e3dc, no entities at all → manual flow works         #
 # =========================================================================== #
+
 
 class TestFreshHaNoE3dcNoEntities:
     """A truly fresh HAOS without e3dc_rscp and without any entities.
@@ -163,8 +160,9 @@ class TestFreshHaNoE3dcNoEntities:
 
 
 # =========================================================================== #
-# TDD TEST 2: Manual config with ONLY fixed numbers (no entities)            #
+# TEST 2: Manual config with ONLY fixed numbers (no entities)                #
 # =========================================================================== #
+
 
 class TestManualFixedValuesNoEntities:
     """User enters manual kWh/W values instead of entity IDs.
@@ -190,12 +188,7 @@ class TestManualFixedValuesNoEntities:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",  # manual kWh
             CONF_MAX_CHARGE_POWER_ENTITY: "",  # no entity
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",  # manual W
-            CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
-            CONF_BATTERY_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_BATTERY_DISCHARGE_ENTITY: "",
-            CONF_GRID_IMPORT_ENTITY: "",
+            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -216,32 +209,65 @@ class TestManualFixedValuesNoEntities:
             CONF_PV_POWER_ENTITY: "sensor.manual_pv",
             CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
             CONF_GRID_EXPORT_ENTITY: "sensor.manual_grid",
-            CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_charge",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_battery_charge",
             CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
             CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
-            CONF_BATTERY_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_BATTERY_DISCHARGE_ENTITY: "",
-            CONF_GRID_IMPORT_ENTITY: "",
+            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 # =========================================================================== #
-# TDD TEST 3: Battery power mode — signed vs. separate entities              #
+# TEST 3: Battery power — single signed entity only (Req 1)                  #
 # =========================================================================== #
 
-class TestBatteryPowerMode:
-    """Battery power: either signed entity with sign convention
-    OR separate charge/discharge entities. Never guess direction."""
 
-    def test_create_entry_with_signed_battery_power(self):
-        """Signed mode: single entity + sign convention."""
+class TestBatteryPowerSingleEntity:
+    """Battery power must be exactly one field (battery_charge_entity).
+    No battery_power_mode, battery_discharge_entity, or battery_power_sign_convention.
+    The grid sign convention covers only grid, not battery."""
+
+    def _schema_keys(self, flow: UemConfigFlow) -> set:
+        schema_dict = flow._build_full_schema({})
+        return set(schema_dict.keys())
+
+    def test_battery_charge_entity_in_schema(self):
+        """CONF_BATTERY_CHARGE_ENTITY must be in the schema."""
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_BATTERY_CHARGE_ENTITY in keys
+
+    def test_no_battery_discharge_in_schema(self):
+        """CONF_BATTERY_DISCHARGE_ENTITY must NOT be in the schema."""
+        from custom_components.universal_energy_manager.const import (
+            CONF_BATTERY_DISCHARGE_ENTITY,
+        )
+
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_BATTERY_DISCHARGE_ENTITY not in keys
+
+    def test_no_battery_power_mode_in_schema(self):
+        """CONF_BATTERY_POWER_MODE must NOT be in the schema."""
+        from custom_components.universal_energy_manager.const import (
+            CONF_BATTERY_POWER_MODE,
+        )
+
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_BATTERY_POWER_MODE not in keys
+
+    def test_submit_with_battery_charge_only(self):
+        """Submitting a single battery_charge_entity creates an entry."""
         hass = MagicMock()
         _mock_location(hass)
         flow = _make_flow(hass, e3dc_entries=[])
@@ -249,27 +275,77 @@ class TestBatteryPowerMode:
         _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
 
         data = {
-            CONF_SOC_ENTITY: "sensor.manual_soc",
-            CONF_PV_POWER_ENTITY: "sensor.manual_pv",
-            CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
-            CONF_GRID_EXPORT_ENTITY: "sensor.manual_grid",
-            CONF_BATTERY_POWER_MODE: "signed",
-            CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_battery_power",
-            CONF_BATTERY_POWER_SIGN_CONVENTION: "positive_is_charging",
-            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
-            CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_BATTERY_DISCHARGE_ENTITY: "",
-            CONF_GRID_IMPORT_ENTITY: "",
+            CONF_SOC_ENTITY: "sensor.soc",
+            CONF_PV_POWER_ENTITY: "sensor.pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.house",
+            CONF_GRID_EXPORT_ENTITY: "sensor.grid",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.battery_charge",
+            CONF_BATTERY_CAPACITY_ENTITY: "",
+            CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+            CONF_MAX_CHARGE_POWER_ENTITY: "",
+            CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_BATTERY_POWER_MODE] == "signed"
-        assert result["data"][CONF_BATTERY_POWER_SIGN_CONVENTION] == "positive_is_charging"
+        assert result["data"][CONF_BATTERY_CHARGE_ENTITY] == "sensor.battery_charge"
 
-    def test_create_entry_with_separate_battery_entities(self):
-        """Separate mode: charge_entity + discharge_entity."""
+
+# =========================================================================== #
+# TEST 4: Grid power — single signed entity with sign convention (Req 2)     #
+# =========================================================================== #
+
+
+class TestGridPowerSingleEntity:
+    """Grid power must be exactly one field (grid_export_entity) with a
+    sign-convention selector. No grid_power_mode or grid_import_entity."""
+
+    def _schema_keys(self, flow: UemConfigFlow) -> set:
+        schema_dict = flow._build_full_schema({})
+        return set(schema_dict.keys())
+
+    def test_grid_export_entity_in_schema(self):
+        """CONF_GRID_EXPORT_ENTITY must be in the schema."""
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_GRID_EXPORT_ENTITY in keys
+
+    def test_grid_power_sign_convention_in_schema(self):
+        """CONF_GRID_POWER_SIGN_CONVENTION must be in the schema."""
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_GRID_POWER_SIGN_CONVENTION in keys
+
+    def test_no_grid_import_in_schema(self):
+        """CONF_GRID_IMPORT_ENTITY must NOT be in the schema."""
+        from custom_components.universal_energy_manager.const import (
+            CONF_GRID_IMPORT_ENTITY,
+        )
+
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_GRID_IMPORT_ENTITY not in keys
+
+    def test_no_grid_power_mode_in_schema(self):
+        """CONF_GRID_POWER_MODE must NOT be in the schema."""
+        from custom_components.universal_energy_manager.const import (
+            CONF_GRID_POWER_MODE,
+        )
+
+        hass = MagicMock()
+        flow = _make_flow(hass, e3dc_entries=[])
+        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
+        keys = self._schema_keys(flow)
+        assert CONF_GRID_POWER_MODE not in keys
+
+    def test_submit_with_grid_export_and_sign_convention(self):
+        """Submitting grid_export_entity + sign convention creates an entry."""
         hass = MagicMock()
         _mock_location(hass)
         flow = _make_flow(hass, e3dc_entries=[])
@@ -277,91 +353,29 @@ class TestBatteryPowerMode:
         _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
 
         data = {
-            CONF_SOC_ENTITY: "sensor.manual_soc",
-            CONF_PV_POWER_ENTITY: "sensor.manual_pv",
-            CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
-            CONF_GRID_EXPORT_ENTITY: "sensor.manual_grid",
-            CONF_BATTERY_POWER_MODE: "separate",
-            CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_battery_charge",
-            CONF_BATTERY_DISCHARGE_ENTITY: "sensor.manual_battery_discharge",
-            CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-            CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
-            CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_GRID_IMPORT_ENTITY: "",
+            CONF_SOC_ENTITY: "sensor.soc",
+            CONF_PV_POWER_ENTITY: "sensor.pv",
+            CONF_HOUSE_POWER_ENTITY: "sensor.house",
+            CONF_BATTERY_CHARGE_ENTITY: "sensor.battery",
+            CONF_BATTERY_CAPACITY_ENTITY: "",
+            CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+            CONF_MAX_CHARGE_POWER_ENTITY: "",
+            CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+            CONF_GRID_EXPORT_ENTITY: "sensor.grid",
+            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_BATTERY_POWER_MODE] == "separate"
-        assert result["data"][CONF_BATTERY_DISCHARGE_ENTITY] == "sensor.manual_battery_discharge"
+        assert result["data"][CONF_GRID_EXPORT_ENTITY] == "sensor.grid"
+        assert result["data"][CONF_GRID_POWER_SIGN_CONVENTION] == (
+            "positive_is_discharging_import"
+        )
 
 
 # =========================================================================== #
-# TDD TEST 4: Grid power mode — signed vs. separate entities                #
+# TEST 5: Solar-only forecasts, unlimited                                    #
 # =========================================================================== #
 
-class TestGridPowerMode:
-    """Grid power: either signed entity with sign convention
-    OR separate import/export entities. Never guess direction."""
-
-    def test_create_entry_with_signed_grid_power(self):
-        """Signed grid mode: single entity + sign convention."""
-        hass = MagicMock()
-        _mock_location(hass)
-        flow = _make_flow(hass, e3dc_entries=[])
-
-        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
-
-        data = {
-            CONF_SOC_ENTITY: "sensor.manual_soc",
-            CONF_PV_POWER_ENTITY: "sensor.manual_pv",
-            CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
-            CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_battery",
-            CONF_BATTERY_POWER_MODE: "signed",
-            CONF_BATTERY_POWER_SIGN_CONVENTION: "positive_is_charging",
-            CONF_GRID_POWER_MODE: "signed",
-            CONF_GRID_EXPORT_ENTITY: "sensor.manual_grid_power",
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_export",
-            CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
-            CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_BATTERY_DISCHARGE_ENTITY: "",
-            CONF_GRID_IMPORT_ENTITY: "",
-        }
-        result = _run(flow.async_step_manual_mapping(data))
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_GRID_POWER_MODE] == "signed"
-        assert result["data"][CONF_GRID_POWER_SIGN_CONVENTION] == "positive_is_export"
-
-    def test_create_entry_with_separate_grid_entities(self):
-        """Separate grid mode: import + export entities."""
-        hass = MagicMock()
-        _mock_location(hass)
-        flow = _make_flow(hass, e3dc_entries=[])
-
-        _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
-
-        data = {
-            CONF_SOC_ENTITY: "sensor.manual_soc",
-            CONF_PV_POWER_ENTITY: "sensor.manual_pv",
-            CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
-            CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_battery",
-            CONF_BATTERY_POWER_MODE: "separate",
-            CONF_BATTERY_DISCHARGE_ENTITY: "sensor.manual_discharge",
-            CONF_GRID_POWER_MODE: "separate",
-            CONF_GRID_EXPORT_ENTITY: "sensor.manual_grid_export",
-            CONF_GRID_IMPORT_ENTITY: "sensor.manual_grid_import",
-            CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
-            CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-        }
-        result = _run(flow.async_step_manual_mapping(data))
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_GRID_POWER_MODE] == "separate"
-        assert result["data"][CONF_GRID_IMPORT_ENTITY] == "sensor.manual_grid_import"
-
-
-# =========================================================================== #
-# TDD TEST 5: Solar-only forecasts, unlimited                                #
-# =========================================================================== #
 
 class TestSolarOnlyForecasts:
     """Only Solar/PV forecasts supported. No BHKW/Wind."""
@@ -375,8 +389,7 @@ class TestSolarOnlyForecasts:
             e3dc_entries=[],
             forecast_entries=[
                 _make_forecast_entry("fs-1", "Dach Nord"),
-                _make_forecast_entry("fs-2", "Dach Süd"),
-                _make_forecast_entry("fs-3", "BKW Ost"),
+                _make_forecast_entry("fs-2", "Dach Sued"),
             ],
         )
 
@@ -388,21 +401,21 @@ class TestSolarOnlyForecasts:
             CONF_HOUSE_POWER_ENTITY: "sensor.manual_house",
             CONF_GRID_EXPORT_ENTITY: "sensor.manual_grid",
             CONF_BATTERY_CHARGE_ENTITY: "sensor.manual_battery",
-            CONF_BATTERY_POWER_MODE: "separate",
-            CONF_BATTERY_DISCHARGE_ENTITY: "sensor.manual_discharge",
-            CONF_GRID_POWER_MODE: "separate",
-            CONF_GRID_IMPORT_ENTITY: "sensor.manual_grid_import",
+            CONF_BATTERY_CAPACITY_ENTITY: "",
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
+            CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
+            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert len(result["data"][CONF_FORECAST_SOLAR_ENTRY_IDS]) == 3
+        assert len(result["data"][CONF_FORECAST_SOLAR_ENTRY_IDS]) == 2
 
 
 # =========================================================================== #
-# TDD TEST 6: Shadow safety — incomplete setup                                #
+# TEST 6: Shadow safety — incomplete setup                                   #
 # =========================================================================== #
+
 
 class TestShadowSafetyIncompleteSetup:
     """When configured with adapter but no entities, or incomplete entities,
@@ -411,7 +424,6 @@ class TestShadowSafetyIncompleteSetup:
     def test_shadow_status_incomplete_when_entities_missing(self):
         """Coordinator with missing required entities → unvollständig."""
         from custom_components.universal_energy_manager.coordinator import (
-            SHADOW_STATUS_UNVOLLSTANDIG,
             ShadowData,
             UemShadowCoordinator,
         )
@@ -448,10 +460,9 @@ class TestShadowSafetyIncompleteSetup:
         assert result.commands_sent is False
         assert result.planned_charge_limit_w == 0.0
 
-    def test_shadow_status_unvollständig_also_when_only_adapter(self):
+    def test_shadow_status_unvollstaendig_also_when_only_adapter(self):
         """When only e3dc adapter exists but entities are not mapped → unvollständig."""
         from custom_components.universal_energy_manager.coordinator import (
-            SHADOW_STATUS_UNVOLLSTANDIG,
             ShadowData,
             UemShadowCoordinator,
         )
@@ -510,8 +521,6 @@ class TestShadowSafetyIncompleteSetup:
                 CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",  # no entity
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-                CONF_BATTERY_POWER_MODE: BATTERY_POWER_MODE_SIGNED,
-                CONF_GRID_POWER_MODE: GRID_POWER_MODE_SIGNED,
             },
             source="user",
             entry_id="uem-manual",
@@ -562,8 +571,9 @@ class TestShadowSafetyIncompleteSetup:
 
 
 # =========================================================================== #
-# TDD TEST 7: Reconfigure — no silent overwrite of manual values             #
+# TEST 7: Reconfigure — no silent overwrite of manual values                 #
 # =========================================================================== #
+
 
 class TestReconfigureNoSilentOverwrite:
     """Reconfigure must fetch adapter suggestions without overwriting
@@ -589,10 +599,7 @@ class TestReconfigureNoSilentOverwrite:
                 CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_charge",
                 CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
                 CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
-                CONF_BATTERY_POWER_MODE: "signed",
-                CONF_BATTERY_POWER_SIGN_CONVENTION: "positive_is_charging",
-                CONF_GRID_POWER_MODE: "signed",
-                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_export",
+                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
             },
             source="user",
             entry_id="uem-001",
@@ -645,12 +652,12 @@ class TestReconfigureNoSilentOverwrite:
         assert result["data"][CONF_E3DC_CONFIG_ENTRY_ID] == "e3dc-001"
         # Manual values should be preserved (not overwritten by rescan)
         assert result["data"][CONF_SOC_ENTITY] == "sensor.e3dc_soc"
-        assert result["data"][CONF_BATTERY_POWER_MODE] == "signed"
 
 
 # =========================================================================== #
-# TDD TEST 8: Version rule — manifest must stay 0.1.x                         #
+# TEST 8: Version rule — manifest must stay 0.1.x                            #
 # =========================================================================== #
+
 
 class TestVersionRule:
     """Version must be 0.1.x. Never 0.2.0."""
