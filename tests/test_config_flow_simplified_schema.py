@@ -354,3 +354,178 @@ class TestStringsJsonDescriptions:
         assert "grid_import_entity" not in content, (
             "strings.json must not reference grid_import_entity"
         )
+
+
+# =========================================================================== #
+# TEST 6: House power negative value accepted in data path (Req 3)             #
+# =========================================================================== #
+
+
+class TestHousePowerNegativeValue:
+    """Requirement 3: House consumption is exactly one input. Negative values
+    are allowed and mean e.g. a balcony PV system currently produces more than
+    the house consumes. This must be reflected in the data path via a
+    regression test."""
+
+    def test_manual_mapping_accepts_negative_house_power(self) -> None:
+        """A negative house_power_entity value must be accepted and stored
+        verbatim in the created config entry data."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from homeassistant.data_entry_flow import FlowResultType
+
+        from custom_components.universal_energy_manager.config_flow import (
+            DOMAIN,
+            E3DC_RSCP_DOMAIN,
+            UemConfigFlow,
+        )
+        from custom_components.universal_energy_manager.const import (
+            CONF_BATTERY_CAPACITY_ENTITY,
+            CONF_BATTERY_CHARGE_ENTITY,
+            CONF_BATTERY_MANUAL_CAPACITY_KWH,
+            CONF_GRID_EXPORT_ENTITY,
+            CONF_GRID_POWER_SIGN_CONVENTION,
+            CONF_HOUSE_POWER_ENTITY,
+            CONF_MANUAL_ENTITIES,
+            CONF_MAX_CHARGE_MANUAL_POWER_W,
+            CONF_MAX_CHARGE_POWER_ENTITY,
+            CONF_PV_POWER_ENTITY,
+            CONF_SOC_ENTITY,
+        )
+
+        flow = UemConfigFlow()
+        flow.hass = MagicMock()
+        flow.context = {}
+        flow.handler = DOMAIN
+        ce = flow.hass.config_entries
+        _all: dict[str, list] = {E3DC_RSCP_DOMAIN: [], DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+        ce.async_entry_for_domain_unique_id = MagicMock(return_value=None)
+
+        loc = MagicMock()
+        loc.latitude = 52.0
+        loc.longitude = 13.0
+        flow.hass.config.location = loc
+
+        async def _go():
+            r1 = await flow.async_step_user()
+            assert r1["type"] == FlowResultType.FORM
+            assert r1["step_id"] == "no_e3dc_choice"
+
+            r2 = await flow.async_step_no_e3dc_choice({"confirm": "continue"})
+            assert r2["type"] == FlowResultType.FORM
+            assert r2["step_id"] == "manual_mapping"
+
+            # Submit with negative house power (Balkonkraftwerk scenario)
+            user_input = {
+                CONF_SOC_ENTITY: "sensor.soc",
+                CONF_PV_POWER_ENTITY: "sensor.pv",
+                CONF_HOUSE_POWER_ENTITY: "-250",  # negative = more PV than consumption
+                CONF_GRID_EXPORT_ENTITY: "sensor.grid",
+                CONF_BATTERY_CHARGE_ENTITY: "sensor.battery",
+                CONF_BATTERY_CAPACITY_ENTITY: "",
+                CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+                CONF_MAX_CHARGE_POWER_ENTITY: "",
+                CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            }
+            r3 = await flow.async_step_manual_mapping(user_input)
+            assert r3["type"] == FlowResultType.CREATE_ENTRY
+            return r3
+
+        result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            _go()
+        )
+
+        # The negative house power must be stored as-is (as a string in the data)
+        assert result["data"][CONF_HOUSE_POWER_ENTITY] == "-250"
+        assert result["data"][CONF_MANUAL_ENTITIES] is True
+
+    def test_manual_mapping_accepts_zero_house_power(self) -> None:
+        """Zero house power must also be accepted."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from homeassistant.data_entry_flow import FlowResultType
+
+        from custom_components.universal_energy_manager.config_flow import (
+            DOMAIN,
+            E3DC_RSCP_DOMAIN,
+            UemConfigFlow,
+        )
+        from custom_components.universal_energy_manager.const import (
+            CONF_BATTERY_CAPACITY_ENTITY,
+            CONF_BATTERY_CHARGE_ENTITY,
+            CONF_BATTERY_MANUAL_CAPACITY_KWH,
+            CONF_GRID_EXPORT_ENTITY,
+            CONF_GRID_POWER_SIGN_CONVENTION,
+            CONF_HOUSE_POWER_ENTITY,
+            CONF_MAX_CHARGE_MANUAL_POWER_W,
+            CONF_MAX_CHARGE_POWER_ENTITY,
+            CONF_PV_POWER_ENTITY,
+            CONF_SOC_ENTITY,
+        )
+
+        flow = UemConfigFlow()
+        flow.hass = MagicMock()
+        flow.context = {}
+        flow.handler = DOMAIN
+        ce = flow.hass.config_entries
+        _all: dict[str, list] = {E3DC_RSCP_DOMAIN: [], DOMAIN: []}
+
+        def _async_entries(domain=None, *args, **kwargs):
+            if domain is None:
+                result = []
+                for entries in _all.values():
+                    result.extend(entries)
+                return result
+            return _all.get(domain, [])
+
+        ce.async_entries = MagicMock(side_effect=_async_entries)
+        ce.async_entry_for_domain_unique_id = MagicMock(return_value=None)
+
+        loc = MagicMock()
+        loc.latitude = 52.0
+        loc.longitude = 13.0
+        flow.hass.config.location = loc
+
+        async def _go():
+            r1 = await flow.async_step_user()
+            assert r1["type"] == FlowResultType.FORM
+            assert r1["step_id"] == "no_e3dc_choice"
+
+            r2 = await flow.async_step_no_e3dc_choice({"confirm": "continue"})
+            assert r2["type"] == FlowResultType.FORM
+            assert r2["step_id"] == "manual_mapping"
+
+            user_input = {
+                CONF_SOC_ENTITY: "sensor.soc",
+                CONF_PV_POWER_ENTITY: "sensor.pv",
+                CONF_HOUSE_POWER_ENTITY: "0",
+                CONF_GRID_EXPORT_ENTITY: "sensor.grid",
+                CONF_BATTERY_CHARGE_ENTITY: "sensor.battery",
+                CONF_BATTERY_CAPACITY_ENTITY: "",
+                CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+                CONF_MAX_CHARGE_POWER_ENTITY: "",
+                CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            }
+            r3 = await flow.async_step_manual_mapping(user_input)
+            assert r3["type"] == FlowResultType.CREATE_ENTRY
+            return r3
+
+        result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            _go()
+        )
+
+        assert result["data"][CONF_HOUSE_POWER_ENTITY] == "0"
