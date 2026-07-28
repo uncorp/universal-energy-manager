@@ -24,6 +24,74 @@ def _make_stub(name: str, **kwargs) -> ModuleType:
     return mod
 
 
+def _vol_stubs() -> dict:
+    """Return voluptuous stubs that properly model schema_builder classes.
+
+    The conftest stubs the entire 'voluptuous' module when real HA / voluptuous
+    is not installed.  The previous stub used lambdas that just returned keys
+    (``lambda k, **kw: k``) which broke isinstance / __str__ checks.  These
+    stub classes mirror the real API so tests can inspect schema keys.
+    """
+
+    class Optional:
+        """Stub matching voluptuous.schema_builder.Optional."""
+        def __init__(self, k, default=None, **kw):
+            self.key = k
+            self.default = default if default is not None else kw.get("default")
+        def __str__(self):
+            return str(self.key)
+        def __repr__(self):
+            return f"Optional({self.key!r})"
+        def __hash__(self):
+            return hash(str(self))
+        def __eq__(self, other):
+            if isinstance(other, Optional):
+                return str(self) == str(other)
+            return str(self) == str(other)
+
+    class Required:
+        """Stub matching voluptuous.schema_builder.Required."""
+        def __init__(self, k, default=None, **kw):
+            self.key = k
+            self.default = default
+        def __str__(self):
+            return str(self.key)
+        def __repr__(self):
+            return f"Required({self.key!r})"
+
+    class In:
+        """Stub matching voluptuous.schema_builder.In."""
+        def __init__(self, container):
+            self.container = container
+
+    class All:
+        """Stub matching voluptuous.schema_builder.All."""
+        def __init__(self, *validators):
+            self.validators = validators
+
+    class Length:
+        """Stub matching voluptuous.schema_builder.Length."""
+        def __init__(self, min=None, max=None, **kw):
+            self.min = min
+            self.max = max
+
+    class Schema:
+        """Stub matching voluptuous.schema_builder.Schema."""
+        def __init__(self, schema, **kw):
+            self.schema = schema if isinstance(schema, dict) else {}
+            self._compiled = None
+            self.extra = kw.get("extra", None)
+
+    return {
+        "Schema": Schema,
+        "Optional": Optional,
+        "Required": Required,
+        "In": In,
+        "All": All,
+        "Length": Length,
+    }
+
+
 # ===========================================================================
 # 0. Stub classes / functions (no injection yet)
 # ===========================================================================
@@ -488,20 +556,9 @@ for _mod_name, _mod_kwargs in [
     ("awesomeversion", {"AwesomeVersion": MagicMock}),
     ("pytz", {"utc": MagicMock()}),
     ("slugify", {"slugify": MagicMock()}),
-    ("voluptuous", {
-        "Schema": lambda schema, **kw: type("Schema", (), {
-            "schema": schema if isinstance(schema, dict) else {},
-            "_compiled": None,
-            "extra": kw.get("extra", None),
-        })(),
-        "Optional": lambda k, **kw: k,
-        "Required": lambda k, **kw: k,
-        "In": type("_InValidator", (), {
-            "__init__": lambda self, container: setattr(self, "container", container),
-        }),
-        "All": lambda *args: args[0] if args else None,
-        "Length": lambda *a, **kw: None,
-    }),
+    # NOTE: voluptuous is NOT stubbed here — it is installed in the test venv.
+    # The stubs above in _vol_stubs() exist only for reference.
+    # ("voluptuous", ...),
     ("voluptuous.humanize", {}),
     ("aiohttp", {}),
     ("propcache", {}),

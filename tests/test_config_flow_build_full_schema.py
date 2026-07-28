@@ -129,7 +129,7 @@ class TestBuildFullSchemaAllOptional:
         schema_dict = flow._build_full_schema({})
         for key in schema_dict.keys():
             assert isinstance(key, vol.Optional), (
-                f"Key {key!r} should be vol.Optional, got {type(key)}"
+                f"Key {key!r} should be vol.Optional, got {type(key).__name__}"
             )
 
 
