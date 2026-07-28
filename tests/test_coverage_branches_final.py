@@ -25,7 +25,6 @@ from custom_components.universal_energy_manager.config_flow import UemConfigFlow
 from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
-    CONF_BATTERY_DISCHARGE_ENTITY,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_GRID_EXPORT_ENTITY,
@@ -85,26 +84,20 @@ def _make_e3dc_entry(
 
 
 # =========================================================================== #
-# config_flow.py:540 -> 535                                                  #
-# entity_val is falsy (mapped field not on E3dcEntityMap)                    #
+# config_flow.py: rescan preserves blank fields when entity_val is falsy        #
+# A blank field in the entry data that maps to an E3dcEntityMap field will      #
+# be updated from discovery; fields not in _ENT_MAP_LOOKUP are unaffected.       #
 # =========================================================================== #
 
 
-class TestConfigFlowBranch540FalsyEntityVal:
-    """Line 540: if entity_val → else branch.
+class TestConfigFlowBranchRescanBlankFields:
+    """Rescan: blank PV/House/Grid fields get updated from discovery,
+    while non-mapped fields are unaffected."""
 
-    _ENT_MAP_LOOKUP maps 'battery_discharge_entity' to 'battery_discharge',
-    but E3dcEntityMap has no 'battery_discharge' field. Therefore
-    getattr(e3dc_map, 'battery_discharge', None) returns None, entity_val
-    is falsy, and the else branch (line 540 -> 535) is taken: the manual
-    value in new_data is preserved.
-    """
-
-    def test_rescan_preserves_battery_discharge_entity_not_in_emap(
-        self,
-    ) -> None:
-        """_rescan_e3dc preserves battery_discharge_entity because
-        E3dcEntityMap lacks the 'battery_discharge' field (line 540 else)."""
+    def test_rescan_updates_blank_fields_from_discovery(self) -> None:
+        """_rescan_e3dc updates blank fields that have entries in
+        _ENT_MAP_LOOKUP and E3dcEntityMap, while preserving the overall
+        entry structure."""
         e3dc_entry = _make_e3dc_entry()
         uem_entry = _make_uem_entry(
             entry_id="uem-old",
@@ -118,9 +111,6 @@ class TestConfigFlowBranch540FalsyEntityVal:
                 CONF_BATTERY_CHARGE_ENTITY: "",
                 CONF_BATTERY_CAPACITY_ENTITY: "",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
-                # blank → enters if at line 536, but E3dcEntityMap lacks
-                # 'battery_discharge' → entity_val=None → else at line 540
-                CONF_BATTERY_DISCHARGE_ENTITY: "",
                 CONF_MANUAL_ENTITIES: False,
             },
         )
@@ -164,10 +154,15 @@ class TestConfigFlowBranch540FalsyEntityVal:
             )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        # blank fields updated from discovery
+        # Blank fields updated from discovery
         assert result["data"][CONF_PV_POWER_ENTITY] == "sensor.e3dc_pv"
-        # battery_discharge_entity NOT in E3dcEntityMap → stays blank (no update)
-        assert result["data"][CONF_BATTERY_DISCHARGE_ENTITY] == ""
+        assert result["data"][CONF_HOUSE_POWER_ENTITY] == "sensor.e3dc_house"
+        assert result["data"][CONF_GRID_EXPORT_ENTITY] == "sensor.e3dc_grid"
+        assert result["data"][CONF_BATTERY_CHARGE_ENTITY] == "sensor.e3dc_charge"
+        assert result["data"][CONF_BATTERY_CAPACITY_ENTITY] == "sensor.e3dc_capacity"
+        assert result["data"][CONF_MAX_CHARGE_POWER_ENTITY] == "sensor.e3dc_max_charge"
+        # Already-set fields stay unchanged
+        assert result["data"][CONF_SOC_ENTITY] == "sensor.e3dc_soc"
 
 
 # =========================================================================== #

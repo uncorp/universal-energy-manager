@@ -18,7 +18,9 @@ CONF_MANUAL_ENTITIES = "manual_entities"
 CONF_STRATEGY = "strategy"
 FORECAST_SOLAR_DOMAIN = "forecast_solar"
 
-# --- Power mode semantics (signed vs. separate) ---
+# --- Power mode semantics (signed vs. separate) — legacy, kept for migration ---
+# These constants are preserved for backward compatibility with existing entries
+# but are no longer used by the config flow.
 CONF_BATTERY_POWER_MODE = "battery_power_mode"
 CONF_BATTERY_POWER_SIGN_CONVENTION = "battery_power_sign_convention"
 CONF_BATTERY_DISCHARGE_ENTITY = "battery_discharge_entity"
@@ -38,9 +40,7 @@ GRID_POWER_MODE_SEPARATE = "separate"
 GRID_POWER_MODES = [GRID_POWER_MODE_SIGNED, GRID_POWER_MODE_SEPARATE]
 
 SIGNED_CONVENTION_POS_CHARGE_EXPORT = "positive_is_charging_export"
-SIGNED_CONVENTION_NEG_CHARGE_EXPORT = "negative_is_charging_export"
 SIGNED_CONVENTION_POS_DISCHARGE_IMPORT = "positive_is_discharging_import"
-SIGNED_CONVENTION_NEG_DISCHARGE_IMPORT = "negative_is_discharging_import"
 
 CONF_TARGET_SOC_PCT = "target_soc_pct"
 CONF_CHARGE_END = "charge_end"
@@ -60,13 +60,13 @@ SHADOW_STATUS = "Shadow – keine aktive Steuerung"
 SHADOW_STATUS_UNVOLLSTANDIG = "Shadow – Einrichtung unvollständig"
 
 # --- Mapping: config key -> E3dcEntityMap attribute name ---
+# Only keys actually used in the simplified schema (rescan path).
 _ENT_MAP_LOOKUP: dict[str, str] = {
     CONF_SOC_ENTITY: "soc",
     CONF_PV_POWER_ENTITY: "pv_power",
     CONF_HOUSE_POWER_ENTITY: "house_power",
     CONF_GRID_EXPORT_ENTITY: "grid_export",
     CONF_BATTERY_CHARGE_ENTITY: "battery_charge",
-    CONF_BATTERY_DISCHARGE_ENTITY: "battery_discharge",
     CONF_BATTERY_CAPACITY_ENTITY: "battery_capacity",
     CONF_MAX_CHARGE_POWER_ENTITY: "max_charge_power",
 }
