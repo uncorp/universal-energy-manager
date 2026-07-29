@@ -37,7 +37,7 @@ from custom_components.universal_energy_manager.const import (
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 
 
@@ -114,7 +114,7 @@ class TestConfigFlowBranch346PrefillPreservation:
         # Core entities submitted
         assert result["data"][CONF_SOC_ENTITY] == "sensor.manual_soc"
         # Optional fields must have been preserved from prefill (elif branch)
-        # The prefill sets grid_power_sign_convention to default
-        expected = SIGNED_CONVENTION_POS_CHARGE_EXPORT
+        # The prefill sets grid_power_sign_convention to default (Netzbezug)
+        expected = SIGNED_CONVENTION_POS_DISCHARGE_IMPORT
         actual = result["data"].get(CONF_GRID_POWER_SIGN_CONVENTION)
         assert actual == expected

@@ -6,7 +6,7 @@ Requirements:
 - All fields are truly optional (vol.Optional with no required constraint)
 - All fields have NO vol.Length(min >= 1) — empty string is valid (Req 4)
 - Pre-filled values override defaults correctly
-- Grid sign convention defaults to SIGNED_CONVENTION_POS_CHARGE_EXPORT
+- Grid sign convention defaults to SIGNED_CONVENTION_POS_DISCHARGE_IMPORT (Netzbezug)
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from custom_components.universal_energy_manager.const import (
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 
 
@@ -134,7 +134,7 @@ class TestBuildFullSchemaAllOptional:
 
 
 # =========================================================================== #
-# TEST 4: Grid sign convention defaults to CHARGE_EXPORT                      #
+# TEST 4: Grid sign convention defaults to DISCHARGE_IMPORT (Netzbezug)       #
 # =========================================================================== #
 
 
@@ -156,8 +156,8 @@ class TestBuildFullSchemaDefaults:
         default_val = self._get_default_value(
             schema_dict, CONF_GRID_POWER_SIGN_CONVENTION
         )
-        assert default_val == SIGNED_CONVENTION_POS_CHARGE_EXPORT, (
-            f"Expected {SIGNED_CONVENTION_POS_CHARGE_EXPORT!r}, "
+        assert default_val == SIGNED_CONVENTION_POS_DISCHARGE_IMPORT, (
+            f"Expected {SIGNED_CONVENTION_POS_DISCHARGE_IMPORT!r}, "
             f"got {default_val!r}"
         )
 

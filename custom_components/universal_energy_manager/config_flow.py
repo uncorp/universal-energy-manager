@@ -206,7 +206,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_POWER_ENTITY: self._e3dc_map.max_charge_power,
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
         }
         self._prefill_data = entity_data
 
@@ -537,7 +537,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             "grid_power_sign_convention_desc": (
                 "Vorzeichenkonvention Netzleistung: Legt fest, was ein "
-                "positiver Wert bedeutet — Netzbezug oder Einspeisung."
+                "positiver Wert bedeutet — Netzbezug oder Einspeisung. "
+                "'Positiver Wert bedeutet Netzbezug' oder "
+                "'Positiver Wert bedeutet Einspeisung'."
             ),
         }
 
@@ -553,7 +555,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             CONF_GRID_EXPORT_ENTITY: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
         }
 
     def _build_full_schema(self, prefill: dict[str, Any] | None = None) -> dict:
@@ -562,8 +564,12 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         values.update(prefill or {})
 
         grid_signs = {
-            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: "Positiver Wert = Netzbezug",
-            SIGNED_CONVENTION_POS_CHARGE_EXPORT: "Positiver Wert = Einspeisung",
+            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: (
+                "Positiver Wert bedeutet Netzbezug"
+            ),
+            SIGNED_CONVENTION_POS_CHARGE_EXPORT: (
+                "Positiver Wert bedeutet Einspeisung"
+            ),
         }
 
         return {
