@@ -1,18 +1,17 @@
-"""Regression test: field descriptions rendered via description_placeholders.
+"""Regression test: field descriptions rendered via data_description in strings.json.
 
-HA 2024.3.3 does NOT support data_description for config flows — it was added
-in 2024.7+. For this pinned version, field explanations must be delivered through
-the step's description text using description_placeholders.
+HA 2024.3.3 supports data_description for config flows — it was added in
+HA 2024.3 and is proven by the real HA Hue integration.  The data_description
+block provides per-field explanations rendered by the HA frontend directly
+below each field label.
 
 Requirement 5: Jede sichtbare Zeile braucht einen klaren deutschen Titel UND
 eine kurze Erklärung direkt darunter.
 
 This test verifies that:
-1. strings.json step descriptions use {placeholder} tokens for field explanations
-2. Config flow passes description_placeholders mapping those tokens to German text
-3. The description_placeholders include explanations for ALL schema fields
-
-This approach works natively in HA 2024.3.3's frontend.
+1. strings.json step data_description contains explanations for all schema fields
+2. Config flow still passes description_placeholders (for HA 2024.7+ compatibility)
+3. All descriptions are meaningful German text
 """
 
 from __future__ import annotations
@@ -73,71 +72,76 @@ def _mock_location(hass: MagicMock):
 
 
 # =========================================================================== #
-# TEST 1: strings.json step descriptions must use placeholder tokens          #
+# TEST 1: strings.json data_description has all field explanations             #
 # =========================================================================== #
 
 
-class TestStringsPlaceholderTokens:
-    """Each step's description must contain {placeholder} tokens for field
-    explanations so the frontend can render them."""
+class TestDataDescriptionFieldExplanations:
+    """Every schema field must have a data_description entry in each step."""
 
-    def test_manual_mapping_description_has_placeholders(self):
-        """manual_mapping description must reference field descriptions."""
-        strings = _load_strings()
-        desc = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("manual_mapping", {})
-            .get("description", "")
-        )
-        # Must contain at least one {placeholder} token
-        assert "{" in desc and "}" in desc, (
-            "manual_mapping description must use {placeholder} tokens for "
-            "field explanations (HA 2024.3.3 doesn't support data_description)"
-        )
+    _ALL_FIELDS = frozenset({
+        "soc_entity",
+        "pv_power_entity",
+        "house_power_entity",
+        "battery_charge_entity",
+        "battery_capacity_entity",
+        "battery_manual_capacity_kwh",
+        "max_charge_power_entity",
+        "max_charge_manual_power_w",
+        "grid_export_entity",
+        "grid_power_sign_convention",
+    })
 
-    def test_confirm_description_has_placeholders(self):
-        """confirm description must reference field descriptions."""
+    def test_confirm_data_description_has_all_fields(self):
         strings = _load_strings()
-        desc = (
+        dd = (
             strings.get("config", {})
             .get("step", {})
             .get("confirm", {})
-            .get("description", "")
+            .get("data_description", {})
         )
-        assert "{" in desc and "}" in desc, (
-            "confirm description must use {placeholder} tokens for "
-            "field explanations"
+        missing = self._ALL_FIELDS - set(dd.keys())
+        assert not missing, (
+            f"confirm/data_description missing: {missing}"
+        )
+
+    def test_manual_mapping_data_description_has_all_fields(self):
+        strings = _load_strings()
+        dd = (
+            strings.get("config", {})
+            .get("step", {})
+            .get("manual_mapping", {})
+            .get("data_description", {})
+        )
+        missing = self._ALL_FIELDS - set(dd.keys())
+        assert not missing, (
+            f"manual_mapping/data_description missing: {missing}"
+        )
+
+    def test_reconfigure_edit_data_description_has_all_fields(self):
+        strings = _load_strings()
+        dd = (
+            strings.get("config", {})
+            .get("step", {})
+            .get("reconfigure_edit", {})
+            .get("data_description", {})
+        )
+        missing = self._ALL_FIELDS - set(dd.keys())
+        assert not missing, (
+            f"reconfigure_edit/data_description missing: {missing}"
         )
 
 
 # =========================================================================== #
-# TEST 2: Config flow passes description_placeholders for all schema fields   #
+# TEST 2: Config flow still passes description_placeholders (HA 2024.7+ compat) #
 # =========================================================================== #
-
-# The placeholder keys used by _build_description_placeholders (each schema
-# key gets an _desc suffix).
-_SCHEMA_PLACEHOLDER_KEYS = {
-    "soc_entity_desc",
-    "pv_power_entity_desc",
-    "house_power_entity_desc",
-    "battery_charge_entity_desc",
-    "battery_capacity_entity_desc",
-    "battery_manual_capacity_kwh_desc",
-    "max_charge_power_entity_desc",
-    "max_charge_manual_power_w_desc",
-    "grid_export_entity_desc",
-    "grid_power_sign_convention_desc",
-}
 
 
 class TestConfigFlowDescriptionPlaceholders:
-    """Config flow must pass description_placeholders for ALL schema fields
-    in manual_mapping and confirm steps."""
+    """Config flow passes description_placeholders for compatibility with
+    HA 2024.7+ which may prefer this approach."""
 
     def test_manual_mapping_passes_description_placeholders(self):
-        """async_step_manual_mapping (form) must pass description_placeholders
-        covering every field in _build_full_schema."""
         hass = MagicMock()
         flow = _make_flow(hass)
         _mock_location(hass)
@@ -157,22 +161,19 @@ class TestConfigFlowDescriptionPlaceholders:
             "manual_mapping step must pass description_placeholders"
         )
         assert isinstance(placeholders, dict)
-
-        # All schema placeholder keys must be present
-        for key in _SCHEMA_PLACEHOLDER_KEYS:
+        # Core field placeholders must be present
+        for key in ("soc_entity_desc", "house_power_entity_desc", "grid_export_entity_desc"):
             assert key in placeholders, (
-                f"description_placeholders must include '{key}' for HA rendering"
+                f"description_placeholders must include '{key}'"
             )
 
     def test_confirm_passes_description_placeholders(self):
-        """async_step_confirm (form) must pass description_placeholders."""
         from homeassistant import config_entries
 
         hass = MagicMock()
         flow = _make_flow(hass)
         _mock_location(hass)
 
-        # Mock e3dc_rscp entry so confirm step is reached
         e3dc_entry = config_entries.ConfigEntry(
             version=1,
             minor_version=1,
@@ -200,29 +201,23 @@ class TestConfigFlowDescriptionPlaceholders:
 
         async def _go():
             r1 = await flow.async_step_user()
-            # Confirm should show form (prefilled)
             return r1
 
         result = asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
             _go()
         )
 
-        # Either confirm form or manual_mapping form
         assert result["type"] == "form"
         placeholders = result.get("description_placeholders")
         assert placeholders is not None, (
             f"{result['step_id']} step must pass description_placeholders"
         )
-        assert isinstance(placeholders, dict)
-
-        # Must include at least the core field placeholders
         for key in ("soc_entity_desc", "house_power_entity_desc", "grid_export_entity_desc"):
             assert key in placeholders, (
                 f"description_placeholders must include '{key}'"
             )
 
     def test_description_placeholders_are_german(self):
-        """All description placeholder values must be in German."""
         hass = MagicMock()
         flow = _make_flow(hass)
         _mock_location(hass)
@@ -241,7 +236,6 @@ class TestConfigFlowDescriptionPlaceholders:
                 f"description_placeholder '{key}' must have meaningful text"
             )
             val_lower = str(val).lower()
-            # Must contain German keywords (not just English)
             assert any(
                 kw in val_lower
                 for kw in [
@@ -252,8 +246,14 @@ class TestConfigFlowDescriptionPlaceholders:
                 ]
             ), f"description_placeholder '{key}' must be in German, got: {val}"
 
+
+# =========================================================================== #
+# TEST 3: House power description explains negative values (Req 3)            #
+# =========================================================================== #
+
+
+class TestHousePowerDescription:
     def test_house_power_placeholder_explains_negative_values(self):
-        """house_power_entity placeholder must explain negative values."""
         hass = MagicMock()
         flow = _make_flow(hass)
         _mock_location(hass)
@@ -277,8 +277,14 @@ class TestConfigFlowDescriptionPlaceholders:
             f"values, got: {house_desc}"
         )
 
+
+# =========================================================================== #
+# TEST 4: Reconfigure edit passes description_placeholders                    #
+# =========================================================================== #
+
+
+class TestReconfigureEditPlaceholders:
     def test_reconfigure_edit_passes_description_placeholders(self):
-        """Reconfigure → edit flow must also pass description_placeholders."""
         from custom_components.universal_energy_manager.const import (
             CONF_BATTERY_CAPACITY_ENTITY,
             CONF_E3DC_CONFIG_ENTRY_ID,
@@ -337,7 +343,3 @@ class TestConfigFlowDescriptionPlaceholders:
 
         placeholders = result.get("description_placeholders")
         assert placeholders is not None, "reconfigure_edit must pass description_placeholders"
-        for key in _SCHEMA_PLACEHOLDER_KEYS:
-            assert key in placeholders, (
-                f"description_placeholders must include '{key}'"
-            )

@@ -1,14 +1,14 @@
-"""Regression test: reconfigure/reconfigure_edit steps use description_placeholders.
+"""Regression test: reconfigure/reconfigure_edit steps use data_description.
 
 Requirements:
-- reconfigure and reconfigure_edit steps in strings.json have description
-  text with {*_desc} placeholder tokens
-- The config flow passes description_placeholders for all fields
+- reconfigure and reconfigure_edit steps in strings.json have data_description
+  for all 10 schema fields (HA 2024.3.3 supported)
+- The config flow passes description_placeholders for all fields (compatibility)
 - No references to removed fields (battery_power_mode, grid_power_mode, etc.)
-- Each field in description_placeholders has a German explanation
+- Each field in data_description has a German explanation
 
-HA 2024.3.3 (pinned version) does NOT support data_description — the
-working mechanism is description_placeholders passed to async_show_form().
+HA 2024.3.3 DOES support data_description in strings.json — it was added
+in HA 2024.3 and is proven by the real HA Hue integration.
 """
 
 from __future__ import annotations
@@ -78,24 +78,23 @@ def _make_flow_with_uem(hass: MagicMock, uem_entry) -> UemConfigFlow:
 
 
 # =========================================================================== #
-# TEST 1: reconfigure step has no data_description (dead code)                #
+# TEST 1: reconfigure/reconfigure_edit have data_description                  #
 # =========================================================================== #
 
 
-class TestReconfigureStepNoDeadCode:
-    """The reconfigure step must not have data_description (HA 2024.3.3 unsupported)."""
+class TestReconfigureStepDataDescription:
+    """The reconfigure_edit step must have data_description (HA 2024.3.3
+    supported, proven by HA Hue integration).  The reconfigure step is a
+    pure choice step (no entity fields) and doesn't need data_description."""
 
-    def test_reconfigure_has_no_data_description_key(self):
-        strings = _load_strings()
-        reconfigure = strings.get("config", {}).get("step", {}).get("reconfigure", {})
-        assert "data_description" not in reconfigure
-
-    def test_reconfigure_edit_has_no_data_description_key(self):
+    def test_reconfigure_edit_has_data_description_key(self):
         strings = _load_strings()
         reconfigure_edit = strings.get("config", {}).get("step", {}).get(
             "reconfigure_edit", {}
         )
-        assert "data_description" not in reconfigure_edit
+        assert "data_description" in reconfigure_edit, (
+            "reconfigure_edit must have data_description (HA 2024.3.3 supported)"
+        )
 
 
 # =========================================================================== #

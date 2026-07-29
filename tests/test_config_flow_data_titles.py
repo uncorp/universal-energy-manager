@@ -1,19 +1,18 @@
 """Regression test: every flow step with entity fields needs both title
-(data) and description (via {placeholder} tokens in description text).
+(data) and description (via data_description in strings.json).
 
 Requirement 5: Jede sichtbare Zeile braucht einen klaren deutschen Titel UND
 eine kurze Erklärung direkt darunter. Die HA-UI-Mechanik dafür ist:
   - "data": { key: "Klarer deutscher Titel" }
-  - "description": text with {*_desc} placeholder tokens
-  - Config flow passes description_placeholders with German text.
+  - "data_description": { key: "Kurze Erklärung darunter" }
 
-HA 2024.3.3 (pinned version) does NOT support ``data_description`` in
-strings.json — it was added in HA 2024.7+.  The working mechanism is
-``description_placeholders`` passed to ``async_show_form()``.
+HA 2024.3.3 DOES support data_description in config_flow strings.json
+(proven by real HA integrations like hue/strings.json).  These per-field
+descriptions are rendered by the HA frontend directly below each field label.
 
 Diese Tests prüfen, dass confirm, manual_mapping und reconfigure_edit alle
-beide Sektionen haben: deutsche Titel ('data') und Erklärungs-Placeholder
-(im description-Text).
+beide Sektionen haben: deutsche Titel ('data') und Erklärungen
+(data_description).
 """
 
 from __future__ import annotations
@@ -86,11 +85,15 @@ def _step_description_tokens(step_name: str) -> list[str]:
     return re.findall(r"\{(\w+)_desc\}", desc)
 
 
-def _step_no_data_description(step_name: str) -> bool:
-    """Return True if the step does NOT have data_description (dead code)."""
+def _step_data_description(step_name: str) -> dict:
+    """Return the data_description dict for a given step."""
     strings = _load_strings()
-    step = strings.get("config", {}).get("step", {}).get(step_name, {})
-    return "data_description" not in step
+    return (
+        strings.get("config", {})
+        .get("step", {})
+        .get(step_name, {})
+        .get("data_description", {})
+    )
 
 
 # =========================================================================== #
@@ -193,54 +196,71 @@ class TestReconfigureEditDataTitles:
 
 
 # =========================================================================== #
-# TEST 4: Every step has description with placeholder tokens                  #
+# TEST 4: Every step has data_description with field explanations             #
 # =========================================================================== #
 
 
-class TestStepDescriptionPlaceholders:
-    """Each step with entity fields must have {*_desc} tokens in its
-    description text, matching all 10 schema fields."""
+class TestStepDataDescriptionExplanations:
+    """Each step with entity fields must have data_description entries for
+    all 10 schema fields — these are the per-field explanations shown by
+    HA 2024.3.3's frontend directly below each field label.
 
-    def _check_tokens(self, step_name: str) -> None:
-        tokens = set(_step_description_tokens(step_name))
-        missing = _EXPECTED_TOKENS - tokens
+    The old {*_desc} placeholder-in-description approach is replaced by
+    data_description which is the proper HA mechanism."""
+
+    def _check_field_count(self, step_name: str) -> None:
+        dd = _step_data_description(step_name)
+        dd_keys = set(dd.keys())
+        missing = _SCHEMA_FIELDS - dd_keys
         assert not missing, (
-            f"{step_name} description missing tokens for: {missing}"
+            f"{step_name} data_description missing fields: {missing}"
+        )
+        extra = dd_keys - _SCHEMA_FIELDS
+        assert not extra, (
+            f"{step_name} data_description has unexpected fields: {extra}"
         )
 
-    def test_confirm_has_all_description_tokens(self) -> None:
-        """confirm step must have all 10 {*_desc} tokens."""
-        self._check_tokens("confirm")
+    def test_confirm_has_all_description_fields(self) -> None:
+        """confirm step must have data_description for all 10 fields."""
+        self._check_field_count("confirm")
 
-    def test_manual_mapping_has_all_description_tokens(self) -> None:
-        """manual_mapping must have all 10 {*_desc} tokens."""
-        self._check_tokens("manual_mapping")
+    def test_manual_mapping_has_all_description_fields(self) -> None:
+        """manual_mapping must have data_description for all 10 fields."""
+        self._check_field_count("manual_mapping")
 
-    def test_reconfigure_edit_has_all_description_tokens(self) -> None:
-        """reconfigure_edit must have all 10 {*_desc} tokens."""
-        self._check_tokens("reconfigure_edit")
+    def test_reconfigure_edit_has_all_description_fields(self) -> None:
+        """reconfigure_edit must have data_description for all 10 fields."""
+        self._check_field_count("reconfigure_edit")
+
+    def test_all_descriptions_are_meaningful(self) -> None:
+        """All data_description values must be meaningful German text."""
+        for step in ("confirm", "manual_mapping", "reconfigure_edit"):
+            dd = _step_data_description(step)
+            for key, val in dd.items():
+                assert len(str(val).strip()) > 3, (
+                    f"{step} data_description['{key}'] must be meaningful, "
+                    f"got: {val!r}"
+                )
 
 
 # =========================================================================== #
-# TEST 5: data_description is dead code — removed from all steps              #
+# TEST 5: data_description IS present (HA 2024.3.3 supports it)               #
 # =========================================================================== #
 
 
-class TestNoDataDescriptionDeadCode:
-    """HA 2024.3.3 does not support data_description.  All steps must
-    not have this key (dead code)."""
+class TestDataDescriptionPresent:
+    """HA 2024.3.3 DOES support data_description in config_flow strings.json
+    (proven by real HA integrations like hue).  This is the proper mechanism
+    for per-field explanations shown directly below each field label."""
 
-    def test_confirm_no_data_description(self) -> None:
-        assert _step_no_data_description("confirm"), (
-            "confirm must not have data_description (dead code)"
-        )
+    def test_confirm_has_data_description(self) -> None:
+        dd = _step_data_description("confirm")
+        assert dd, "confirm must have data_description (HA 2024.3.3 supported)"
 
-    def test_manual_mapping_no_data_description(self) -> None:
-        assert _step_no_data_description("manual_mapping"), (
-            "manual_mapping must not have data_description (dead code)"
-        )
+    def test_manual_mapping_has_data_description(self) -> None:
+        dd = _step_data_description("manual_mapping")
+        assert dd, "manual_mapping must have data_description"
 
-    def test_reconfigure_edit_no_data_description(self) -> None:
-        assert _step_no_data_description("reconfigure_edit"), (
-            "reconfigure_edit must not have data_description (dead code)"
-        )
+    def test_reconfigure_edit_has_data_description(self) -> None:
+        dd = _step_data_description("reconfigure_edit")
+        assert dd, "reconfigure_edit must have data_description"

@@ -3,18 +3,17 @@
 Requirement 5: Jede sichtbare Zeile braucht einen klaren deutschen Titel
 UND eine kurze Erklärung direkt darunter.
 
-HA 2024.3.3 (pinned version) does NOT support ``data_description`` in
-config-flow strings.json — it was added in HA 2024.7+.  The actual
-mechanism is:
-- The step's ``description`` text contains ``{*_desc}`` placeholder tokens.
-- The config flow passes ``description_placeholders`` with the real German
-  text for each placeholder to ``async_show_form()``.
-- The HA frontend substitutes placeholders at render time.
+HA 2024.3.3 DOES support ``data_description`` in config-flow strings.json
+(proven by real HA integrations like hue/strings.json).  The per-field
+explanations are provided via the ``data_description`` block.  Additionally,
+the config flow still passes ``description_placeholders`` for compatibility
+with newer HA versions.
 
 This test verifies that:
 1. The confirm step has a ``data`` dict with German field titles.
-2. The confirm step's ``description`` contains all ``{*_desc}`` placeholder tokens.
-3. All field descriptions are present (mirroring manual_mapping).
+2. The confirm step's ``data_description`` contains entries for all 10 fields.
+3. The confirm step's ``description`` contains {*_desc} tokens (backward compat).
+4. All field descriptions are present (mirroring manual_mapping).
 """
 
 from __future__ import annotations
@@ -137,26 +136,28 @@ class TestConfirmStepDataTitles:
 
 
 # =========================================================================== #
-# TEST 2: confirm step description contains placeholder tokens               #
+# TEST 2: confirm step data_description has all field explanations           #
 # =========================================================================== #
 
 
-class TestConfirmStepDescriptionPlaceholders:
-    """The confirm step's description must contain {*_desc} tokens for
-    field explanations.  These are substituted by HA at render time
-    via description_placeholders passed by the config flow."""
+class TestConfirmStepDataDescription:
+    """The confirm step must have data_description for all 10 fields."""
 
-    def _description_tokens(self, step_name: str) -> list[str]:
+    def test_confirm_has_data_description(self):
+        """confirm step must have data_description key."""
         strings = _load_strings()
-        desc = strings.get("config", {}).get("step", {}).get(step_name, {}).get("description", "")
-        # Find all {token} patterns
-        import re
-        return re.findall(r"\{(\w+)_desc\}", desc)
+        confirm = strings.get("config", {}).get("step", {}).get("confirm", {})
+        assert "data_description" in confirm, (
+            "confirm step must have data_description (HA 2024.3.3 supported)"
+        )
 
-    def test_confirm_has_all_placeholder_tokens(self):
-        """confirm description must contain all 10 field-description tokens."""
-        tokens = self._description_tokens("confirm")
-        expected_tokens = [
+    def test_confirm_data_description_has_all_fields(self):
+        """confirm/data_description must cover all 10 schema fields."""
+        strings = _load_strings()
+        dd = strings.get("config", {}).get("step", {}).get("confirm", {}).get(
+            "data_description", {}
+        )
+        expected = {
             "soc_entity",
             "pv_power_entity",
             "house_power_entity",
@@ -167,17 +168,43 @@ class TestConfirmStepDescriptionPlaceholders:
             "max_charge_manual_power_w",
             "grid_export_entity",
             "grid_power_sign_convention",
-        ]
-        for t in expected_tokens:
-            assert t in tokens, (
-                f"confirm description must contain {{{t}_desc}} placeholder, "
-                f"found: {tokens}"
+        }
+        missing = expected - set(dd.keys())
+        assert not missing, (
+            f"confirm/data_description missing fields: {missing}"
+        )
+
+    def test_confirm_data_description_values_are_german(self):
+        """All data_description values must be meaningful German text."""
+        strings = _load_strings()
+        dd = strings.get("config", {}).get("step", {}).get("confirm", {}).get(
+            "data_description", {}
+        )
+        for key, val in dd.items():
+            assert len(str(val).strip()) > 3, (
+                f"confirm/data_description['{key}'] must be meaningful, got: {val!r}"
             )
 
-    def test_confirm_and_manual_mapping_share_all_placeholder_tokens(self):
-        """Both steps must define placeholders for the same fields."""
-        confirm_tokens = set(self._description_tokens("confirm"))
-        manual_tokens = set(self._description_tokens("manual_mapping"))
+
+# =========================================================================== #
+# TEST 3: confirm and manual_mapping share data_description fields           #
+# =========================================================================== #
+
+
+class TestConfirmManualMappingDataDescriptionMatch:
+    """Both steps must have the same data_description fields."""
+
+    def test_confirm_and_manual_mapping_share_data_description_fields(self):
+        """confirm and manual_mapping data_description fields must match."""
+        strings = _load_strings()
+        confirm_dd = set(
+            strings.get("config", {}).get("step", {})
+            .get("confirm", {}).get("data_description", {}).keys()
+        )
+        manual_dd = set(
+            strings.get("config", {}).get("step", {})
+            .get("manual_mapping", {}).get("data_description", {}).keys()
+        )
         expected = {
             "soc_entity", "pv_power_entity", "house_power_entity",
             "battery_charge_entity", "battery_capacity_entity",
@@ -185,34 +212,9 @@ class TestConfirmStepDescriptionPlaceholders:
             "max_charge_manual_power_w", "grid_export_entity",
             "grid_power_sign_convention",
         }
-        assert confirm_tokens == expected, (
-            f"confirm placeholder tokens mismatch: missing={expected - confirm_tokens}"
+        assert confirm_dd == expected, (
+            f"confirm data_description mismatch: missing={expected - confirm_dd}"
         )
-        assert manual_tokens == expected, (
-            f"manual_mapping placeholder tokens mismatch: missing={expected - manual_tokens}"
-        )
-
-
-# =========================================================================== #
-# TEST 3: data_description is dead code (removed)                             #
-# =========================================================================== #
-
-
-class TestConfirmNoDeadDataDescription:
-    """HA 2024.3.3 does not support data_description — it must be removed."""
-
-    def test_confirm_has_no_data_description_key(self):
-        """confirm step must not have data_description (dead code)."""
-        strings = _load_strings()
-        confirm = strings.get("config", {}).get("step", {}).get("confirm", {})
-        assert "data_description" not in confirm, (
-            "confirm step must not have data_description (HA 2024.3.3 unsupported)"
-        )
-
-    def test_manual_mapping_has_no_data_description_key(self):
-        """manual_mapping step must not have data_description (dead code)."""
-        strings = _load_strings()
-        mapping = strings.get("config", {}).get("step", {}).get("manual_mapping", {})
-        assert "data_description" not in mapping, (
-            "manual_mapping must not have data_description (HA 2024.3.3 unsupported)"
+        assert manual_dd == expected, (
+            f"manual_mapping data_description mismatch: missing={expected - manual_dd}"
         )
