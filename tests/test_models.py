@@ -42,15 +42,15 @@ class TestLiveStateValidation:
         with pytest.raises(ValueError, match="finite"):
             LiveState(**self._make_base(pv_power_w=nan))
 
-    def test_rejects_negative_grid_export(self) -> None:
-        """grid_export_w must be non-negative — negative means import."""
-        with pytest.raises(ValueError, match="grid_export_w"):
-            LiveState(**self._make_base(grid_export_w=-100.0))
+    def test_accepts_negative_grid_export(self) -> None:
+        """grid_export_w is signed: negative = import, positive = export (Req 1-2)."""
+        live = LiveState(**self._make_base(grid_export_w=-100.0))
+        assert live.grid_export_w == -100.0
 
-    def test_rejects_negative_battery_charge(self) -> None:
-        """battery_charge_w must be non-negative."""
-        with pytest.raises(ValueError, match="battery_charge_w"):
-            LiveState(**self._make_base(battery_charge_w=-50.0))
+    def test_accepts_negative_battery_charge(self) -> None:
+        """battery_charge_w is signed: negative = discharging, positive = charging (Req 1)."""
+        live = LiveState(**self._make_base(battery_charge_w=-50.0))
+        assert live.battery_charge_w == -50.0
 
     def test_accepts_zero_grid_export(self) -> None:
         """Zero grid export is valid (boundary)."""

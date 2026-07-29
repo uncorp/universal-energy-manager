@@ -41,12 +41,10 @@ class LiveState:
             raise ValueError("soc_pct must be between 0 and 100")
         if self.pv_power_w < 0.0:
             raise ValueError("pv_power_w must be non-negative")
-        if self.house_power_w < 0.0:
-            raise ValueError("house_power_w must be non-negative")
-        if self.grid_export_w < 0.0:
-            raise ValueError("grid_export_w must be non-negative")
-        if self.battery_charge_w < 0.0:
-            raise ValueError("battery_charge_w must be non-negative")
+        # house_power_w, grid_export_w, battery_charge_w are signed values:
+        # - house_power: negative = balcony PV produces more than house (Req 3)
+        # - grid_export: negative = import, positive = export (Req 1-2)
+        # - battery_charge: negative = discharging, positive = charging (Req 1)
 
 
 @dataclass(frozen=True, slots=True)

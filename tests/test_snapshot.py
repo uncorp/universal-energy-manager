@@ -8,6 +8,10 @@ from custom_components.universal_energy_manager.snapshot import (
 )
 
 
+def _now() -> datetime:
+    return datetime(2026, 7, 29, 12, 0, tzinfo=UTC)
+
+
 def test_build_live_state_normalizes_e3dc_power_measurements() -> None:
     now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
     live = build_live_state(
@@ -117,8 +121,8 @@ def test_build_live_state_rejects_soc_above_100() -> None:
 
 
 def test_build_live_state_rejects_negative_power() -> None:
-    """Negative PV / house power values must be rejected."""
-    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
+    """Negative PV power is invalid; negative house_power is now valid (signed, Req 3)."""
+    now = _now()
 
     with pytest.raises(ValueError, match="pv_power"):
         build_live_state(
@@ -126,16 +130,6 @@ def test_build_live_state_rejects_negative_power() -> None:
             soc=StateSample("50", "%", now),
             pv_power=StateSample("-100", "W", now),
             house_power=StateSample("500", "W", now),
-            grid_export=StateSample("1500", "W", now),
-            battery_charge=StateSample("0", "W", now),
-        )
-
-    with pytest.raises(ValueError, match="house_power"):
-        build_live_state(
-            now=now,
-            soc=StateSample("50", "%", now),
-            pv_power=StateSample("2000", "W", now),
-            house_power=StateSample("-100", "W", now),
             grid_export=StateSample("1500", "W", now),
             battery_charge=StateSample("0", "W", now),
         )
@@ -188,32 +182,32 @@ def test_build_live_state_accepts_none_unit_as_watts() -> None:
     assert live.grid_export_w == 2500.0
 
 
-def test_build_live_state_rejects_negative_grid_export() -> None:
-    """Negative grid_export must be rejected — that indicates import."""
-    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
-    with pytest.raises(ValueError, match="grid_export"):
-        build_live_state(
-            now=now,
-            soc=StateSample("50", "%", now),
-            pv_power=StateSample("2000", "W", now),
-            house_power=StateSample("500", "W", now),
-            grid_export=StateSample("-100", "W", now),
-            battery_charge=StateSample("0", "W", now),
-        )
+def test_build_live_state_accepts_negative_grid_export() -> None:
+    """grid_export is signed: negative = import, positive = export (Req 2)."""
+    now = _now()
+    live = build_live_state(
+        now=now,
+        soc=StateSample("50", "%", now),
+        pv_power=StateSample("2000", "W", now),
+        house_power=StateSample("500", "W", now),
+        grid_export=StateSample("-100", "W", now),
+        battery_charge=StateSample("0", "W", now),
+    )
+    assert live.grid_export_w == -100.0
 
 
-def test_build_live_state_rejects_negative_battery_charge() -> None:
-    """Negative battery charge must be rejected."""
-    now = datetime(2026, 7, 18, 12, 0, tzinfo=UTC)
-    with pytest.raises(ValueError, match="battery_charge"):
-        build_live_state(
-            now=now,
-            soc=StateSample("50", "%", now),
-            pv_power=StateSample("2000", "W", now),
-            house_power=StateSample("500", "W", now),
-            grid_export=StateSample("1500", "W", now),
-            battery_charge=StateSample("-50", "W", now),
-        )
+def test_build_live_state_accepts_negative_battery_charge() -> None:
+    """battery_charge is signed: negative = discharging, positive = charging (Req 1)."""
+    now = _now()
+    live = build_live_state(
+        now=now,
+        soc=StateSample("50", "%", now),
+        pv_power=StateSample("2000", "W", now),
+        house_power=StateSample("500", "W", now),
+        grid_export=StateSample("1500", "W", now),
+        battery_charge=StateSample("-50", "W", now),
+    )
+    assert live.battery_charge_w == -50.0
 
 
 def test_build_live_state_rejects_non_numeric_battery_charge() -> None:
