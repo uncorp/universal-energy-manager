@@ -23,7 +23,6 @@ from custom_components.universal_energy_manager.config_flow import (
 )
 from custom_components.universal_energy_manager.const import (
     CONF_GRID_POWER_SIGN_CONVENTION,
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
     SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 
