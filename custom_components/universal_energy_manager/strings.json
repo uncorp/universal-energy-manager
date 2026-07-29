@@ -7,7 +7,7 @@
       },
       "confirm": {
         "title": "Erkannte Messwerte bestätigen",
-        "description": "UEM kann erkannte Entitäten vorbefüllen. Beim ersten Start werden keine Steuerbefehle gesendet. Du kannst die Werte bearbeiten oder zur manuellen Zuordnung wechseln.",
+        "description": "UEM kann erkannte Entitäten vorbefüllen. Beim ersten Start werden keine Steuerbefehle gesendet. Du kannst die Werte bearbeiten oder zur manuellen Zuordnung wechseln.\n\n{soc_entity_desc}\n{pv_power_entity_desc}\n{house_power_entity_desc}\n{battery_charge_entity_desc}\n{battery_capacity_entity_desc}\n{battery_manual_capacity_kwh_desc}\n{max_charge_power_entity_desc}\n{max_charge_manual_power_w_desc}\n{grid_export_entity_desc}\n{grid_power_sign_convention_desc}",
         "data": {
           "soc_entity": "Batterieladestand (SoC)",
           "pv_power_entity": "PV-Leistung",
@@ -39,7 +39,7 @@
       },
       "manual_mapping": {
         "title": "Manuelle Entitätszuordnung",
-        "description": "Alle Felder sind optional. UEM verwendet nur die vorhandenen, plausiblen Messwerte. Solange für eine Berechnung Daten fehlen, zeigt UEM **Einrichtung unvollständig** und bleibt vollständig im Shadow-Modus – ohne Steuerung.",
+        "description": "Alle Felder sind optional. UEM verwendet nur die vorhandenen, plausiblen Messwerte. Solange für eine Berechnung Daten fehlen, zeigt UEM **Einrichtung unvollständig** und bleibt vollständig im Shadow-Modus – ohne Steuerung.\n\n{soc_entity_desc}\n{pv_power_entity_desc}\n{house_power_entity_desc}\n{battery_charge_entity_desc}\n{battery_capacity_entity_desc}\n{battery_manual_capacity_kwh_desc}\n{max_charge_power_entity_desc}\n{max_charge_manual_power_w_desc}\n{grid_export_entity_desc}\n{grid_power_sign_convention_desc}",
         "data": {
           "soc_entity": "Batterieladestand (SoC)",
           "pv_power_entity": "PV-Leistung",
@@ -71,7 +71,7 @@
       },
       "reconfigure_edit": {
         "title": "Entitäten bearbeiten",
-        "description": "Ändere die Zuordnung der Sensoren. Leer lassen behält den aktuellen Wert.",
+        "description": "Ändere die Zuordnung der Sensoren. Leer lassen behält den aktuellen Wert.\n\n{soc_entity_desc}\n{pv_power_entity_desc}\n{house_power_entity_desc}\n{battery_charge_entity_desc}\n{battery_capacity_entity_desc}\n{battery_manual_capacity_kwh_desc}\n{max_charge_power_entity_desc}\n{max_charge_manual_power_w_desc}\n{grid_export_entity_desc}\n{grid_power_sign_convention_desc}",
         "data": {
           "soc_entity": "Batterieladestand (SoC)",
           "pv_power_entity": "PV-Leistung",
