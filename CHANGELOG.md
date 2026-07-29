@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9 – Config-Flow-Korrekturen als Test-Beta
+
+- **Fix:** Manuelle Zuordnung verwendet verständlichere Netz-Vorzeichenbeschreibungen und standardmäßig „Netzbezug positiv“.
+- **Fix:** Die Konfigurationsdialoge enthalten die für Home Assistant 2024.3.x erforderlichen Platzhalter in den Feldbeschreibungen.
+- **Fix:** Signierte Werte für Hauslast, Netzeinspeisung und Batterieladung werden im manuellen Mapping akzeptiert.
+- **Test:** Erweiterte Regressionstests für leere und unvollständige Shadow-Konfigurationen, Reconfigure, Feldbeschreibungen und Vorzeichenkonventionen.
+
 ## 0.1.8 – Optionale, gruppierte manuelle Entitätszuordnung
 
 - **UX:** Manuelle Zuordnung ist weiterhin eine Seite, aber Messwerte sind verständlich gruppiert: allgemeine Werte, alle Batterie-Felder zusammen und alle Netz-Felder zusammen.

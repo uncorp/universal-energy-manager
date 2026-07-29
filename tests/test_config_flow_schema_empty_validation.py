@@ -54,7 +54,7 @@ class TestEmptySchemaValidation:
 
     def test_empty_dict_passes_schema_validation(self) -> None:
         """vol.Schema(schema_dict)({}) must not raise voluptuous.Invalid.
-        
+
         The result may include defaults — the important thing is no exception.
         """
         flow = _make_flow()
