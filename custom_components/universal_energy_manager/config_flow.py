@@ -74,9 +74,14 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
        - None: show no_e3dc_choice form (cancel or continue with manual)
        - One:  go to confirm step with prefill from e3dc
        - Many: show user selection form first
-    3. confirm step: show discovered entities, user can edit or go to manual
+    3. confirm step: show detected entities, user can edit or go to manual
     4. manual_mapping step: free-form entity selection (always available)
     5. create entry
+
+    Reconfigure:
+    - If e3dc_config_entry_id stored: _rescan_e3dc → auto-save (existing path)
+    - If e3dc_config_entry_id is None: rescan → 0 abort, 1 edit form
+      with prefill, multiple → select → same prefill path
     """
 
     VERSION = 1
@@ -371,33 +376,113 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_reconfigure()
 
         if do_edit:
-            # Show edit form for manual entities
-            return await self._show_reconfigure_edit(entry, current_data)
+            # Show edit form for manual entities — no discovery prefill for
+            # plain edit (e3dc_map not needed when user just wants to edit)
+            from .e3dc_rscp import E3dcEntityMap
+            empty_map = E3dcEntityMap(
+                soc=None, pv_power=None, house_power=None,
+                grid_export=None, battery_charge=None,
+                battery_capacity=None, max_charge_power=None,
+            )
+            return await self._show_reconfigure_edit(entry, current_data, empty_map)
 
         if do_rescan:
-            # Rescan e3dc_rscp for new entities, preserve manual overrides
-            new_data = await self._rescan_e3dc(entry, current_data)
-            if new_data is None:
-                return self.async_abort(reason="e3dc_rscp_not_configured")
-            return self.async_create_entry(
-                title="UEM – Universal Energy Manager",
-                data=new_data,
+            e3dc_entry_id = current_data.get(CONF_E3DC_CONFIG_ENTRY_ID)
+            if e3dc_entry_id is not None:
+                # Existing path: e3dc entry ID stored → auto-save
+                new_data = await self._rescan_e3dc(entry, current_data)
+                if new_data is None:
+                    return self.async_abort(reason="e3dc_rscp_not_configured")
+                return self.async_create_entry(
+                    title="UEM – Universal Energy Manager",
+                    data=new_data,
+                )
+            else:
+                # No entry ID stored — scan for existing adapters
+                return await self.async_step_reconfigure_rescan()
+
+    async def async_step_reconfigure_rescan(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Rescan for e3dc_rscp adapters when no e3dc_config_entry_id is stored.
+
+        0 adapters: abort with e3dc_rscp_not_configured.
+        1 adapter:   show reconfigure_edit form with prefill suggestions.
+        Multiple:    show selection form; on selection → same prefill path.
+        """
+        e3dc_entries = self.hass.config_entries.async_entries(E3DC_RSCP_DOMAIN)
+
+        if not e3dc_entries:
+            return self.async_abort(reason="e3dc_rscp_not_configured")
+
+        if len(e3dc_entries) == 1:
+            # Single adapter: discover entities and show edit form with prefill
+            e3dc_entry = e3dc_entries[0]
+            e3dc_map = self._discover_entities_from_entry(e3dc_entry.entry_id)
+            entry = self._get_current_entry()
+            return await self._show_reconfigure_edit(
+                entry, dict(entry.data), e3dc_map
             )
 
+        # Multiple adapters: show selection form
+        if user_input is not None:
+            self._e3dc_entry_id = user_input[CONF_E3DC_CONFIG_ENTRY_ID]
+            e3dc_entry = next(
+                (e for e in e3dc_entries if e.entry_id == self._e3dc_entry_id), None
+            )
+            if e3dc_entry is not None:
+                e3dc_map = self._discover_entities_from_entry(e3dc_entry.entry_id)
+                entry = self._get_current_entry()
+                return await self._show_reconfigure_edit(
+                    entry, dict(entry.data), e3dc_map
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_rescan",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_E3DC_CONFIG_ENTRY_ID): vol.In(
+                        {entry.entry_id: entry.title for entry in e3dc_entries}
+                    )
+                }
+            ),
+        )
+
     async def _show_reconfigure_edit(
-        self, entry: config_entries.ConfigEntry, current_data: dict
+        self,
+        entry: config_entries.ConfigEntry,
+        current_data: dict,
+        e3dc_map: Any,
     ) -> FlowResult:
-        """Show entity editing form in reconfigure mode."""
-        entity_data = {}
+        """Show entity editing form in reconfigure mode.
+
+        Discovery prefill is applied ONLY to fields that are blank in the
+        current entry data.  Non-blank manual values are never overwritten.
+        """
+        # Build prefill: discovery values only for blank fields
+        self._prefill_data = self._fill_blank_fields(e3dc_map, current_data)
+
+        # Schema defaults: start from current data, then fill only blanks
+        schema_defaults = {}
+        for key in self._mapping_defaults().keys():
+            cur = current_data.get(key, "")
+            if not cur or (isinstance(cur, str) and not cur.strip()):
+                p = self._prefill_data.get(key, "")
+                schema_defaults[key] = p
+            else:
+                schema_defaults[key] = cur
+
+        # Add non-mapping keys (sign convention, etc.) as-is
         for key, val in current_data.items():
-            entity_data[key] = str(val) if val is not None else ""
+            if key not in schema_defaults:
+                schema_defaults[key] = str(val) if val is not None else ""
 
         return self.async_show_form(
             step_id="reconfigure_edit",
             description_placeholders=self._build_description_placeholders(
-                entity_data
+                self._prefill_data
             ),
-            data_schema=vol.Schema(self._build_full_schema(entity_data)),
+            data_schema=vol.Schema(self._build_full_schema(schema_defaults)),
         )
 
     async def async_step_reconfigure_edit(
@@ -408,10 +493,19 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if entry is None:
             return self.async_abort(reason="not_configured")
         if user_input is None:
-            return await self._show_reconfigure_edit(entry, dict(entry.data))
+            from .e3dc_rscp import E3dcEntityMap
+            empty_map = E3dcEntityMap(
+                soc=None, pv_power=None, house_power=None,
+                grid_export=None, battery_charge=None,
+                battery_capacity=None, max_charge_power=None,
+            )
+            return await self._show_reconfigure_edit(entry, dict(entry.data), empty_map)
 
         updated_data = self._mapping_defaults()
+        # Merge existing entry data (preserves non-entity fields)
         updated_data.update(entry.data)
+        # Apply user input (overrides everything — prefill was already baked
+        # into the schema defaults above, so we do NOT apply _prefill_data here)
         for field, value in user_input.items():
             updated_data[field] = value.strip() if isinstance(value, str) else value
 
@@ -474,6 +568,57 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # ------------------------------------------------------------------ #
     # Helpers                                                              #
     # ------------------------------------------------------------------ #
+
+    def _discover_entities_from_entry(self, config_entry_id: str):
+        """Discover e3dc_rscp entities from a specific entry's entity registry."""
+        registry = er.async_get(self.hass)
+        unique_ids = {
+            entry.unique_id: entry.entity_id
+            for entry in er.async_entries_for_config_entry(
+                registry, config_entry_id
+            )
+            if entry.domain == "sensor" and entry.unique_id is not None
+        }
+        return discover_e3dc_entities(source_by_key_from_unique_ids(unique_ids))
+
+    def _fill_blank_fields(
+        self, e3dc_map, current_data: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Fill only blank mapping fields from discovery, return entity_data dict.
+
+        Returns a dict with all mapping keys.  Only fields that are empty/None/
+        whitespace in *current_data* receive a discovery prefill.  Non-blank
+        existing values are never overwritten.
+        """
+        defaults = {
+            CONF_SOC_ENTITY: "",
+            CONF_PV_POWER_ENTITY: "",
+            CONF_HOUSE_POWER_ENTITY: "",
+            CONF_GRID_EXPORT_ENTITY: "",
+            CONF_BATTERY_CHARGE_ENTITY: "",
+            CONF_BATTERY_CAPACITY_ENTITY: "",
+            CONF_MAX_CHARGE_POWER_ENTITY: "",
+            CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
+            CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+        }
+
+        # Start from defaults, then overlay existing non-blank values
+        entity_data = dict(defaults)
+        if current_data:
+            entity_data.update(current_data)
+
+        for key, default_val in defaults.items():
+            cur = entity_data.get(key, default_val)
+            # Only fill when current value is empty / None / whitespace
+            if not cur or (isinstance(cur, str) and not cur.strip()):
+                mapped = _ENT_MAP_LOOKUP.get(key)
+                if mapped:
+                    entity_val = getattr(e3dc_map, mapped, None)
+                    if entity_val:
+                        entity_data[key] = entity_val
+
+        return entity_data
 
     def _build_description_placeholders(
         self, prefill: dict[str, Any] | None = None
