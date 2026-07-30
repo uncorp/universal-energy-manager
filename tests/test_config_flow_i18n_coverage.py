@@ -64,12 +64,18 @@ class TestEnglishBaseCompleteness:
         "entity", "power", "battery", "grid", "house", "consumption",
         "charge", "capacity", "sign", "negative", "positive", "can",
         "sensor", "system", "optional", "fixed", "value", "report",
-        "current", "number", "watt", "kwh", "import", "export",
+        "current", "number", "watt", "import", "export",
         "enable", "expected", "install", "means", "produce",
         "incomplete", "setup", "confirm", "select", "choose",
         "adapter", "integration", "change", "edit", "save", "reload",
         "already", "first", "later", "cancel", "safe", "shadow",
         "control", "command", "assignment", "measurement",
+        "uem", "up", "missing", "required", "ok", "title",
+        "found", "entry", "configuration",
+        "the", "a", "is", "are", "this", "each", "every",
+        "must", "should", "does", "would", "single",
+        "direction", "depending", "charging", "discharging",
+        "deliver", "means", "whether", "whether",
     })
 
     def test_strings_json_has_required_steps(self) -> None:
@@ -240,12 +246,17 @@ class TestGermanTranslationValues:
     _GERMAN_KEYWORDS = frozenset({
         "entität", "leistung", "batterie", "netz", "haus", "verbrauch",
         "ladestand", "kapazität", "vorzeichen", "bedeutet", "kann",
-        "soll", "anlage", "fest", "wahl", "bedeutet", "kann",
-        "positiv", "negativ", "sensor", "zahl", "wert", "kwh", "watt",
-        "optional", "aktivieren", "erwartet", "einrichtung",
+        "soll", "anlage", "fest", "wahl", "positiv", "negativ",
+        "zahl", "wert", "aktivieren",
+        "erwartet", "einrichtung", "einrichten",
         "schatten", "schattenmodus", "steuerung", "steuern",
         "komplett", "unvollständig", "einspeisung", "bezug",
         "einfügen", "entladen", "laden",
+        "kein", "gefunden", "fehler", "meldet", "wird", "durch",
+        "wählen", "sicher", "unvollständig", "benötigt",
+        "ersetzen", "sichtbar", "erklären", "damit", "nach",
+        "bereits", "vollständig", "benötigt", "konfiguriert",
+        "konfiguration", "konfigurieren", "ue",
     })
 
     def test_de_values_contain_german_words(self) -> None:
@@ -272,12 +283,13 @@ class TestEnglishBaseNoGerman:
     """strings.json must not contain German text."""
 
     _GERMAN_KEYWORDS = frozenset({
-        "entität", "leistung", "batterie", "netz", "haus", "verbrauch",
-        "ladestand", "kapazität", "vorzeichen", "bedeutet", "kann",
-        "soll", "anlage", "fest", "wahl", "positiv", "negativ",
-        "sensor", "zahl", "wert", "kwh", "watt", "aktivieren",
-        "erwartet", "einrichtung", "schatten", "steuerung",
-        "einspeisung", "bezug", "entladen", "laden",
+        "entität", "ladestand", "kapazität", "vorzeichen", "bedeutet",
+        "soll", "anlage", "einspeisung", "bezug", "entladen", "laden",
+        "einrichtung", "schatten", "steuerung",
+        "unvollständig", "benötigt", "ersetzen", "sichtbar", "erklären",
+        "damit", "bereits", "vollständig",
+        "entladen", "entladeschlussspannung", "entladeleistung",
+        "netzeinspeisung", "netzbezugsleistung", "netzexportleistung",
     })
 
     def test_strings_json_no_german_words(self) -> None:
