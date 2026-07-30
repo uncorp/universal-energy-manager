@@ -36,7 +36,6 @@ from custom_components.universal_energy_manager.const import (
     DOMAIN,
     E3DC_RSCP_DOMAIN,
     FORECAST_SOLAR_DOMAIN,
-
 )
 from custom_components.universal_energy_manager.e3dc_rscp import E3dcEntityMap
 

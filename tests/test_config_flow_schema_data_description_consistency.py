@@ -152,14 +152,15 @@ class TestDataDescriptionValuesGerman:
                     f"{val!r}"
                 )
 
-    def test_data_descriptions_contain_german_words(self) -> None:
-        """All data_description values should contain German words."""
+    def test_data_descriptions_contain_english_words(self) -> None:
+        """All data_description values should contain English words (base locale)."""
         strings = _load_strings()
-        german_keywords = [
-            "entität", "leistung", "batterie", "netz", "haus", "verbrauch",
-            "ladestand", "kapazität", "vorzeichen", "bedeutet", "kann",
-            "soll", "messwert", "anlage", "positiv", "negativ", "ein",
-            "der", "die", "das", "sensor", "zahl", "wert", "kwh", "watt",
+        english_keywords = [
+            "entity", "power", "battery", "grid", "house", "consumption",
+            "charge", "capacity", "sign", "negative", "positive", "can",
+            "should", "sensor", "system", "optional", "fixed", "value",
+            "report", "current", "number", "watt", "kwh", "import",
+            "export", "enable", "expect"
         ]
         for step_id in ("confirm", "manual_mapping", "reconfigure_edit"):
             dd = (
@@ -170,9 +171,9 @@ class TestDataDescriptionValuesGerman:
             )
             for key, val in dd.items():
                 val_lower = str(val).lower()
-                assert any(kw in val_lower for kw in german_keywords), (
+                assert any(kw in val_lower for kw in english_keywords), (
                     f"{step_id}/data_description['{key}'] doesn't appear to be "
-                    f"German: {val!r}"
+                    f"English: {val!r}"
                 )
 
 

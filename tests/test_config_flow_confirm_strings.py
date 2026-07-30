@@ -1,16 +1,17 @@
-"""Regression test: confirm step in strings.json provides field descriptions.
+"""Regression test: confirm step in de.json provides German field descriptions.
 
 Requirement 5: Jede sichtbare Zeile braucht einen klaren deutschen Titel
 UND eine kurze Erklärung direkt darunter.
 
-Current state: No separate translations/de.json exists.
-strings.json contains the German UI text that is actually displayed.
-data_description provides the per-field explanations.
+With de.json now present (created by Stefan's HA-version commit), the German
+UI text lives in translations/de.json, not strings.json (which holds the
+English base locale). This test validates the German translations in de.json.
 
 This test verifies that:
 1. The confirm step has both ``data`` (field titles) and ``data_description``.
-2. The confirm step's ``description`` contains {*_desc} tokens.
-3. German text is present in both data and data_description.
+2. The confirm step's ``description`` contains {*_desc} tokens for per-field
+   explanations.
+3. All data and data_description values are in German.
 """
 
 from __future__ import annotations
@@ -31,8 +32,22 @@ from custom_components.universal_energy_manager.const import (
     CONF_SOC_ENTITY,
 )
 
-def _load_strings() -> dict:
-    """Load strings.json (German UI text) from the integration package."""
+
+def _load_de_strings() -> dict:
+    """Load translations/de.json (German UI text) from the integration package."""
+    strings_path = (
+        Path(__file__).parents[1]
+        / "custom_components"
+        / "universal_energy_manager"
+        / "translations"
+        / "de.json"
+    )
+    with open(strings_path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _load_base_strings() -> dict:
+    """Load strings.json (base/English locale) from the integration package."""
     strings_path = (
         Path(__file__).parents[1]
         / "custom_components"
@@ -41,6 +56,16 @@ def _load_strings() -> dict:
     )
     with open(strings_path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def _confirm_data() -> dict:
+    """Return the confirm step's ``data`` dict from de.json."""
+    return _load_de_strings()["config"]["step"]["confirm"]["data"]
+
+
+def _confirm_data_description() -> dict:
+    """Return the confirm step's ``data_description`` dict from de.json."""
+    return _load_de_strings()["config"]["step"]["confirm"]["data_description"]
 
 
 # =========================================================================== #
@@ -52,13 +77,9 @@ class TestConfirmStepDataTitles:
     """The confirm step has field titles (data) and descriptions."""
 
     def test_confirm_has_data_and_data_description(self):
-        """strings.json confirm step has both data and data_description keys."""
-        strings = _load_strings()
-        confirm = (
-            strings.get("config", {})
-            .get("step", {})
-            .get("confirm", {})
-        )
+        """de.json confirm step has both data and data_description keys."""
+        de = _load_de_strings()
+        confirm = de.get("config", {}).get("step", {}).get("confirm", {})
         assert "data" in confirm, (
             "confirm step must have a 'data' key with field titles"
         )
@@ -67,59 +88,38 @@ class TestConfirmStepDataTitles:
         )
 
     def test_confirm_data_has_soc(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_SOC_ENTITY in data
+        assert CONF_SOC_ENTITY in _confirm_data()
 
     def test_confirm_data_has_pv_power(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_PV_POWER_ENTITY in data
+        assert CONF_PV_POWER_ENTITY in _confirm_data()
 
     def test_confirm_data_has_house_power(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_HOUSE_POWER_ENTITY in data
+        assert CONF_HOUSE_POWER_ENTITY in _confirm_data()
 
     def test_confirm_data_has_battery_charge(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_BATTERY_CHARGE_ENTITY in data
+        assert CONF_BATTERY_CHARGE_ENTITY in _confirm_data()
 
     def test_confirm_data_has_grid_export(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_GRID_EXPORT_ENTITY in data
+        assert CONF_GRID_EXPORT_ENTITY in _confirm_data()
 
     def test_confirm_data_has_grid_sign_convention(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_INVERT_GRID_POWER_SIGN in data
+        assert CONF_INVERT_GRID_POWER_SIGN in _confirm_data()
 
     def test_confirm_data_has_battery_capacity(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_BATTERY_CAPACITY_ENTITY in data
+        assert CONF_BATTERY_CAPACITY_ENTITY in _confirm_data()
 
     def test_confirm_data_has_battery_manual_capacity(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_BATTERY_MANUAL_CAPACITY_KWH in data
+        assert CONF_BATTERY_MANUAL_CAPACITY_KWH in _confirm_data()
 
     def test_confirm_data_has_max_charge_power_entity(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_MAX_CHARGE_POWER_ENTITY in data
+        assert CONF_MAX_CHARGE_POWER_ENTITY in _confirm_data()
 
     def test_confirm_data_has_max_charge_manual_power(self):
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
-        assert CONF_MAX_CHARGE_MANUAL_POWER_W in data
+        assert CONF_MAX_CHARGE_MANUAL_POWER_W in _confirm_data()
 
     def test_confirm_data_values_are_german(self):
         """All data values in confirm must be in German."""
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        data = _confirm_data()
         for key, val in data.items():
             assert len(val.strip()) > 2, (
                 f"data title for {key} must be a meaningful German string"
@@ -135,10 +135,7 @@ class TestConfirmStepDataTitles:
 
     def test_confirm_data_description_is_german(self):
         """All data_description values in confirm must be German."""
-        strings = _load_strings()
-        dd = strings.get("config", {}).get("step", {}).get("confirm", {}).get(
-            "data_description", {}
-        )
+        dd = _confirm_data_description()
         for key, val in dd.items():
             assert len(val.strip()) > 3, (
                 f"data_description for {key} must be a meaningful German string"
@@ -154,10 +151,7 @@ class TestConfirmStepDataTitles:
 
     def test_confirm_data_description_has_all_fields(self):
         """confirm/data_description must cover all schema fields."""
-        strings = _load_strings()
-        dd = strings.get("config", {}).get("step", {}).get("confirm", {}).get(
-            "data_description", {}
-        )
+        dd = _confirm_data_description()
         expected = {
             "soc_entity",
             "pv_power_entity",
@@ -177,8 +171,7 @@ class TestConfirmStepDataTitles:
 
     def test_confirm_data_has_all_fields(self):
         """confirm/data must cover all schema fields."""
-        strings = _load_strings()
-        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        data = _confirm_data()
         expected = {
             "soc_entity", "pv_power_entity", "house_power_entity",
             "battery_charge_entity", "battery_capacity_entity",
@@ -190,3 +183,62 @@ class TestConfirmStepDataTitles:
         assert not missing, (
             f"confirm/data missing fields: {missing}"
         )
+
+
+# =========================================================================== #
+# TEST 2: Confirm step description contains {*_desc} tokens                  #
+# =========================================================================== #
+
+
+class TestConfirmStepDescriptionTokens:
+    """The confirm step description must reference per-field explanations."""
+
+    def test_confirm_description_has_soc_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{soc_entity_desc}" in desc
+
+    def test_confirm_description_has_pv_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{pv_power_entity_desc}" in desc
+
+    def test_confirm_description_has_house_token(self):
+        de = _load_de_strings()
+        desc = desc = de["config"]["step"]["confirm"]["description"]
+        assert "{house_power_entity_desc}" in desc
+
+    def test_confirm_description_has_battery_charge_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{battery_charge_entity_desc}" in desc
+
+    def test_confirm_description_has_battery_capacity_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{battery_capacity_entity_desc}" in desc
+
+    def test_confirm_description_has_battery_manual_capacity_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{battery_manual_capacity_kwh_desc}" in desc
+
+    def test_confirm_description_has_max_charge_power_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{max_charge_power_entity_desc}" in desc
+
+    def test_confirm_description_has_max_charge_manual_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{max_charge_manual_power_w_desc}" in desc
+
+    def test_confirm_description_has_grid_export_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{grid_export_entity_desc}" in desc
+
+    def test_confirm_description_has_invert_token(self):
+        de = _load_de_strings()
+        desc = de["config"]["step"]["confirm"]["description"]
+        assert "{invert_grid_power_sign_desc}" in desc
