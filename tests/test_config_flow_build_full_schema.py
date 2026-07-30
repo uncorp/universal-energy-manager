@@ -6,7 +6,7 @@ Requirements:
 - All fields are truly optional (vol.Optional with no required constraint)
 - All fields have NO vol.Length(min >= 1) — empty string is valid (Req 4)
 - Pre-filled values override defaults correctly
-- Grid sign convention defaults to SIGNED_CONVENTION_POS_DISCHARGE_IMPORT (Netzbezug)
+- Grid sign convention defaults to False (Netzbezug)
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import voluptuous as vol
+from homeassistant.helpers.selector import BooleanSelector
 
 from custom_components.universal_energy_manager.config_flow import (
     DOMAIN,
@@ -25,13 +26,12 @@ from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 
 
@@ -101,7 +101,7 @@ class TestBuildFullSchemaFieldsPresent:
         CONF_MAX_CHARGE_POWER_ENTITY,
         CONF_MAX_CHARGE_MANUAL_POWER_W,
         CONF_GRID_EXPORT_ENTITY,
-        CONF_GRID_POWER_SIGN_CONVENTION,
+        CONF_INVERT_GRID_POWER_SIGN,
     })
 
     def test_all_expected_fields_present(self) -> None:
@@ -154,10 +154,10 @@ class TestBuildFullSchemaDefaults:
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
         default_val = self._get_default_value(
-            schema_dict, CONF_GRID_POWER_SIGN_CONVENTION
+            schema_dict, CONF_INVERT_GRID_POWER_SIGN
         )
-        assert default_val == SIGNED_CONVENTION_POS_DISCHARGE_IMPORT, (
-            f"Expected {SIGNED_CONVENTION_POS_DISCHARGE_IMPORT!r}, "
+        assert not default_val, (
+            f"Expected {False!r}, "
             f"got {default_val!r}"
         )
 
@@ -217,15 +217,15 @@ class TestBuildFullSchemaPrefill:
     def test_prefill_overrides_grid_sign(self) -> None:
         flow = _make_flow()
         prefill = {
-            CONF_GRID_POWER_SIGN_CONVENTION:
-                "positive_is_discharging_import"
+            CONF_INVERT_GRID_POWER_SIGN:
+                False
         }
         schema_dict = flow._build_full_schema(prefill)
         default_val = self._get_default_value(
-            schema_dict, CONF_GRID_POWER_SIGN_CONVENTION
+            schema_dict, CONF_INVERT_GRID_POWER_SIGN
         )
-        assert default_val == "positive_is_discharging_import", (
-            f"Expected 'positive_is_discharging_import', got {default_val!r}"
+        assert default_val is False, (
+            f"Expected False, got {default_val!r}"
         )
 
     def test_prefill_overrides_battery_charge(self) -> None:
@@ -300,8 +300,8 @@ class TestBuildFullSchemaNoRequiredLength:
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
         validator = self._get_validator(
-            schema_dict, CONF_GRID_POWER_SIGN_CONVENTION
+            schema_dict, CONF_INVERT_GRID_POWER_SIGN
         )
-        assert isinstance(validator, vol.In), (
-            f"Grid sign convention should be vol.In, got {type(validator)}"
+        assert isinstance(validator, BooleanSelector), (
+            f"Grid sign convention should be BooleanSelector, got {type(validator)}"
         )

@@ -28,8 +28,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
@@ -382,7 +382,7 @@ class TestBuildFullSchema:
         assert CONF_BATTERY_MANUAL_CAPACITY_KWH in schema
         assert CONF_MAX_CHARGE_POWER_ENTITY in schema
         assert CONF_MAX_CHARGE_MANUAL_POWER_W in schema
-        assert CONF_GRID_POWER_SIGN_CONVENTION in schema
+        assert CONF_INVERT_GRID_POWER_SIGN in schema
 
 
 # =========================================================================== #

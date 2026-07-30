@@ -26,8 +26,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
@@ -58,7 +58,7 @@ _SCHEMA_FIELDS = frozenset({
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
+    CONF_INVERT_GRID_POWER_SIGN,
 })
 
 # Expected description placeholder base names (without _desc suffix).
@@ -120,8 +120,8 @@ class TestConfirmStepDataTitles:
             f"confirm/data missing titles for: {missing}"
         )
 
-    def test_confirm_data_titles_are_german(self) -> None:
-        """All confirm/data titles must be meaningful German text."""
+    def test_confirm_data_titles_are_english(self) -> None:
+        """All confirm/data titles must be meaningful English text (base locale)."""
         data = _step_data("confirm")
         for key, val in data.items():
             assert len(val.strip()) > 2, (
@@ -130,12 +130,13 @@ class TestConfirmStepDataTitles:
             val_lower = val.lower()
             assert any(
                 kw in val_lower
-                for kw in ["entität", "leistung", "batterie", "netz", "haus",
-                           "verbrauch", "ladestand", "kapazität", "vorzeichen",
-                           "kann", "soll", "messwert", "anlage", "fest", "wahl",
-                           "bedeutet", "konvention"]
+                for kw in ["entity", "power", "battery", "grid", "house",
+                           "consumption", "charge", "capacity", "invert",
+                           "can", "should", "system", "fixed", "value",
+                           "report", "current", "optional", "sensor", "number",
+                           "negative", "positive", "enable"]
             ), (
-                f"confirm/data[{key}] = {val!r} is not a proper German title"
+                f"confirm/data[{key}] = {val!r} is not a proper English title"
             )
 
 
@@ -186,8 +187,8 @@ class TestReconfigureEditDataTitles:
             f"reconfigure_edit/data missing titles for: {missing}"
         )
 
-    def test_reconfigure_edit_data_titles_are_german(self) -> None:
-        """All reconfigure_edit/data titles must be meaningful German text."""
+    def test_reconfigure_edit_data_titles_are_english(self) -> None:
+        """All reconfigure_edit/data titles must be meaningful English text (base locale)."""
         data = _step_data("reconfigure_edit")
         for key, val in data.items():
             assert len(val.strip()) > 2, (

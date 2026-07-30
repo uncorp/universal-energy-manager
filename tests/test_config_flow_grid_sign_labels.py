@@ -1,20 +1,17 @@
-"""Regression test: grid sign convention labels use "bedeutet" not "=".
+"""Regression test: grid sign selector changed from Select to BooleanSelector.
 
 Requirement 2:
-- Netzleistung deckt Import und Export über diese eine Entität ab.
-- Direkt darunter gibt es eine verständliche Auswahl
-  "Positiver Wert bedeutet Netzbezug" oder "Positiver Wert bedeutet Einspeisung".
+- Netzleistung deckt Import und Export über eine einzige Entität ab.
+- Die Vorzeichen-Invertierung wird über einen BooleanSelector gesteuert.
+- Default ist False (positiver Wert bedeutet Netzbezug).
 - Keine zweite Netz-Entität und keine verstreute Import-/Export-Eingabe.
-
-This test verifies that the vol.In options for the grid sign convention
-selector use the exact German wording with "bedeutet" (not "=").
 """
 
 from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import voluptuous as vol
+from homeassistant.helpers.selector import BooleanSelector
 
 from custom_components.universal_energy_manager.config_flow import (
     DOMAIN,
@@ -22,8 +19,9 @@ from custom_components.universal_energy_manager.config_flow import (
     UemConfigFlow,
 )
 from custom_components.universal_energy_manager.const import (
+    CONF_GRID_EXPORT_ENTITY,
     CONF_GRID_POWER_SIGN_CONVENTION,
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+    CONF_INVERT_GRID_POWER_SIGN,
 )
 
 
@@ -48,77 +46,43 @@ def _make_flow() -> UemConfigFlow:
     return flow
 
 
-# =========================================================================== #
-# TEST 1: Grid sign convention labels use "bedeutet"                          #
-# =========================================================================== #
+class TestGridSignSelector:
+    """Grid sign convention is now a BooleanSelector, not a Select."""
 
-
-class TestGridSignConventionLabelWording:
-    """The vol.In container must show 'Positiver Wert bedeutet Netzbezug'
-    and 'Positiver Wert bedeutet Einspeisung' — not 'Positiver Wert = ...'."""
-
-    def test_grid_sign_labels_use_bedeutet_not_equals(self) -> None:
-        """Both grid sign convention options must contain the word 'bedeutet'."""
+    def test_grid_sign_selector_is_boolean_selector(self) -> None:
+        """The grid sign selector must be a BooleanSelector."""
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
-        grid_sign_key = CONF_GRID_POWER_SIGN_CONVENTION
-        validator = schema_dict.get(grid_sign_key)
-        assert validator is not None, (
-            f"{grid_sign_key} must be in the schema"
-        )
-        assert isinstance(validator, vol.In), (
-            f"{grid_sign_key} validator must be vol.In"
-        )
-        for label in validator.container.values():
-            assert "bedeutet" in label.lower(), (
-                f"Grid sign convention label must contain 'bedeutet', "
-                f"got: '{label}'"
-            )
-
-    def test_grid_sign_labels_no_equals(self) -> None:
-        """No grid sign convention option should use '=' as separator."""
-        flow = _make_flow()
-        schema_dict = flow._build_full_schema({})
-        grid_sign_key = CONF_GRID_POWER_SIGN_CONVENTION
-        validator = schema_dict.get(grid_sign_key)
+        validator = schema_dict.get(CONF_INVERT_GRID_POWER_SIGN)
         assert validator is not None
-        assert isinstance(validator, vol.In)
-        for label in validator.container.values():
-            assert "=" not in label, (
-                f"Grid sign convention label must not use '=', "
-                f"got: '{label}'"
-            )
+        assert isinstance(validator, BooleanSelector)
 
-    def test_grid_sign_convention_default_is_netzbezug(self) -> None:
-        """The default grid sign convention in _mapping_defaults must be
-        'positive_is_discharging_import' (Netzbegzug) — the most common
-        household expectation."""
+    def test_grid_sign_default_is_false(self) -> None:
+        """Default invert_grid_power_sign is False (positive = Netzbezug)."""
         defaults = UemConfigFlow()._mapping_defaults()
-        assert defaults[CONF_GRID_POWER_SIGN_CONVENTION] == (
-            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT
-        ), (
-            f"Default grid sign convention should be "
-            f"'{SIGNED_CONVENTION_POS_DISCHARGE_IMPORT}' "
-            f"(positive means Netzbezug), got: {defaults[CONF_GRID_POWER_SIGN_CONVENTION]}"
-        )
+        assert defaults[CONF_INVERT_GRID_POWER_SIGN] is False
+
+    def test_grid_sign_convention_key_not_in_schema(self) -> None:
+        """Old CONF_GRID_POWER_SIGN_CONVENTION must NOT be in the schema."""
+        flow = _make_flow()
+        schema_dict = flow._build_full_schema({})
+        assert CONF_GRID_POWER_SIGN_CONVENTION not in schema_dict
 
 
-# =========================================================================== #
-# TEST 2: Grid sign convention in description_placeholder is "bedeutet"       #
-# =========================================================================== #
+class TestGridSignDescriptionPlaceholder:
+    """The new invert_grid_power_sign description placeholder exists."""
 
-
-class TestGridSignConventionDescPlaceholder:
-    """The grid_power_sign_convention description_placeholder must also
-    use correct 'bedeutet' wording."""
-
-    def test_grid_sign_desc_placeholder_uses_bedeutet(self) -> None:
-        """The grid_power_sign_convention_desc description placeholder
-        must explain 'bedeutet' for positive values."""
+    def test_invert_grid_power_sign_desc_placeholder_exists(self) -> None:
+        """The invert_grid_power_sign_desc placeholder must exist."""
         flow = _make_flow()
         placeholders = flow._build_description_placeholders()
-        grid_desc = str(placeholders.get("grid_power_sign_convention_desc", ""))
-        assert "bedeutet" in grid_desc.lower(), (
-            f"grid_power_sign_convention_desc must explain 'bedeutet', "
-            f"got: '{grid_desc}'"
-        )
+        desc = str(placeholders.get("invert_grid_power_sign_desc", ""))
+        assert "invert_grid_power_sign_desc" in placeholders
+        assert len(desc) > 0
+
+    def test_grid_export_entity_still_present(self) -> None:
+        """CONF_GRID_EXPORT_ENTITY must still be in the schema."""
+        flow = _make_flow()
+        schema_dict = flow._build_full_schema({})
+        assert CONF_GRID_EXPORT_ENTITY in schema_dict
+        assert schema_dict[CONF_GRID_EXPORT_ENTITY] is str

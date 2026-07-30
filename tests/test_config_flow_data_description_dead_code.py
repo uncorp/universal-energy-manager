@@ -23,8 +23,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
@@ -41,7 +41,7 @@ _ALL_SCHEMA_FIELDS = frozenset({
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
+    CONF_INVERT_GRID_POWER_SIGN,
 })
 
 
@@ -182,18 +182,18 @@ class TestDataDescriptionHousePower:
 
 
 class TestDataDescriptionGridSign:
-    """grid_power_sign_convention data_description must mention Netzbezug and
-    Einspeisung (Req 2)."""
+    """invert_grid_power_sign data_description must mention Vorzeichenumkehr
+    or umkehren (Req 2: BooleanSelector for sign convention)."""
 
     def _check_grid_sign(self, step_name: str) -> None:
         dd = _step_data_description(step_name)
-        desc = str(dd.get("grid_power_sign_convention", ""))
-        # Must mention both concepts (Bezug and Einspeisung)
+        desc = str(dd.get("invert_grid_power_sign", ""))
+        # Must mention sign inversion concept (umkehren or Vorzeichen)
         assert (
-            "netzbezug" in desc.lower() or "einspeisung" in desc.lower()
+            "umkehr" in desc.lower() or "vorzeichen" in desc.lower()
         ), (
-            f"{step_name} data_description['grid_power_sign_convention'] must "
-            f"mention Bezug or Einspeisung, got: {desc}"
+            f"{step_name} data_description['invert_grid_power_sign'] must "
+            f"mention Vorzeichen or umkehren, got: {desc}"
         )
 
     def test_confirm_grid_sign(self) -> None:

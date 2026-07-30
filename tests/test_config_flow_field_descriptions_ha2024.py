@@ -89,7 +89,7 @@ class TestDataDescriptionFieldExplanations:
         "max_charge_power_entity",
         "max_charge_manual_power_w",
         "grid_export_entity",
-        "grid_power_sign_convention",
+        "invert_grid_power_sign",
     })
 
     def test_confirm_data_description_has_all_fields(self):

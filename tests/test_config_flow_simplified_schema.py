@@ -18,7 +18,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import voluptuous as vol
+from homeassistant.helpers.selector import BooleanSelector
 
 from custom_components.universal_energy_manager.config_flow import (
     DOMAIN,
@@ -35,8 +35,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_GRID_EXPORT_ENTITY,
     CONF_GRID_IMPORT_ENTITY,
     CONF_GRID_POWER_MODE,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
@@ -133,11 +133,11 @@ class TestSimplifiedSchemaRequiredFields:
         keys = self._schema_keys(flow)
         assert CONF_GRID_EXPORT_ENTITY in keys
 
-    def test_grid_power_sign_convention_present(self) -> None:
+    def test_invert_grid_power_sign_present(self) -> None:
         """Grid sign-convention selector must remain for Netzleistung."""
         flow = _make_flow()
         keys = self._schema_keys(flow)
-        assert CONF_GRID_POWER_SIGN_CONVENTION in keys
+        assert CONF_INVERT_GRID_POWER_SIGN in keys
 
     def test_soc_present(self) -> None:
         """CONF_SOC_ENTITY must be in the schema."""
@@ -193,24 +193,20 @@ class TestGridSignConventionOptions:
     def test_grid_sign_has_exactly_two_options(self) -> None:
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
-        grid_sign_key = CONF_GRID_POWER_SIGN_CONVENTION
+        grid_sign_key = CONF_INVERT_GRID_POWER_SIGN
         validator = schema_dict.get(grid_sign_key)
         assert validator is not None
-        # The validator should be a vol.In
-        assert isinstance(validator, vol.In)
-        assert len(validator.container) == 2
+        # The validator should be a BooleanSelector
+        assert isinstance(validator, BooleanSelector)
 
     def test_grid_sign_options_values(self) -> None:
-        """Grid sign convention must include both Bezug and Einspeisung."""
+        """Grid sign convention must be a BooleanSelector."""
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
-        grid_sign_key = CONF_GRID_POWER_SIGN_CONVENTION
+        grid_sign_key = CONF_INVERT_GRID_POWER_SIGN
         validator = schema_dict.get(grid_sign_key)
-        assert isinstance(validator, vol.In)
-        values = list(validator.container.values())
-        # One option must mean "positive = Bezug", the other "positive = Einspeisung"
-        assert any("bezug" in v.lower() for v in values)
-        assert any("einspeisung" in v.lower() for v in values)
+        assert isinstance(validator, BooleanSelector)
+        # A BooleanSelector represents a True/False toggle for sign inversion
 
 
 # =========================================================================== #
@@ -474,8 +470,8 @@ class TestHousePowerNegativeValue:
             CONF_BATTERY_CHARGE_ENTITY,
             CONF_BATTERY_MANUAL_CAPACITY_KWH,
             CONF_GRID_EXPORT_ENTITY,
-            CONF_GRID_POWER_SIGN_CONVENTION,
             CONF_HOUSE_POWER_ENTITY,
+            CONF_INVERT_GRID_POWER_SIGN,
             CONF_MANUAL_ENTITIES,
             CONF_MAX_CHARGE_MANUAL_POWER_W,
             CONF_MAX_CHARGE_POWER_ENTITY,
@@ -526,7 +522,7 @@ class TestHousePowerNegativeValue:
                 CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+                CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
             }
             r3 = await flow.async_step_manual_mapping(user_input)
             assert r3["type"] == FlowResultType.CREATE_ENTRY
@@ -557,8 +553,8 @@ class TestHousePowerNegativeValue:
             CONF_BATTERY_CHARGE_ENTITY,
             CONF_BATTERY_MANUAL_CAPACITY_KWH,
             CONF_GRID_EXPORT_ENTITY,
-            CONF_GRID_POWER_SIGN_CONVENTION,
             CONF_HOUSE_POWER_ENTITY,
+            CONF_INVERT_GRID_POWER_SIGN,
             CONF_MAX_CHARGE_MANUAL_POWER_W,
             CONF_MAX_CHARGE_POWER_ENTITY,
             CONF_PV_POWER_ENTITY,
@@ -607,7 +603,7 @@ class TestHousePowerNegativeValue:
                 CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+                CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
             }
             r3 = await flow.async_step_manual_mapping(user_input)
             assert r3["type"] == FlowResultType.CREATE_ENTRY

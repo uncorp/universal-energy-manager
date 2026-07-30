@@ -32,8 +32,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
@@ -171,7 +171,7 @@ class TestReconfigureEditStepPlaceholders:
             "max_charge_power_entity_desc",
             "max_charge_manual_power_w_desc",
             "grid_export_entity_desc",
-            "grid_power_sign_convention_desc",
+            "invert_grid_power_sign_desc",
         }
         for key in _ALL_PLACEHOLDER_KEYS:
             assert key in placeholders, (
@@ -287,7 +287,7 @@ class TestReconfigureFlowSimplifiedSchema:
         assert CONF_HOUSE_POWER_ENTITY in schema_keys
         assert CONF_BATTERY_CHARGE_ENTITY in schema_keys
         assert CONF_GRID_EXPORT_ENTITY in schema_keys
-        assert CONF_GRID_POWER_SIGN_CONVENTION in schema_keys
+        assert CONF_INVERT_GRID_POWER_SIGN in schema_keys
 
     def test_reconfigure_edit_save_updates_entry_data(self):
         hass = MagicMock()
@@ -318,7 +318,7 @@ class TestReconfigureFlowSimplifiedSchema:
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
         }
 
         async def _go():

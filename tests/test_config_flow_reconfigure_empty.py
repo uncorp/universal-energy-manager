@@ -29,16 +29,14 @@ from custom_components.universal_energy_manager.const import (
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
     SHADOW_STATUS_UNVOLLSTANDIG,
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 
 # --------------------------------------------------------------------------- #
@@ -120,7 +118,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
                 CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
                 CONF_MANUAL_ENTITIES: False,
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
             }
         )
 
@@ -144,7 +142,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
             })
         )
         assert result["type"] == FlowResultType.ABORT
@@ -171,7 +169,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
             })
         )
         assert result["type"] == FlowResultType.ABORT
@@ -197,7 +195,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
                 CONF_MANUAL_ENTITIES: False,
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
                 CONF_FORECAST_SOLAR_ENTRY_IDS: ["fs-old"],
             },
         )
@@ -215,7 +213,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             })
         )
         assert result["type"] == FlowResultType.ABORT
@@ -225,9 +223,7 @@ class TestReconfigureEditEmptyForm:
         call_data = hass.config_entries.async_update_entry.call_args.kwargs["data"]
         assert call_data[CONF_E3DC_CONFIG_ENTRY_ID] == "e3dc-preserved"
         assert call_data[CONF_E3DC_SOURCE_UNIQUE_ID] == "HW-preserved"
-        assert call_data[CONF_GRID_POWER_SIGN_CONVENTION] == (
-            "positive_is_discharging_import"
-        )
+        assert call_data[CONF_INVERT_GRID_POWER_SIGN] is False
         assert call_data[CONF_FORECAST_SOLAR_ENTRY_IDS] == ["fs-old"]
 
     def test_reconfigure_edit_accepts_partial_updates(self) -> None:
@@ -248,7 +244,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_BATTERY_CAPACITY_ENTITY: "sensor.old_capacity",
                 CONF_MAX_CHARGE_POWER_ENTITY: "sensor.old_max",
                 CONF_MANUAL_ENTITIES: False,
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
                 CONF_FORECAST_SOLAR_ENTRY_IDS: ["fs-old"],
             },
         )
@@ -266,7 +262,7 @@ class TestReconfigureEditEmptyForm:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
             })
         )
         assert result["type"] == FlowResultType.ABORT
@@ -311,7 +307,7 @@ class TestReconfigureEmptyShadowStatus:
                 CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_CHARGE_EXPORT,
+                CONF_INVERT_GRID_POWER_SIGN: True,
             },
         )
         hass.config_entries.async_entries.return_value = [entry]

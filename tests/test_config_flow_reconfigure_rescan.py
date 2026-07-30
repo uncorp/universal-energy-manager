@@ -26,8 +26,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
@@ -36,7 +36,7 @@ from custom_components.universal_energy_manager.const import (
     DOMAIN,
     E3DC_RSCP_DOMAIN,
     FORECAST_SOLAR_DOMAIN,
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+
 )
 from custom_components.universal_energy_manager.e3dc_rscp import E3dcEntityMap
 
@@ -156,7 +156,7 @@ class TestFillBlankFields:
         # Non-mapping fields stay as defaults
         assert result[CONF_BATTERY_MANUAL_CAPACITY_KWH] == ""
         assert result[CONF_MAX_CHARGE_MANUAL_POWER_W] == ""
-        assert result[CONF_GRID_POWER_SIGN_CONVENTION] == SIGNED_CONVENTION_POS_DISCHARGE_IMPORT
+        assert not result[CONF_INVERT_GRID_POWER_SIGN]
 
     def test_fill_blank_fields_preserves_nonblank(self) -> None:
         """Non-blank fields in the current data are not overwritten by _fill_blank_fields."""
@@ -180,7 +180,7 @@ class TestFillBlankFields:
             CONF_MAX_CHARGE_POWER_ENTITY: "sensor.custom_max_charge",  # non-blank
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             CONF_GRID_EXPORT_ENTITY: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         result = flow._fill_blank_fields(e3dc_map, current_data)
 
@@ -249,7 +249,7 @@ class TestReconfigureRescanNoAdapters:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
         )
         flow = _make_flow_with_uem(hass, e3dc_entries=[], uem_entry=uem_entry)
@@ -290,7 +290,7 @@ class TestReconfigureRescanOneAdapter:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
         )
         flow = _make_flow_with_uem(hass, [e3dc_entry], uem_entry=uem_entry)
@@ -349,7 +349,7 @@ class TestReconfigureRescanOneAdapter:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
         )
         flow = _make_flow_with_uem(hass, [e3dc_entry], uem_entry=uem_entry)
@@ -388,7 +388,7 @@ class TestReconfigureRescanOneAdapter:
                     CONF_MAX_CHARGE_POWER_ENTITY: "",  # keep blank
                     CONF_MAX_CHARGE_MANUAL_POWER_W: "",  # keep blank
                     CONF_GRID_EXPORT_ENTITY: "",  # keep blank
-                    CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                    CONF_INVERT_GRID_POWER_SIGN: False,
                 })
             )
 
@@ -423,7 +423,7 @@ class TestReconfigureRescanOneAdapter:
                 CONF_MAX_CHARGE_POWER_ENTITY: "sensor.manual_max_charge",  # non-blank
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
         )
         flow = _make_flow_with_uem(hass, [e3dc_entry], uem_entry=uem_entry)
@@ -592,7 +592,7 @@ class TestRescanStoredEntryIdCompatible:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
         )
         flow = _make_flow_with_uem(hass, [e3dc_entry], uem_entry=uem_entry)
@@ -696,7 +696,7 @@ class TestReconfigureEditWithPrefillDisplay:
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
                 CONF_GRID_EXPORT_ENTITY: "",
-                CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
         )
         flow = _make_flow_with_uem(hass, [e3dc_entry], uem_entry=uem_entry)
@@ -732,6 +732,4 @@ class TestReconfigureEditWithPrefillDisplay:
         # Non-mapping fields stay as defaults
         assert flow._prefill_data[CONF_BATTERY_MANUAL_CAPACITY_KWH] == ""
         assert flow._prefill_data[CONF_MAX_CHARGE_MANUAL_POWER_W] == ""
-        assert flow._prefill_data[CONF_GRID_POWER_SIGN_CONVENTION] == (
-            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT
-        )
+        assert not flow._prefill_data[CONF_INVERT_GRID_POWER_SIGN]

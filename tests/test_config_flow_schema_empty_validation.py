@@ -69,7 +69,7 @@ class TestEmptySchemaValidation:
         )
         assert result.get(CONF_SOC_ENTITY, "") == ""
         # Grid sign convention gets its default
-        assert result.get("grid_power_sign_convention") == "positive_is_discharging_import"
+        assert result.get("invert_grid_power_sign") is False
 
     def test_whitespace_only_strings_pass(self) -> None:
         """Whitespace-only values should also be accepted (they are stripped
@@ -87,7 +87,7 @@ class TestEmptySchemaValidation:
             "max_charge_power_entity": "   ",
             "max_charge_manual_power_w": "   ",
             "grid_export_entity": "   ",
-            "grid_power_sign_convention": "positive_is_discharging_import",
+            "invert_grid_power_sign": False,
         }
         result = schema(whitespace_input)
         # Should accept whitespace strings
@@ -108,7 +108,7 @@ class TestEmptySchemaValidation:
             "max_charge_power_entity": "",
             "max_charge_manual_power_w": "",
             "grid_export_entity": "",
-            "grid_power_sign_convention": "positive_is_discharging_import",
+            "invert_grid_power_sign": False,
         }
         result = schema(all_empty)
         assert result == all_empty
@@ -123,4 +123,4 @@ class TestEmptySchemaValidation:
         # The key assertion is: no exception raised
         assert isinstance(result, dict)
         # Grid sign convention should get its default value
-        assert result.get("grid_power_sign_convention") == "positive_is_discharging_import"
+        assert result.get("invert_grid_power_sign") is False

@@ -18,6 +18,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from custom_components.universal_energy_manager.const import (
+    CONF_BATTERY_CAPACITY_ENTITY,
+    CONF_BATTERY_CHARGE_ENTITY,
+    CONF_BATTERY_MANUAL_CAPACITY_KWH,
+    CONF_GRID_EXPORT_ENTITY,
+    CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
+    CONF_MAX_CHARGE_MANUAL_POWER_W,
+    CONF_MAX_CHARGE_POWER_ENTITY,
+    CONF_PV_POWER_ENTITY,
+    CONF_SOC_ENTITY,
+)
 
 def _load_strings() -> dict:
     """Load strings.json (German UI text) from the integration package."""
@@ -54,8 +66,58 @@ class TestConfirmStepDataTitles:
             "confirm step must have a 'data_description' key"
         )
 
-    def test_confirm_data_is_german(self):
-        """All data values in confirm must be German."""
+    def test_confirm_data_has_soc(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_SOC_ENTITY in data
+
+    def test_confirm_data_has_pv_power(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_PV_POWER_ENTITY in data
+
+    def test_confirm_data_has_house_power(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_HOUSE_POWER_ENTITY in data
+
+    def test_confirm_data_has_battery_charge(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_BATTERY_CHARGE_ENTITY in data
+
+    def test_confirm_data_has_grid_export(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_GRID_EXPORT_ENTITY in data
+
+    def test_confirm_data_has_grid_sign_convention(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_INVERT_GRID_POWER_SIGN in data
+
+    def test_confirm_data_has_battery_capacity(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_BATTERY_CAPACITY_ENTITY in data
+
+    def test_confirm_data_has_battery_manual_capacity(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_BATTERY_MANUAL_CAPACITY_KWH in data
+
+    def test_confirm_data_has_max_charge_power_entity(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_MAX_CHARGE_POWER_ENTITY in data
+
+    def test_confirm_data_has_max_charge_manual_power(self):
+        strings = _load_strings()
+        data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
+        assert CONF_MAX_CHARGE_MANUAL_POWER_W in data
+
+    def test_confirm_data_values_are_german(self):
+        """All data values in confirm must be in German."""
         strings = _load_strings()
         data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
         for key, val in data.items():
@@ -106,7 +168,7 @@ class TestConfirmStepDataTitles:
             "max_charge_power_entity",
             "max_charge_manual_power_w",
             "grid_export_entity",
-            "grid_power_sign_convention",
+            "invert_grid_power_sign",
         }
         missing = expected - set(dd.keys())
         assert not missing, (
@@ -118,16 +180,11 @@ class TestConfirmStepDataTitles:
         strings = _load_strings()
         data = strings.get("config", {}).get("step", {}).get("confirm", {}).get("data", {})
         expected = {
-            "soc_entity",
-            "pv_power_entity",
-            "house_power_entity",
-            "battery_charge_entity",
-            "battery_capacity_entity",
-            "battery_manual_capacity_kwh",
-            "max_charge_power_entity",
-            "max_charge_manual_power_w",
-            "grid_export_entity",
-            "grid_power_sign_convention",
+            "soc_entity", "pv_power_entity", "house_power_entity",
+            "battery_charge_entity", "battery_capacity_entity",
+            "battery_manual_capacity_kwh", "max_charge_power_entity",
+            "max_charge_manual_power_w", "grid_export_entity",
+            "invert_grid_power_sign",
         }
         missing = expected - set(data.keys())
         assert not missing, (

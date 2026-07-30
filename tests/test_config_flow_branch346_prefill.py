@@ -32,12 +32,11 @@ from custom_components.universal_energy_manager.const import (
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 
 
@@ -78,7 +77,7 @@ class TestConfigFlowBranch346PrefillPreservation:
     """Line 346: elif field in entity_data → pass (keep prefill).
 
     This test submits ONLY core entities, leaving all optional fields
-    (grid_power_sign_convention, battery_manual_capacity_kwh,
+    (invert_grid_power_sign, battery_manual_capacity_kwh,
     max_charge_manual_power_w, etc.)
     to be filled from the prefill. The elif branch at line 346 must
     preserve those prefill values.
@@ -96,7 +95,7 @@ class TestConfigFlowBranch346PrefillPreservation:
 
         # Step 2: manual_mapping with ONLY core entities.
         # The prefill from no_e3dc_choice includes all optional fields
-        # with defaults (grid_power_sign_convention, etc.).
+        # with defaults (invert_grid_power_sign, etc.).
         # By omitting optional fields from user_input, the elif branch
         # at line 346 (elif field in entity_data: pass) must preserve them.
         minimal_data = {
@@ -114,7 +113,7 @@ class TestConfigFlowBranch346PrefillPreservation:
         # Core entities submitted
         assert result["data"][CONF_SOC_ENTITY] == "sensor.manual_soc"
         # Optional fields must have been preserved from prefill (elif branch)
-        # The prefill sets grid_power_sign_convention to default (Netzbezug)
-        expected = SIGNED_CONVENTION_POS_DISCHARGE_IMPORT
-        actual = result["data"].get(CONF_GRID_POWER_SIGN_CONVENTION)
+        # The prefill sets invert_grid_power_sign to default (Netzbezug)
+        expected = False
+        actual = result["data"].get(CONF_INVERT_GRID_POWER_SIGN)
         assert actual == expected

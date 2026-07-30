@@ -22,6 +22,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.selector import BooleanSelector
 
 from .const import (
     _ENT_MAP_LOOKUP,
@@ -32,8 +33,8 @@ from .const import (
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
@@ -42,8 +43,6 @@ from .const import (
     DOMAIN,
     E3DC_RSCP_DOMAIN,
     FORECAST_SOLAR_DOMAIN,
-    SIGNED_CONVENTION_POS_CHARGE_EXPORT,
-    SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
 )
 from .e3dc_rscp import (
     discover_e3dc_entities,
@@ -211,7 +210,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_POWER_ENTITY: self._e3dc_map.max_charge_power,
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         self._prefill_data = entity_data
 
@@ -600,7 +599,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
 
         # Start from defaults, then overlay existing non-blank values
@@ -676,15 +675,14 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "eine Entität wählen."
             ),
             "grid_export_entity_desc": (
-                "Netzleistung: Die Entität der Netzleistung. Ein einziger "
+                "Netzleistung: Die Entität der Netzleistung. Ein einzelner "
                 "Sensor, der Import und Export über eine einzige Zahl "
                 "abbildet."
             ),
-            "grid_power_sign_convention_desc": (
-                "Vorzeichenkonvention Netzleistung: Legt fest, was ein "
-                "positiver Wert bedeutet — Netzbezug oder Einspeisung. "
-                "'Positiver Wert bedeutet Netzbezug' oder "
-                "'Positiver Wert bedeutet Einspeisung'."
+            "invert_grid_power_sign_desc": (
+                "Vorzeichen der Netzleistung umkehren: Aktivieren, wenn deine "
+                "Netzleistungs-Entität das gegenteilige Vorzeichen liefert als "
+                "UEM erwartet."
             ),
         }
 
@@ -700,22 +698,13 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             CONF_GRID_EXPORT_ENTITY: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: SIGNED_CONVENTION_POS_DISCHARGE_IMPORT,
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
 
     def _build_full_schema(self, prefill: dict[str, Any] | None = None) -> dict:
         """Build one optional, grouped manual-mapping form."""
         values = self._mapping_defaults()
         values.update(prefill or {})
-
-        grid_signs = {
-            SIGNED_CONVENTION_POS_DISCHARGE_IMPORT: (
-                "Positiver Wert bedeutet Netzbezug"
-            ),
-            SIGNED_CONVENTION_POS_CHARGE_EXPORT: (
-                "Positiver Wert bedeutet Einspeisung"
-            ),
-        }
 
         return {
             # Allgemeine Messwerte
@@ -743,15 +732,15 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MAX_CHARGE_MANUAL_POWER_W,
                 default=values[CONF_MAX_CHARGE_MANUAL_POWER_W],
             ): str,
-            # Netz: eine Netzleistungs-Entität mit Vorzeichenkonvention.
+            # Netz: eine Netzleistungs-Entität mit Vorzeichen-Invertierung.
             vol.Optional(
                 CONF_GRID_EXPORT_ENTITY,
                 default=values[CONF_GRID_EXPORT_ENTITY],
             ): str,
             vol.Optional(
-                CONF_GRID_POWER_SIGN_CONVENTION,
-                default=values[CONF_GRID_POWER_SIGN_CONVENTION],
-            ): vol.In(grid_signs),
+                CONF_INVERT_GRID_POWER_SIGN,
+                default=values[CONF_INVERT_GRID_POWER_SIGN],
+            ): BooleanSelector(),
         }
 
     def _discover_entities(self, config_entry_id: str):

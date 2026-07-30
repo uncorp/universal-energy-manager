@@ -35,8 +35,8 @@ from custom_components.universal_energy_manager.const import (
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
-    CONF_GRID_POWER_SIGN_CONVENTION,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MANUAL_ENTITIES,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
@@ -188,7 +188,7 @@ class TestManualFixedValuesNoEntities:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",  # manual kWh
             CONF_MAX_CHARGE_POWER_ENTITY: "",  # no entity
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",  # manual W
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -214,7 +214,7 @@ class TestManualFixedValuesNoEntities:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
             CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -284,7 +284,7 @@ class TestBatteryPowerSingleEntity:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -312,13 +312,13 @@ class TestGridPowerSingleEntity:
         keys = self._schema_keys(flow)
         assert CONF_GRID_EXPORT_ENTITY in keys
 
-    def test_grid_power_sign_convention_in_schema(self):
-        """CONF_GRID_POWER_SIGN_CONVENTION must be in the schema."""
+    def test_invert_grid_power_sign_in_schema(self):
+        """CONF_INVERT_GRID_POWER_SIGN must be in the schema."""
         hass = MagicMock()
         flow = _make_flow(hass, e3dc_entries=[])
         _run(flow.async_step_no_e3dc_choice({"confirm": "continue"}))
         keys = self._schema_keys(flow)
-        assert CONF_GRID_POWER_SIGN_CONVENTION in keys
+        assert CONF_INVERT_GRID_POWER_SIGN in keys
 
     def test_no_grid_import_in_schema(self):
         """CONF_GRID_IMPORT_ENTITY must NOT be in the schema."""
@@ -362,12 +362,12 @@ class TestGridPowerSingleEntity:
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             CONF_GRID_EXPORT_ENTITY: "sensor.grid",
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_GRID_EXPORT_ENTITY] == "sensor.grid"
-        assert result["data"][CONF_GRID_POWER_SIGN_CONVENTION] == (
+        assert result["data"][CONF_INVERT_GRID_POWER_SIGN] == (
             "positive_is_discharging_import"
         )
 
@@ -405,7 +405,7 @@ class TestSolarOnlyForecasts:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -599,7 +599,7 @@ class TestReconfigureNoSilentOverwrite:
                 CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_charge",
                 CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
                 CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
-                CONF_GRID_POWER_SIGN_CONVENTION: "positive_is_discharging_import",
+                CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
             },
             source="user",
             entry_id="uem-001",
