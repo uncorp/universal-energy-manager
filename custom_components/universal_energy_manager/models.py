@@ -43,7 +43,7 @@ class LiveState:
             raise ValueError("pv_power_w must be non-negative")
         # house_power_w, grid_export_w, battery_charge_w are signed values:
         # - house_power: negative = balcony PV produces more than house (Req 3)
-        # - grid_export: negative = import, positive = export (Req 1-2)
+        # - grid_export: positive = import, negative = export (Req 1-2)
         # - battery_charge: negative = discharging, positive = charging (Req 1)
 
 

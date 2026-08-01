@@ -211,8 +211,8 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             # hacs-e3dc's grid-netchange is positive for import and negative
-            # for export; UEM normalizes to import-negative/export-positive.
-            CONF_INVERT_GRID_POWER_SIGN: True,
+            # for export, which is also UEM's standard convention.
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         self._prefill_data = entity_data
 
@@ -682,10 +682,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "abbildet."
             ),
             "invert_grid_power_sign_desc": (
-                "Vorzeichen der Netzleistung umkehren: Bei automatisch erkanntem "
-                "e3dc_rscp ist dies standardmäßig aktiviert, weil dessen "
-                "grid-netchange Netzbezug positiv und Einspeisung negativ "
-                "meldet. Nur für abweichende Quellen umstellen."
+                "Vorzeichen der Netzleistung umkehren: e3dc_rscp grid-netchange "
+                "meldet Netzbezug positiv und Einspeisung negativ – das ist "
+                "der UEM-Standard. Nur für abweichende Quellen aktivieren."
             ),
         }
 

@@ -31,8 +31,8 @@ def test_e3dc_rscp_uses_signed_grid_netchange_sensor() -> None:
     assert result.grid_export == "sensor.e3dc_grid_netchange"
 
 
-def test_e3dc_rscp_default_inverts_signed_grid_netchange_for_uem(hass) -> None:
-    """E3DC import-positive becomes UEM import-negative after the default flip."""
+def test_e3dc_rscp_keeps_signed_grid_netchange_in_its_native_direction(hass) -> None:
+    """E3DC import-positive/export-negative is also UEM's standard convention."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -41,7 +41,7 @@ def test_e3dc_rscp_default_inverts_signed_grid_netchange_for_uem(hass) -> None:
             CONF_HOUSE_POWER_ENTITY: "sensor.house",
             CONF_GRID_EXPORT_ENTITY: "sensor.grid_netchange",
             CONF_BATTERY_CHARGE_ENTITY: "sensor.battery",
-            CONF_INVERT_GRID_POWER_SIGN: True,
+            CONF_INVERT_GRID_POWER_SIGN: False,
         },
     )
     values = {
@@ -56,4 +56,4 @@ def test_e3dc_rscp_default_inverts_signed_grid_netchange_for_uem(hass) -> None:
 
     live = UemShadowCoordinator(hass, entry)._live_state()
 
-    assert live.grid_export_w == -650
+    assert live.grid_export_w == 650

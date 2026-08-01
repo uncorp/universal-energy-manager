@@ -369,6 +369,7 @@ class TestWithE3dcPrefill:
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_E3DC_CONFIG_ENTRY_ID] == "e3dc-alpha"
         assert result["data"][CONF_E3DC_SOURCE_UNIQUE_ID] == "HW-999"
+        assert result["data"][CONF_INVERT_GRID_POWER_SIGN] is False
 
 
 # =========================================================================== #
