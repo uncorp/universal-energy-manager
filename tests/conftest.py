@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import sys
 from datetime import UTC, datetime
+from importlib import util as importlib_util
 from types import ModuleType
 from unittest.mock import AsyncMock, MagicMock
 
@@ -413,8 +414,12 @@ _REAL_HA_MODULES = {
     "homeassistant.helpers.update_coordinator",
 }
 
-# Check if real HA is available
-_HA_AVAILABLE = "homeassistant" in sys.modules
+# Check if real HA is available — use find_spec so we detect real HA
+# even when it hasn't been imported yet (e.g. at conftest load time).
+# When real HA IS installed (in the test venv), real modules must NOT be
+# replaced by stubs, because tests like `test_config_flow_*` import
+# real submodules such as `homeassistant.helpers.selector.BooleanSelector`.
+_HA_AVAILABLE = importlib_util.find_spec("homeassistant") is not None
 
 # --- Inject HA stubs when real HA is NOT installed ---
 if not _HA_AVAILABLE:
@@ -550,15 +555,28 @@ _phacc_common.mock_entity_picture = MagicMock
 sys.modules["pytest_homeassistant_custom_component"] = _phacc
 sys.modules["pytest_homeassistant_custom_component.common"] = _phacc_common
 
-# --- Other non-HA third-party stubs (only if not already present) ---
+# --- Other non-HA third-party stubs (only if the real module is NOT already
+# installed/importable) ---
+_THIRD_PARTY = [
+    "async_interrupt",
+    "awesomeversion",
+    "pytz",
+    "slugify",
+    # NOTE: voluptuous is NOT stubbed here — it is installed in the test venv.
+    # The stubs above in _vol_stubs() exist only for reference.
+    # ("voluptuous", ...),
+    "voluptuous.humanize",
+    "aiohttp",
+    "propcache",
+    "propcache.api",
+    "orjson",
+    "httpx",
+]
 for _mod_name, _mod_kwargs in [
     ("async_interrupt", {"interrupt": MagicMock}),
     ("awesomeversion", {"AwesomeVersion": MagicMock}),
     ("pytz", {"utc": MagicMock()}),
     ("slugify", {"slugify": MagicMock()}),
-    # NOTE: voluptuous is NOT stubbed here — it is installed in the test venv.
-    # The stubs above in _vol_stubs() exist only for reference.
-    # ("voluptuous", ...),
     ("voluptuous.humanize", {}),
     ("aiohttp", {}),
     ("propcache", {}),
@@ -566,7 +584,17 @@ for _mod_name, _mod_kwargs in [
     ("orjson", {"dumps": MagicMock(), "loads": MagicMock()}),
     ("httpx", {}),
 ]:
-    if _mod_name not in sys.modules:
+    # Only inject a stub when the real package is NOT installable.
+    # This matters when real HA and its deps are installed in the test venv:
+    # the conftest runs before any import of those packages, so they are
+    # not yet in sys.modules — we must not overwrite them with stubs.
+    # Some packages (e.g. propcache) may cause find_spec to raise on
+    # __path__ inspection — wrap in try/except for safety.
+    try:
+        _spec = importlib_util.find_spec(_mod_name)
+    except Exception:
+        _spec = None
+    if _mod_name not in sys.modules and _spec is None:
         sys.modules[_mod_name] = _make_stub(_mod_name, **_mod_kwargs)
 
 

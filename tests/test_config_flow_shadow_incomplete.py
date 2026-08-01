@@ -188,7 +188,7 @@ class TestManualFixedValuesNoEntities:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",  # manual kWh
             CONF_MAX_CHARGE_POWER_ENTITY: "",  # no entity
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",  # manual W
-            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -214,7 +214,7 @@ class TestManualFixedValuesNoEntities:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
             CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -284,7 +284,7 @@ class TestBatteryPowerSingleEntity:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -362,14 +362,12 @@ class TestGridPowerSingleEntity:
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             CONF_GRID_EXPORT_ENTITY: "sensor.grid",
-            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_GRID_EXPORT_ENTITY] == "sensor.grid"
-        assert result["data"][CONF_INVERT_GRID_POWER_SIGN] == (
-            "positive_is_discharging_import"
-        )
+        assert result["data"][CONF_INVERT_GRID_POWER_SIGN] is False
 
 
 # =========================================================================== #
@@ -405,7 +403,7 @@ class TestSolarOnlyForecasts:
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "10.5",
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "5000",
-            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
         result = _run(flow.async_step_manual_mapping(data))
         assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -599,7 +597,7 @@ class TestReconfigureNoSilentOverwrite:
                 CONF_BATTERY_CHARGE_ENTITY: "sensor.e3dc_charge",
                 CONF_BATTERY_CAPACITY_ENTITY: "sensor.e3dc_capacity",
                 CONF_MAX_CHARGE_POWER_ENTITY: "sensor.e3dc_max",
-                CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+                CONF_INVERT_GRID_POWER_SIGN: False,
             },
             source="user",
             entry_id="uem-001",

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.10 – Grid-Vorzeichen- und Shadow-Testbeta
+
+- **Fix:** E3DC-RSCP `grid-netchange` folgt nun durchgängig der UEM-Konvention: Netzbezug positiv, Einspeisung negativ. Abweichende Quellen können ihr Vorzeichen explizit umkehren.
+- **UX:** Die Netz-Vorzeichenoption ist ein klarer Boolean-Schalter; Reconfigure und E3DC-Rescan bewahren die Auswahl.
+- **Shadow-Safety:** UEM bleibt sensor-only: keine aktiven Steuerbefehle, `active_control=false` und `commands_sent=false`.
+- **Test:** Vollständige Regressionen für Vorzeichen, Schema, Rescan und unvollständige Shadow-Konfigurationen.
+
 ## 0.1.9 – Config-Flow-Korrekturen als Test-Beta
 
 - **Fix:** Manuelle Zuordnung verwendet verständlichere Netz-Vorzeichenbeschreibungen und standardmäßig „Netzbezug positiv“.

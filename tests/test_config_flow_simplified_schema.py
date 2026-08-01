@@ -522,7 +522,7 @@ class TestHousePowerNegativeValue:
                 CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-                CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
             r3 = await flow.async_step_manual_mapping(user_input)
             assert r3["type"] == FlowResultType.CREATE_ENTRY
@@ -603,7 +603,7 @@ class TestHousePowerNegativeValue:
                 CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
                 CONF_MAX_CHARGE_POWER_ENTITY: "",
                 CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-                CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+                CONF_INVERT_GRID_POWER_SIGN: False,
             }
             r3 = await flow.async_step_manual_mapping(user_input)
             assert r3["type"] == FlowResultType.CREATE_ENTRY

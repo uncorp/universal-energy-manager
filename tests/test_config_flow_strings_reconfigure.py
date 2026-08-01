@@ -318,7 +318,7 @@ class TestReconfigureFlowSimplifiedSchema:
             CONF_MAX_CHARGE_POWER_ENTITY: "",
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
-            CONF_INVERT_GRID_POWER_SIGN: "positive_is_discharging_import",
+            CONF_INVERT_GRID_POWER_SIGN: False,
         }
 
         async def _go():
