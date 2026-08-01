@@ -21,6 +21,7 @@ from .const import (
     CONF_FORECAST_SOLAR_ENTRY_IDS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
+    CONF_INVERT_GRID_POWER_SIGN,
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
@@ -372,12 +373,23 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         return combine_producer_forecasts(all_forecasts)
 
     def _live_state(self):
+        grid_power = self._sample(CONF_GRID_EXPORT_ENTITY)
+        if self._entry.data.get(CONF_INVERT_GRID_POWER_SIGN, False):
+            try:
+                grid_power = StateSample(
+                    value=-float(grid_power.value),
+                    unit=grid_power.unit,
+                    updated_at=grid_power.updated_at,
+                )
+            except (TypeError, ValueError) as err:
+                raise ValueError("invalid grid-power value") from err
+
         return build_live_state(
             now=dt_util.utcnow(),
             soc=self._sample(CONF_SOC_ENTITY),
             pv_power=self._sample(CONF_PV_POWER_ENTITY),
             house_power=self._sample(CONF_HOUSE_POWER_ENTITY),
-            grid_export=self._sample(CONF_GRID_EXPORT_ENTITY),
+            grid_export=grid_power,
             battery_charge=self._sample(CONF_BATTERY_CHARGE_ENTITY),
         )
 

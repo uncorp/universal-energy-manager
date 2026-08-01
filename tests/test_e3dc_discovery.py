@@ -7,7 +7,7 @@ def test_discovery_prefills_known_e3dc_rscp_measurements() -> None:
             "soc": "sensor.e3dc_state_of_charge",
             "solar-production": "sensor.e3dc_solar_production",
             "house-consumption": "sensor.e3dc_house_consumption",
-            "grid-production": "sensor.e3dc_grid_export",
+            "grid-netchange": "sensor.e3dc_grid_netchange",
             "battery-charge": "sensor.e3dc_battery_charge",
             "system-battery-installed-capacity": "sensor.e3dc_battery_capacity",
             "system-battery-charge-max": "sensor.e3dc_max_charge_power",
@@ -17,7 +17,7 @@ def test_discovery_prefills_known_e3dc_rscp_measurements() -> None:
     assert discovered.soc == "sensor.e3dc_state_of_charge"
     assert discovered.pv_power == "sensor.e3dc_solar_production"
     assert discovered.house_power == "sensor.e3dc_house_consumption"
-    assert discovered.grid_export == "sensor.e3dc_grid_export"
+    assert discovered.grid_export == "sensor.e3dc_grid_netchange"
     assert discovered.battery_charge == "sensor.e3dc_battery_charge"
     assert discovered.battery_capacity == "sensor.e3dc_battery_capacity"
     assert discovered.max_charge_power == "sensor.e3dc_max_charge_power"
