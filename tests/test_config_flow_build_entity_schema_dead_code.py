@@ -74,15 +74,15 @@ class TestBuildFullSchemaReplacesEntitySchema:
     """After removal, _build_full_schema must serve as the single schema builder."""
 
     def test_build_full_schema_has_all_fields(self) -> None:
-        """_build_full_schema returns exactly 10 fields (Req 5 grouping)."""
+        """_build_full_schema returns 12 fields (10 entity fields + generators + batteries)."""
         flow = UemConfigFlow()
         flow.hass = MagicMock()
         flow.context = {}
         flow.handler = DOMAIN
 
         schema_dict = flow._build_full_schema({})
-        assert len(schema_dict) == 10, (
-            f"Expected exactly 10 fields, got {len(schema_dict)}"
+        assert len(schema_dict) == 12, (
+            f"Expected exactly 12 fields, got {len(schema_dict)}"
         )
 
     def test_build_full_schema_has_soc(self) -> None:

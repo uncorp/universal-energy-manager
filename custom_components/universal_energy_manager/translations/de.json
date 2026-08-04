@@ -18,7 +18,9 @@
           "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
           "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
           "grid_export_entity": "Netzleistung",
-          "invert_grid_power_sign": "Vorzeichen der Netzleistung umkehren"
+          "invert_grid_power_sign": "Vorzeichen der Netzleistung umkehren",
+          "generators": "Zusätzliche Erzeuger — Name und Leistungsentität zuweisen",
+          "batteries": "Zusätzliche Akkus — Name, SoC, Kapazität und Lade-/Entladeleistung zuweisen"
         },
         "data_description": {
           "soc_entity": "Die Entität, die den aktuellen Ladestand der Batterie meldet (z. B. 50 = 50 %).",
@@ -30,7 +32,9 @@
           "max_charge_power_entity": "Die Entität, die die maximale Ladeleistung der Batterie in Watt meldet. Optional — alternativ kannst du einen festen Wert eingeben.",
           "max_charge_manual_power_w": "Die maximale Ladeleistung als fester Wert in Watt. Optional — alternativ kannst du eine Entität wählen.",
           "grid_export_entity": "Die Entität der Netzleistung. Ein einzelner Sensor, der Import und Export über eine einzige Zahl abbildet.",
-          "invert_grid_power_sign": "Vorzeichen: e3dc_rscp grid-netchange meldet Netzbezug positiv und Einspeisung negativ – das ist der UEM-Standard. Nur für abweichende Quellen umkehren."
+          "invert_grid_power_sign": "Vorzeichen: e3dc_rscp grid-netchange meldet Netzbezug positiv und Einspeisung negativ – das ist der UEM-Standard. Nur für abweichende Quellen umkehren.",
+          "generators": "Zusätzliche Erzeuger neben der E3DC-PV. Jeder zusätzliche Erzeuger (z. B. Balkonkraftwerk, EcoFlow) erhält einen Namen und eine Live-Leistungsentität. Forecast.Solar-Prognosen werden global summiert und nicht pro Erzeuger zugeordnet.",
+          "batteries": "Zusätzliche Akkus neben der E3DC-Batterie. Jeder zusätzliche Akku (z. B. Wall-Power) erhält einen Namen, eine SoC-Entität, Kapazität und Lade-/Entladeleistungsentitäten."
         }
       },
       "no_e3dc_choice": {
@@ -50,7 +54,9 @@
           "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
           "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
           "grid_export_entity": "Netzleistung",
-          "invert_grid_power_sign": "Vorzeichen der Netzleistung umkehren"
+          "invert_grid_power_sign": "Vorzeichen der Netzleistung umkehren",
+          "generators": "Zusätzliche Erzeuger — Name und Leistungsentität zuweisen",
+          "batteries": "Zusätzliche Akkus — Name, SoC, Kapazität und Lade-/Entladeleistung zuweisen"
         },
         "data_description": {
           "soc_entity": "Die Entität, die den aktuellen Ladestand der Batterie meldet (z. B. 50 = 50 %).",
@@ -62,7 +68,9 @@
           "max_charge_power_entity": "Die Entität, die die maximale Ladeleistung der Batterie in Watt meldet. Optional — alternativ kannst du einen festen Wert eingeben.",
           "max_charge_manual_power_w": "Die maximale Ladeleistung als fester Wert in Watt. Optional — alternativ kannst du eine Entität wählen.",
           "grid_export_entity": "Die Entität der Netzleistung. Ein einzelner Sensor, der Import und Export über eine einzige Zahl abbildet.",
-          "invert_grid_power_sign": "Vorzeichen: e3dc_rscp grid-netchange meldet Netzbezug positiv und Einspeisung negativ – das ist der UEM-Standard. Nur für abweichende Quellen umkehren."
+          "invert_grid_power_sign": "Vorzeichen: e3dc_rscp grid-netchange meldet Netzbezug positiv und Einspeisung negativ – das ist der UEM-Standard. Nur für abweichende Quellen umkehren.",
+          "generators": "Zusätzliche Erzeuger neben der E3DC-PV. Jeder zusätzliche Erzeuger (z. B. Balkonkraftwerk, EcoFlow) erhält einen Namen und eine Live-Leistungsentität. Forecast.Solar-Prognosen werden global summiert und nicht pro Erzeuger zugeordnet.",
+          "batteries": "Zusätzliche Akkus neben der E3DC-Batterie. Jeder zusätzliche Akku (z. B. Wall-Power) erhält einen Namen, eine SoC-Entität, Kapazität und Lade-/Entladeleistungsentitäten."
         }
       },
       "reconfigure": {
@@ -82,7 +90,9 @@
           "max_charge_power_entity": "Maximale Ladeleistung als Entität (W)",
           "max_charge_manual_power_w": "Maximale Ladeleistung als fester Wert (W)",
           "grid_export_entity": "Netzleistung",
-          "invert_grid_power_sign": "Vorzeichen der Netzleistung umkehren"
+          "invert_grid_power_sign": "Vorzeichen der Netzleistung umkehren",
+          "generators": "Zusätzliche Erzeuger — Name und Leistungsentität zuweisen",
+          "batteries": "Zusätzliche Akkus — Name, SoC, Kapazität und Lade-/Entladeleistung zuweisen"
         },
         "data_description": {
           "soc_entity": "Die Entität, die den aktuellen Ladestand der Batterie meldet (z. B. 50 = 50 %).",
@@ -94,7 +104,9 @@
           "max_charge_power_entity": "Die Entität, die die maximale Ladeleistung der Batterie in Watt meldet. Optional — alternativ kannst du einen festen Wert eingeben.",
           "max_charge_manual_power_w": "Die maximale Ladeleistung als fester Wert in Watt. Optional — alternativ kannst du eine Entität wählen.",
           "grid_export_entity": "Die Entität der Netzleistung. Ein einzelner Sensor, der Import und Export über eine einzige Zahl abbildet.",
-          "invert_grid_power_sign": "Vorzeichen: e3dc_rscp grid-netchange meldet Netzbezug positiv und Einspeisung negativ – das ist der UEM-Standard. Nur für abweichende Quellen umkehren."
+          "invert_grid_power_sign": "Vorzeichen: e3dc_rscp grid-netchange meldet Netzbezug positiv und Einspeisung negativ – das ist der UEM-Standard. Nur für abweichende Quellen umkehren.",
+          "generators": "Zusätzliche Erzeuger neben der E3DC-PV. Jeder zusätzliche Erzeuger (z. B. Balkonkraftwerk, EcoFlow) erhält einen Namen und eine Live-Leistungsentität. Forecast.Solar-Prognosen werden global summiert und nicht pro Erzeuger zugeordnet.",
+          "batteries": "Zusätzliche Akkus neben der E3DC-Batterie. Jeder zusätzliche Akku (z. B. Wall-Power) erhält einen Namen, eine SoC-Entität, Kapazität und Lade-/Entladeleistungsentitäten."
         }
       }
     },

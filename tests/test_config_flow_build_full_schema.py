@@ -1,8 +1,8 @@
 """Regression tests for _build_full_schema helper in config_flow.
 
 Requirements:
-- _build_full_schema returns exactly 10 fields (no more, no less)
-- All 10 expected keys are present with correct defaults from _mapping_defaults
+- _build_full_schema returns exactly 12 fields (no more, no less)
+- All 12 expected keys are present with correct defaults from _mapping_defaults
 - All fields are truly optional (vol.Optional with no required constraint)
 - All fields have NO vol.Length(min >= 1) — empty string is valid (Req 4)
 - Pre-filled values override defaults correctly
@@ -22,9 +22,11 @@ from custom_components.universal_energy_manager.config_flow import (
     UemConfigFlow,
 )
 from custom_components.universal_energy_manager.const import (
+    CONF_BATTERIES,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
+    CONF_GENERATORS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_INVERT_GRID_POWER_SIGN,
@@ -71,14 +73,15 @@ def _get_schema_key(schema_dict: dict, key_name: str) -> vol.Optional:
 
 
 class TestBuildFullSchemaFieldCount:
-    """_build_full_schema must return exactly 10 fields."""
+    """_build_full_schema must return 12 fields
+    (10 entity fields + generators + batteries)."""
 
     def test_exact_field_count(self) -> None:
-        """_build_full_schema({}) must return exactly 10 fields."""
+        """_build_full_schema({}) must return exactly 12 fields."""
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
-        assert len(schema_dict) == 10, (
-            f"Expected exactly 10 fields, got {len(schema_dict)}: "
+        assert len(schema_dict) == 12, (
+            f"Expected exactly 12 fields, got {len(schema_dict)}: "
             f"{sorted(schema_dict.keys())}"
         )
 
@@ -102,10 +105,12 @@ class TestBuildFullSchemaFieldsPresent:
         CONF_MAX_CHARGE_MANUAL_POWER_W,
         CONF_GRID_EXPORT_ENTITY,
         CONF_INVERT_GRID_POWER_SIGN,
+        CONF_GENERATORS,
+        CONF_BATTERIES,
     })
 
     def test_all_expected_fields_present(self) -> None:
-        """All 10 expected fields must be in the schema."""
+        """All 12 expected fields must be in the schema."""
         flow = _make_flow()
         schema_dict = flow._build_full_schema({})
         schema_keys = {str(k) for k in schema_dict.keys()}

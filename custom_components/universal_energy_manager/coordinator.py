@@ -13,12 +13,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_BATTERIES,
     CONF_BATTERY_CAPACITY_ENTITY,
+    CONF_BATTERY_CAPACITY_KWH,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_CHARGE_END,
     CONF_FORECAST_ENTITY,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
+    CONF_GENERATOR_POWER_ENTITY,
+    CONF_GENERATORS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_INVERT_GRID_POWER_SIGN,
@@ -246,7 +250,13 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
             return 0.0
 
     def _build_storage_capabilities(self) -> StorageCapabilities:
-        """Derive storage limits from entities or manual fallback values."""
+        """Derive storage limits from E3DC entities plus additional batteries.
+
+        E3DC battery capacity/power comes from entities or manual fallback.
+        Additional batteries contribute their capacity (kWh) from the parsed
+        CONF_BATTERIES JSON list; their max charge power is not yet
+        configurable so only the E3DC max_charge_power_w is used.
+        """
         cap_entity = self._entry.data.get(CONF_BATTERY_CAPACITY_ENTITY)
         max_entity = self._entry.data.get(CONF_MAX_CHARGE_POWER_ENTITY)
         cap_manual = self._entry.data.get(CONF_BATTERY_MANUAL_CAPACITY_KWH)
@@ -264,10 +274,60 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         if cap_val is None or max_val is None:
             raise ValueError("missing battery capacity or max charge power")
 
+        # Sum additional battery capacities
+        batteries_json = self._entry.data.get(CONF_BATTERIES)
+        additional_cap = self._sum_additional_battery_capacity(batteries_json)
+        total_capacity = cap_val + additional_cap
+
         return StorageCapabilities(
-            usable_capacity_kwh=float(cap_val),
+            usable_capacity_kwh=float(total_capacity),
             max_charge_power_w=float(max_val),
         )
+
+    def _sum_additional_battery_capacity(self, batteries_json: str | None) -> float:
+        """Sum the capacity (kWh) of all additional batteries from JSON."""
+        batteries = self._parse_batteries_json(batteries_json)
+        total = 0.0
+        for bat in batteries:
+            if not isinstance(bat, dict):
+                continue
+            cap_str = bat.get(CONF_BATTERY_CAPACITY_KWH)
+            if not isinstance(cap_str, str) or not cap_str.strip():
+                continue
+            try:
+                total += float(cap_str)
+            except (ValueError, TypeError):
+                pass
+        return total
+
+    def _sum_generators_power_w(self) -> float:
+        """Sum the power (W) of all configured additional generators.
+
+        Each generator's power_entity is read from HA; invalid or unavailable
+        entities are silently skipped.  Uses the same W/kW normalisation as
+        the snapshot pipeline.
+        """
+        generators_json = self._entry.data.get(CONF_GENERATORS)
+        generators = self._parse_batteries_json(generators_json)  # same shape
+        total_w = 0.0
+        for gen in generators:
+            if not isinstance(gen, dict):
+                continue
+            entity_id = gen.get(CONF_GENERATOR_POWER_ENTITY)
+            if not isinstance(entity_id, str) or not entity_id.strip():
+                continue
+            state = self.hass.states.get(entity_id)
+            if state is None or state.state in {"unknown", "unavailable"}:
+                continue
+            try:
+                power = float(state.state)
+            except (TypeError, ValueError):
+                continue
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit == "kW":
+                power *= 1000.0
+            total_w += power
+        return total_w
 
     def _parse_float_entity(self, entity_id: str | None) -> float | None:
         """Best-effort float from a configured entity state, manual value, or None."""
@@ -384,10 +444,24 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
             except (TypeError, ValueError) as err:
                 raise ValueError("invalid grid-power value") from err
 
+        # Base PV power from the E3DC PV entity.
+        pv_sample = self._sample(CONF_PV_POWER_ENTITY)
+        # Add power from configured additional generators.
+        generator_extra_w = self._sum_generators_power_w()
+        try:
+            base_power = float(pv_sample.value) + generator_extra_w
+        except (TypeError, ValueError):
+            base_power = generator_extra_w
+        pv_sample = StateSample(
+            value=base_power,
+            unit=pv_sample.unit,
+            updated_at=pv_sample.updated_at,
+        )
+
         return build_live_state(
             now=dt_util.utcnow(),
             soc=self._sample(CONF_SOC_ENTITY),
-            pv_power=self._sample(CONF_PV_POWER_ENTITY),
+            pv_power=pv_sample,
             house_power=self._sample(CONF_HOUSE_POWER_ENTITY),
             grid_export=grid_power,
             battery_charge=self._sample(CONF_BATTERY_CHARGE_ENTITY),
@@ -482,6 +556,33 @@ class UemShadowCoordinator(DataUpdateCoordinator[ShadowData]):
         thread.start()
         thread.join()
         return result_holder[0]
+
+    # ------------------------------------------------------------------ #
+    # Battery JSON parsing (Task B slice 3)                                #
+    # ------------------------------------------------------------------ #
+
+    def _parse_batteries_json(
+        self, batteries_json: str | None
+    ) -> list[dict]:
+        """Parse the CONF_BATTERIES JSON string into a list of battery dicts.
+
+        Returns an empty list on None, empty string, or malformed JSON.
+        This defensive parsing ensures the config flow never crashes the
+        coordinator when a user enters invalid data.
+        """
+        if batteries_json is None or batteries_json == "":
+            return []
+        if not isinstance(batteries_json, str):
+            return []
+        import json
+
+        try:
+            result = json.loads(batteries_json)
+            if isinstance(result, list):
+                return [item for item in result if isinstance(item, dict)]
+            return []
+        except (json.JSONDecodeError, ValueError):
+            return []
 
     # ------------------------------------------------------------------ #
     # Incomplete setup detection                                           #

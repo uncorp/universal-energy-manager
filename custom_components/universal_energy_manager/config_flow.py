@@ -26,12 +26,14 @@ from homeassistant.helpers.selector import BooleanSelector
 
 from .const import (
     _ENT_MAP_LOOKUP,
+    CONF_BATTERIES,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
+    CONF_GENERATORS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_INVERT_GRID_POWER_SIGN,
@@ -199,7 +201,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Discover entities from the adapter
         self._e3dc_map = self._discover_entities(self._e3dc_entry_id)
 
-        # Build entity data dict with discovered values as prefill
+        # Build entity data dict with discovered values as prefill.
+        # Generators and batteries default to empty lists so the confirm step
+        # can persist them (Task B: multi-generator / multi-battery).
         entity_data = {
             CONF_SOC_ENTITY: self._e3dc_map.soc,
             CONF_PV_POWER_ENTITY: self._e3dc_map.pv_power,
@@ -210,6 +214,8 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_POWER_ENTITY: self._e3dc_map.max_charge_power,
             CONF_BATTERY_MANUAL_CAPACITY_KWH: "",
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
+            CONF_GENERATORS: [],
+            CONF_BATTERIES: [],
             # hacs-e3dc's grid-netchange is positive for import and negative
             # for export, which is also UEM's standard convention.
             CONF_INVERT_GRID_POWER_SIGN: False,
@@ -505,6 +511,14 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         updated_data = self._mapping_defaults()
         # Merge existing entry data (preserves non-entity fields)
         updated_data.update(entry.data)
+        # Re-collect Forecast.Solar entry IDs from HA's current state.
+        # This ensures that Forecast.Solar entries added after the initial
+        # UEM install are picked up during reconfigure (fixes the bug where
+        # forecast_solar_entry_ids stays empty when FS is set up later).
+        updated_data[CONF_FORECAST_SOLAR_ENTRY_IDS] = [
+            entry.entry_id
+            for entry in self.hass.config_entries.async_entries(FORECAST_SOLAR_DOMAIN)
+        ]
         # Apply user input (overrides everything — prefill was already baked
         # into the schema defaults above, so we do NOT apply _prefill_data here)
         for field, value in user_input.items():
@@ -521,6 +535,9 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> dict | None:
         """Rescan e3dc_rscp for new entities, only update fields that were
         not manually overridden.
+
+        Also re-collects Forecast.Solar entry IDs so that entries added after
+        the initial UEM install are picked up during rescan.
 
         Returns the new config data dict, or None if the e3dc entry is missing.
         """
@@ -549,6 +566,15 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     entity_val = getattr(e3dc_map, mapped, None)
                     if entity_val:
                         new_data[key] = entity_val
+
+        # Re-collect Forecast.Solar entry IDs from HA's current state.
+        # This ensures that Forecast.Solar entries added after the initial
+        # UEM install are picked up during rescan (same logic as
+        # async_step_reconfigure_edit, lines 508-515).
+        new_data[CONF_FORECAST_SOLAR_ENTRY_IDS] = [
+            ce.entry_id
+            for ce in self.hass.config_entries.async_entries(FORECAST_SOLAR_DOMAIN)
+        ]
 
         return new_data
 
@@ -701,12 +727,54 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAX_CHARGE_MANUAL_POWER_W: "",
             CONF_GRID_EXPORT_ENTITY: "",
             CONF_INVERT_GRID_POWER_SIGN: False,
+            CONF_GENERATORS: [],
+            CONF_BATTERIES: [],
         }
 
     def _build_full_schema(self, prefill: dict[str, Any] | None = None) -> dict:
         """Build one optional, grouped manual-mapping form."""
         values = self._mapping_defaults()
         values.update(prefill or {})
+
+        # Generators: start from existing generators or empty list.
+        # The config-flow stores generators and batteries as JSON-encoded
+        # strings so the HA frontend can treat them as simple text fields.
+        # Here we normalise to a list for display, then serialise back to
+        # a string for the voluptuous validator and the entry data.
+        generators = values.get(CONF_GENERATORS, [])
+        if generators is None:
+            generators = []
+        if isinstance(generators, str):
+            try:
+                import ast
+                generators = ast.literal_eval(generators)
+            except (ValueError, SyntaxError):
+                generators = []
+        if not isinstance(generators, list):
+            generators = []
+
+        # Batteries: same pattern as generators.
+        batteries = values.get(CONF_BATTERIES, [])
+        if batteries is None:
+            batteries = []
+        if isinstance(batteries, str):
+            try:
+                import ast
+                batteries = ast.literal_eval(batteries)
+            except (ValueError, SyntaxError):
+                batteries = []
+        if not isinstance(batteries, list):
+            batteries = []
+
+        import json
+        generators_str = json.dumps(generators, ensure_ascii=False)
+        batteries_str = json.dumps(batteries, ensure_ascii=False)
+
+        def _generators_default():
+            return generators_str
+
+        def _batteries_default():
+            return batteries_str
 
         return {
             # Allgemeine Messwerte
@@ -743,6 +811,18 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_INVERT_GRID_POWER_SIGN,
                 default=values[CONF_INVERT_GRID_POWER_SIGN],
             ): BooleanSelector(),
+            # Erzeuger (Multi-Quelle, Task B slice 1): existing generators list.
+            # Stored as JSON string in the entry data; type hint stays str so
+            # HA's config-flow renderer treats it as a text field.
+            vol.Optional(
+                CONF_GENERATORS,
+                default=_generators_default,
+            ): vol.All(str, vol.Length(min=0)),
+            # Akkus (Multi-Akku, Task B slice 2): existing batteries list.
+            vol.Optional(
+                CONF_BATTERIES,
+                default=_batteries_default,
+            ): vol.All(str, vol.Length(min=0)),
         }
 
     def _discover_entities(self, config_entry_id: str):

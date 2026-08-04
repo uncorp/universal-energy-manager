@@ -17,12 +17,14 @@ from custom_components.universal_energy_manager.config_flow import (
     UemConfigFlow,
 )
 from custom_components.universal_energy_manager.const import (
+    CONF_BATTERIES,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
     CONF_E3DC_CONFIG_ENTRY_ID,
     CONF_E3DC_SOURCE_UNIQUE_ID,
     CONF_FORECAST_SOLAR_ENTRY_IDS,
+    CONF_GENERATORS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_INVERT_GRID_POWER_SIGN,
@@ -297,7 +299,8 @@ class TestManualMappingCreation:
         )
         schema_fields = list(dict(result["data_schema"].schema))
 
-        # Expected order: general measurements, then battery group, then grid group
+        # Expected order: general measurements, battery group, grid group,
+        # generators, batteries
         assert schema_fields == [
             CONF_SOC_ENTITY,
             CONF_PV_POWER_ENTITY,
@@ -309,6 +312,8 @@ class TestManualMappingCreation:
             CONF_MAX_CHARGE_MANUAL_POWER_W,
             CONF_GRID_EXPORT_ENTITY,
             CONF_INVERT_GRID_POWER_SIGN,
+            CONF_GENERATORS,
+            CONF_BATTERIES,
         ]
 
 

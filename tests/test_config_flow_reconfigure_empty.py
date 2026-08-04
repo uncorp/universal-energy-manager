@@ -36,6 +36,7 @@ from custom_components.universal_energy_manager.const import (
     CONF_MAX_CHARGE_POWER_ENTITY,
     CONF_PV_POWER_ENTITY,
     CONF_SOC_ENTITY,
+    FORECAST_SOLAR_DOMAIN,
     SHADOW_STATUS_UNVOLLSTANDIG,
 )
 
@@ -64,13 +65,18 @@ def _make_uem_entry(
 def _make_flow_with_uem(
     hass: MagicMock,
     uem_entry: config_entries.ConfigEntry,
+    forecast_entries: list[config_entries.ConfigEntry] | None = None,
 ) -> UemConfigFlow:
     flow = UemConfigFlow()
     flow.hass = hass
     flow.context = {"entry_id": uem_entry.entry_id}
     flow.handler = DOMAIN
     ce = hass.config_entries
-    _all = {DOMAIN: [uem_entry], E3DC_RSCP_DOMAIN: []}
+    _all: dict[str, list[config_entries.ConfigEntry]] = {
+        DOMAIN: [uem_entry],
+        E3DC_RSCP_DOMAIN: [],
+        FORECAST_SOLAR_DOMAIN: forecast_entries or [],
+    }
 
     def _async_entries(domain=None, *args, **kwargs):
         if domain is None:
@@ -177,9 +183,32 @@ class TestReconfigureEditEmptyForm:
 
     def test_reconfigure_edit_preserves_non_entity_fields(self) -> None:
         """Non-entity fields (e3dc_config_entry_id, etc.) must be preserved
-        in the data passed to async_update_entry."""
+        in the data passed to async_update_entry.
+
+        Note: forecast_solar_entry_ids is re-collected from HA's current state
+        during reconfigure_edit (not preserved from the old entry), so the
+        assertion must match what the mock returns.
+        """
+        from custom_components.universal_energy_manager.const import (
+            FORECAST_SOLAR_DOMAIN,
+        )
+
         hass = MagicMock()
         _mock_location(hass)
+
+        # Existing Forecast.Solar entry in HA (so re-collection picks it up)
+        forecast_entry = config_entries.ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain=FORECAST_SOLAR_DOMAIN,
+            title="Forecast.Solar",
+            data={},
+            source="user",
+            entry_id="forecast-solar-existing",
+            unique_id="forecast-solar:test",
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+
         entry = _make_uem_entry(
             entry_id="uem-preserve",
             data={
@@ -199,7 +228,9 @@ class TestReconfigureEditEmptyForm:
                 CONF_FORECAST_SOLAR_ENTRY_IDS: ["fs-old"],
             },
         )
-        flow = _make_flow_with_uem(hass, entry)
+        flow = _make_flow_with_uem(
+            hass, forecast_entries=[forecast_entry], uem_entry=entry
+        )
 
         # Submit ALL 10 schema fields with sign convention changed
         result = _run(
@@ -224,7 +255,8 @@ class TestReconfigureEditEmptyForm:
         assert call_data[CONF_E3DC_CONFIG_ENTRY_ID] == "e3dc-preserved"
         assert call_data[CONF_E3DC_SOURCE_UNIQUE_ID] == "HW-preserved"
         assert call_data[CONF_INVERT_GRID_POWER_SIGN] is False
-        assert call_data[CONF_FORECAST_SOLAR_ENTRY_IDS] == ["fs-old"]
+        # forecast_solar_entry_ids is re-collected from HA state, not preserved
+        assert call_data[CONF_FORECAST_SOLAR_ENTRY_IDS] == ["forecast-solar-existing"]
 
     def test_reconfigure_edit_accepts_partial_updates(self) -> None:
         """Submitting ALL schema fields where only some are changed must

@@ -18,7 +18,9 @@
           "max_charge_power_entity": "Max charging power as entity (W)",
           "max_charge_manual_power_w": "Max charging power as fixed value (W)",
           "grid_export_entity": "Grid power",
-          "invert_grid_power_sign": "Invert grid power sign"
+          "invert_grid_power_sign": "Invert grid power sign",
+          "generators": "Additional generators",
+          "batteries": "Additional batteries (name, SoC entity, capacity, charge/discharge power)"
         },
         "data_description": {
           "soc_entity": "The entity that reports the battery's current state of charge (e.g. 50 = 50%).",
@@ -30,7 +32,9 @@
           "max_charge_power_entity": "The entity that reports the battery's maximum charging power in watts. Optional — alternatively you can enter a fixed value.",
           "max_charge_manual_power_w": "The maximum charging power as a fixed value in watts. Optional — alternatively you can select an entity.",
           "grid_export_entity": "The grid power entity. A single sensor that maps import and export via a single number.",
-          "invert_grid_power_sign": "Enable if your grid power entity reports the opposite sign convention from what UEM expects."
+          "invert_grid_power_sign": "Enable if your grid power entity reports the opposite sign convention from what UEM expects.",
+          "generators": "Additional generators besides the E3DC PV. Each additional generator (e.g. balcony power station, EcoFlow) gets a name and a live power entity. Forecast.Solar forecasts are summed globally and not mapped per generator.",
+          "batteries": "Additional batteries besides the E3DC battery. Each additional battery gets a name, a SoC entity, capacity, and charge/discharge power entities."
         }
       },
       "no_e3dc_choice": {
@@ -50,7 +54,9 @@
           "max_charge_power_entity": "Max charging power as entity (W)",
           "max_charge_manual_power_w": "Max charging power as fixed value (W)",
           "grid_export_entity": "Grid power",
-          "invert_grid_power_sign": "Invert grid power sign"
+          "invert_grid_power_sign": "Invert grid power sign",
+          "generators": "Additional generators",
+          "batteries": "Additional batteries (name, SoC entity, capacity, charge/discharge power)"
         },
         "data_description": {
           "soc_entity": "The entity that reports the battery's current state of charge (e.g. 50 = 50%).",
@@ -62,7 +68,9 @@
           "max_charge_power_entity": "The entity that reports the battery's maximum charging power in watts. Optional — alternatively you can enter a fixed value.",
           "max_charge_manual_power_w": "The maximum charging power as a fixed value in watts. Optional — alternatively you can select an entity.",
           "grid_export_entity": "The grid power entity. A single sensor that maps import and export via a single number.",
-          "invert_grid_power_sign": "Enable if your grid power entity reports the opposite sign convention from what UEM expects."
+          "invert_grid_power_sign": "Enable if your grid power entity reports the opposite sign convention from what UEM expects.",
+          "generators": "Additional generators besides the E3DC PV. Each additional generator (e.g. balcony power station, EcoFlow) gets a name and a live power entity. Forecast.Solar forecasts are summed globally and not mapped per generator.",
+          "batteries": "Additional batteries besides the E3DC battery. Each additional battery gets a name, a SoC entity, capacity, and charge/discharge power entities."
         }
       },
       "reconfigure": {
@@ -82,7 +90,9 @@
           "max_charge_power_entity": "Max charging power as entity (W)",
           "max_charge_manual_power_w": "Max charging power as fixed value (W)",
           "grid_export_entity": "Grid power",
-          "invert_grid_power_sign": "Invert grid power sign"
+          "invert_grid_power_sign": "Invert grid power sign",
+          "generators": "Additional generators",
+          "batteries": "Additional batteries (name, SoC entity, capacity, charge/discharge power)"
         },
         "data_description": {
           "soc_entity": "The entity that reports the battery's current state of charge (e.g. 50 = 50%).",
@@ -94,7 +104,9 @@
           "max_charge_power_entity": "The entity that reports the battery's maximum charging power in watts. Optional — alternatively you can enter a fixed value.",
           "max_charge_manual_power_w": "The maximum charging power as a fixed value in watts. Optional — alternatively you can select an entity.",
           "grid_export_entity": "The grid power entity. A single sensor that maps import and export via a single number.",
-          "invert_grid_power_sign": "Enable if your grid power entity reports the opposite sign convention from what UEM expects."
+          "invert_grid_power_sign": "Enable if your grid power entity reports the opposite sign convention from what UEM expects.",
+          "generators": "Additional generators besides the E3DC PV. Each additional generator (e.g. balcony power station, EcoFlow) gets a name and a live power entity. Forecast.Solar forecasts are summed globally and not mapped per generator.",
+          "batteries": "Additional batteries besides the E3DC battery. Each additional battery gets a name, a SoC entity, capacity, and charge/discharge power entities."
         }
       }
     },

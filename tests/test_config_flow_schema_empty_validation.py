@@ -70,6 +70,10 @@ class TestEmptySchemaValidation:
         assert result.get(CONF_SOC_ENTITY, "") == ""
         # Grid sign convention gets its default
         assert result.get("invert_grid_power_sign") is False
+        # Generators gets its default (JSON-encoded empty list)
+        import json
+        assert json.loads(result.get("generators", "[]")) == []
+        assert json.loads(result.get("batteries", "[]")) == []
 
     def test_whitespace_only_strings_pass(self) -> None:
         """Whitespace-only values should also be accepted (they are stripped
@@ -88,6 +92,8 @@ class TestEmptySchemaValidation:
             "max_charge_manual_power_w": "   ",
             "grid_export_entity": "   ",
             "invert_grid_power_sign": False,
+            "generators": "[]",
+            "batteries": "[]",
         }
         result = schema(whitespace_input)
         # Should accept whitespace strings
@@ -109,6 +115,8 @@ class TestEmptySchemaValidation:
             "max_charge_manual_power_w": "",
             "grid_export_entity": "",
             "invert_grid_power_sign": False,
+            "generators": "",
+            "batteries": "",
         }
         result = schema(all_empty)
         assert result == all_empty

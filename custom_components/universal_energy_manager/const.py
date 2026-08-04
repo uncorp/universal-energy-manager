@@ -19,6 +19,19 @@ CONF_MANUAL_ENTITIES = "manual_entities"
 CONF_STRATEGY = "strategy"
 FORECAST_SOLAR_DOMAIN = "forecast_solar"
 
+# --- Multi-generator support (Task B, slice 1) ---
+CONF_GENERATORS = "generators"
+CONF_GENERATOR_NAME = "generator_name"
+CONF_GENERATOR_POWER_ENTITY = "generator_power_entity"
+
+# --- Multi-battery support (Task B, slice 2) ---
+CONF_BATTERIES = "batteries"
+CONF_BATTERY_NAME = "battery_name"
+CONF_BATTERY_SOC_ENTITY = "battery_soc_entity"
+CONF_BATTERY_CAPACITY_KWH = "battery_capacity_kwh"
+CONF_BATTERY_CHARGE_POWER_ENTITY = "battery_charge_power_entity"
+CONF_BATTERY_DISCHARGE_POWER_ENTITY = "battery_discharge_power_entity"
+
 # --- Power mode semantics (signed vs. separate) — legacy, kept for migration ---
 # These constants are preserved for backward compatibility with existing entries
 # but are no longer used by the config flow.

@@ -22,9 +22,11 @@ import re
 from pathlib import Path
 
 from custom_components.universal_energy_manager.const import (
+    CONF_BATTERIES,
     CONF_BATTERY_CAPACITY_ENTITY,
     CONF_BATTERY_CHARGE_ENTITY,
     CONF_BATTERY_MANUAL_CAPACITY_KWH,
+    CONF_GENERATORS,
     CONF_GRID_EXPORT_ENTITY,
     CONF_HOUSE_POWER_ENTITY,
     CONF_INVERT_GRID_POWER_SIGN,
@@ -47,7 +49,7 @@ def _load_strings() -> dict:
         return json.load(f)
 
 
-# All 10 schema fields that need titles + descriptions
+# All 12 schema fields that need titles + descriptions (10 entity fields + generators + batteries)
 _SCHEMA_FIELDS = frozenset({
     CONF_SOC_ENTITY,
     CONF_PV_POWER_ENTITY,
@@ -59,6 +61,8 @@ _SCHEMA_FIELDS = frozenset({
     CONF_MAX_CHARGE_MANUAL_POWER_W,
     CONF_GRID_EXPORT_ENTITY,
     CONF_INVERT_GRID_POWER_SIGN,
+    CONF_GENERATORS,
+    CONF_BATTERIES,
 })
 
 # Expected description placeholder base names (without _desc suffix).
@@ -134,7 +138,7 @@ class TestConfirmStepDataTitles:
                            "consumption", "charge", "capacity", "invert",
                            "can", "should", "system", "fixed", "value",
                            "report", "current", "optional", "sensor", "number",
-                           "negative", "positive", "enable"]
+                           "negative", "positive", "enable", "generator"]
             ), (
                 f"confirm/data[{key}] = {val!r} is not a proper English title"
             )
@@ -222,15 +226,15 @@ class TestStepDataDescriptionExplanations:
         )
 
     def test_confirm_has_all_description_fields(self) -> None:
-        """confirm step must have data_description for all 10 fields."""
+        """confirm step must have data_description for all 12 fields."""
         self._check_field_count("confirm")
 
     def test_manual_mapping_has_all_description_fields(self) -> None:
-        """manual_mapping must have data_description for all 10 fields."""
+        """manual_mapping must have data_description for all 12 fields."""
         self._check_field_count("manual_mapping")
 
     def test_reconfigure_edit_has_all_description_fields(self) -> None:
-        """reconfigure_edit must have data_description for all 10 fields."""
+        """reconfigure_edit must have data_description for all 12 fields."""
         self._check_field_count("reconfigure_edit")
 
     def test_all_descriptions_are_meaningful(self) -> None:
