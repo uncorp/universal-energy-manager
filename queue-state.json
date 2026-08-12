@@ -9,43 +9,43 @@
       "number": 1,
       "description": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
       "status": "completed",
-      "evidence": "pytest 658 passed in 1.59s, ruff clean (all checks passed), git diff --check clean (exit 0, HEAD clean); Shadow-Safety: grep no service calls (none), no platform registrations for switch/select/number/climate/cover (none); only sensor.py exports active_control=False, commands_sent=False, command_sent=False; sensor-only boundary verified",
-      "timestamp": "2026-08-12T12:30:00Z"
+      "evidence": "pytest 658 passed in 1.79s; ruff check: all checks passed; git diff --check clean (exit 0); Shadow-Safety: grep -service (none), grep -platform registrations for switch/select/number/climate/cover (none), grep -network imports (none); HEAD=12cfd65 clean (origin/main=12cfd65 sync)",
+      "timestamp": "2026-08-12T18:00:00Z"
     },
     {
       "number": 2,
       "description": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
       "status": "completed",
-      "evidence": "CHANGELOG.md head: ## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release); manifest.json: version 0.1.10; annotated tag v0.1.10-rc.2 at commit 83df15dc9b48e22d18ff346eacbb396e8ecaed15; release-Konvention erfüllt; git status clean (no untracked/uncommitted); HEAD=a86b226 (2 queue-state commits past tag)",
-      "timestamp": "2026-08-12T12:30:00Z"
+      "evidence": "CHANGELOG.md head: ## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release); manifest.json version 0.1.10 (3-teilig, Pre-Release-Suffix im Tag); annotated tag v0.1.10-rc.2 at commit 83df15dc9b48e22d18ff346eacbb396e8ecaed15",
+      "timestamp": "2026-08-12T18:00:00Z"
     },
     {
       "number": 3,
       "description": "Commit + Push + annotierter Tag + GitHub Pre-release",
       "status": "completed",
-      "evidence": "HEAD=a86b226, origin/main=a86b226 (in sync); annotated tag v0.1.10-rc.2 on origin@83df15d; GitHub Pre-release published 2026-08-12T05:58:39Z at https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2 with asset universal_energy_manager.zip (30795 bytes, 1 download); isPrerelease=true, targetCommitish=main; no ZIP in git (excluded by design)",
-      "timestamp": "2026-08-12T12:30:00Z"
+      "evidence": "GitHub Release: tag=v0.1.10-rc.2, prerelease=true, published=2026-08-12T05:58:39Z, target_commitish=main; asset: universal_energy_manager.zip (30795 bytes, 1 download); origin/main=12cfd65 sync with tag 83df15d",
+      "timestamp": "2026-08-12T18:00:00Z"
     },
     {
       "number": 4,
       "description": "CI-Abschlussprüfung",
       "status": "completed",
-      "evidence": "CI check-runs on commit 83df15d: 2x check-run test — both conclusion=success, status=completed; no open failures on this commit; all CI gates green",
-      "timestamp": "2026-08-12T12:30:00Z"
+      "evidence": "CI check-runs on commit 83df15d: 2x test — both conclusion=success, status=completed",
+      "timestamp": "2026-08-12T18:00:00Z"
     },
     {
       "number": 5,
       "description": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
       "status": "completed",
-      "evidence": "HA http://192.168.10.51:8123 API running. update.uem_universal_energy_manager_update: state=off, installed_version=v0.1.10-rc.2, latest_version=v0.1.2 (rc.2 is pre-release, v0.1.2 is latest stable), in_progress=false, release_summary=null; 1 UEM entity total (update entity only); config_entries=0 (expected for isolated test HA)",
-      "timestamp": "2026-08-12T12:30:00Z"
+      "evidence": "HA http://192.168.10.51:8123 v2026.7.4 RUNNING; update.uem_universal_energy_manager_update: state=off, installed_version=v0.1.10-rc.2, latest_version=v0.1.2 (rc.2 pre-release, v0.1.2 latest stable), in_progress=false; 1 UEM entity (update entity only); config_entries=0",
+      "timestamp": "2026-08-12T18:00:00Z"
     },
     {
       "number": 6,
       "description": "Reload + Runtime-/Shadow-Validierung",
       "status": "completed",
-      "evidence": "Endpoint: http://192.168.10.51:8123. Paketversion: installed=v0.1.10-rc.2. UEM entities: 1 update entity, 0 config entries, 0 sensor entities (pending config entry), 0 control entities. Shadow-Safety: PASS — no switch/select/number/button/climate/cover entities; no service calls; no write paths; active_control=False, commands_sent=False, command_sent=False. release_summary=None (clean).",
-      "timestamp": "2026-08-12T12:30:00Z"
+      "evidence": "Endpoint: http://192.168.10.51:8123. Paketversion: installed=v0.1.10-rc.2. UEM entities: 1 update entity only. Shadow-Safety: PASS — 0 control entities, 0 sensor entities (pending config entry), no service calls, no network imports, no platform registrations for write entities",
+      "timestamp": "2026-08-12T18:00:00Z"
     }
   ],
   "plan": {
@@ -53,7 +53,7 @@
     "completed_count": 6,
     "active_gate": 0,
     "next_gate": 0,
-    "last_evidence_at": "2026-08-12T12:30:00Z",
+    "last_evidence_at": "2026-08-12T18:00:00Z",
     "gates": {
       "1": "completed",
       "2": "completed",
@@ -65,17 +65,17 @@
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-12T12:30:00Z",
-    "basis": "Alle 6 Gates abgeschlossen (automatisiert, frische Validierung). Restliche Validierung erfordert manuelle Config-Einrichtung des UEM config entry in Test-HA (config flow mit Shadow-Entities). Kein automatisierter Nachfolgeauftrag offen. HA API erreichbar, HACS-Update-Entity zeigt korrekte v0.1.10-rc.2, GitHub Pre-release veröffentlicht + CI green.",
-    "earliest_check_at": "2026-08-12T15:00:00Z",
-    "recommended_check_at": "2026-08-12T18:00:00Z",
+    "checked_at": "2026-08-12T18:00:00Z",
+    "basis": "Alle 6 Gates abgeschlossen mit frischer Validierung. HA v2026.7.4 RUNNING, HACS update entity zeigt installed_version=v0.1.10-rc.2, GitHub Pre-release published, CI green (2x success). Restliche Validierung erfordert manuelle Config-Einrichtung des UEM config entry in Test-HA (config flow mit Shadow-Entities). Kein automatisierter Nachfolgeauftrag offen.",
+    "earliest_check_at": "2026-08-12T21:00:00Z",
+    "recommended_check_at": "2026-08-13T09:00:00Z",
     "caveat": "Dies ist eine praktische Vorhersage. Konkrete Zeiten hängen von Stefans manueller Config-Einrichtung und Test-HA-Verfügbarkeit ab. Keine Fertigstellgarantie."
   },
   "release_info": {
     "commit": "83df15dc9b48e22d18ff346eacbb396e8ecaed15",
     "tag": "v0.1.10-rc.2",
     "github_release": "https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2",
-    "ci_run": 31568274200,
+    "ci_run": "2x test: success/completed",
     "ci_status": "success (2x check-runs completed)",
     "manifest_version": "0.1.10",
     "changelog_top": "## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)"
@@ -91,6 +91,6 @@
     "uem_control_entities": 0,
     "uem_update_entity": "update.uem_universal_energy_manager_update",
     "uem_update_state": "off",
-    "shadow_safety": "PASS (1 UEM entity = update entity only; 0 UEM control entities; 0 UEM sensors pending config entry; no service calls; no platform registrations for switch/select/number/climate/cover)"
+    "shadow_safety": "PASS (1 UEM entity = update entity only; 0 control; 0 sensors pending config entry; no service calls; no network imports; no platform registrations for write entities)"
   }
 }
