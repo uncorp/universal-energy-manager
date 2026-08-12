@@ -7,12 +7,12 @@
   "completed_count": 4,
   "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-12T23:30Z",
+  "last_evidence_at": "2026-08-12T23:50Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-12T23:30Z FRESH: pytest collected+pass (full suite, 0 failures), ruff check . → All checks passed, git diff --check HEAD → 0 whitespace errors. Working tree clean except queue-state.json updates. Release code at tag v0.1.10-rc.2 (ea54733, ancestor 83df15d). Shadow-only AST: HomeAssistant type imports in sensor.py/coordinator.py (standard HA integration pattern, no service/control API usage). No fire/call_service/register_service violations."
+      "evidence": "2026-08-12T23:50Z FRESH LIVE: pytest 658 passed (1.53s, 0 failures), ruff check . → All checks passed, git status clean, git diff-index clean. Shadow-only AST: NO call_service/fire_service/register_service/hass.services found in custom_components/universal_energy_manager/. Working tree clean (nur queue-state.json)."
     },
     "2": {
       "status": "completed",
@@ -22,22 +22,22 @@
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "Tag v0.1.10-rc.2 → annotated tag at ea54733. origin/main=HEAD=196ce73 (pushed). GitHub Pre-release exists at ea54733 (requires API verification for URL/draft/prerelease flags)."
+      "evidence": "Tag v0.1.10-rc.2 → annotated tag (5b51892) on origin/main. GitHub Pre-release: draft=False, prerelease=True, published=2026-08-12T05:58:39Z, url=https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2, sha=main."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "GitHub Actions check-runs on main → verified green on ea54733 (previous runs). CI green on all relevant commits."
+      "evidence": "GitHub Actions check-runs on 83df15d (release commit): 2 check-runs completed with conclusion=success (test: both green). GitHub Pre-release verified live via API."
     },
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder value (eyJhbG...msjg). Auth to http://192.168.10.51:8123/api/config → 401. HA endpoint reachable (HTTP 200 on root). Token refresh required before HACS install."
+      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder (eyJhbG...msjg). Endpoint 192.168.10.51:8123 reachable (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich vor HACS-Install."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "BLOCKED: Depends on Gate 5 (HA auth required for runtime validation)."
+      "evidence": "BLOCKED: Depends on Gate 5 (HA auth required for runtime validation). HACS-Install + config-entry-shadow-Kontrolle nicht möglich."
     }
   },
   "plan": {
@@ -45,15 +45,15 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-12T23:30Z"
+    "last_evidence_at": "2026-08-12T23:50Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-12T23:30Z",
-    "basis": "Gates 1-4 LIVE verifiziert: pytest pass (full suite, 0 failures), ruff clean, git diff --check clean, working tree clean (nur queue-state.json), shadow-only AST verified. origin/main=HEAD=196ce73. v0.1.10-rc.2 tag at ea54733. GitHub Pre-release existiert. Gate 5 BLOCKED: HA Token in .env ist truncated/placeholder. Endpoint 192.168.10.51:8123 erreichbar (200 root, 401 /api/config). Token-Erneuerung erforderlich.",
-    "earliest_check_at": "2026-08-12T23:30Z",
+    "checked_at": "2026-08-12T23:50Z",
+    "basis": "LIVE Verifikation 2026-08-12T23:50Z: pytest 658/658 pass (1.53s), ruff clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published). CI green on release commit 83df15d (2/2 check-runs success). Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 reachable (200 root, 401 /api/config).",
+    "earliest_check_at": "2026-08-12T23:50Z",
     "recommended_check_at": "2026-08-13T08:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check: 2026-08-13T08:00 für Token-Erneuerung + HACS-Installations-Validierung. Keine Zusage/Deadline."
+    "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check nach Token-Erneuerung: 2026-08-13T08:00. Keine Zusage/Deadline — externe Abhängigkeit (Token-Refresh durch Stefan)."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
