@@ -7,7 +7,7 @@
   "completed_count": 4,
   "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-12T23:50Z",
+  "last_evidence_at": "2026-08-13T00:00Z",
   "gates": {
     "1": {
       "status": "completed",
@@ -45,13 +45,13 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-12T23:50Z"
+    "last_evidence_at": "2026-08-13T00:00Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-12T23:50Z",
-    "basis": "LIVE Verifikation 2026-08-12T23:50Z: pytest 658/658 pass (1.53s), ruff clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published). CI green on release commit 83df15d (2/2 check-runs success). Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 reachable (200 root, 401 /api/config).",
-    "earliest_check_at": "2026-08-12T23:50Z",
+    "checked_at": "2026-08-13T00:00Z",
+    "basis": "LIVE Verifikation 2026-08-13T00:00Z: pytest 658/658 pass (1.53s), ruff clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published). CI green on release commit 83df15d (2/2 check-runs success). Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 reachable (200 root, 401 /api/config).",
+    "earliest_check_at": "2026-08-13T00:00Z",
     "recommended_check_at": "2026-08-13T08:00:00Z",
     "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check nach Token-Erneuerung: 2026-08-13T08:00. Keine Zusage/Deadline — externe Abhängigkeit (Token-Refresh durch Stefan)."
   },
