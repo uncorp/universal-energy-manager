@@ -7,22 +7,22 @@
   "completed_count": 4,
   "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-12T18:44Z",
+  "last_evidence_at": "2026-08-13T19:40Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-12T18:44Z LIVE: pytest 658 passed (1.44s, 0 failures), ruff check . → All checks passed, git working tree clean, git diff --check clean. Shadow-only AST verified: NO_SERVICE_CALLS_FOUND (no call_service/fire_service/register_service/hass.services in custom_components/)."
+      "evidence": "2026-08-13T19:40Z LIVE: pytest 658 passed (1.45s, 0 failures), ruff check . -> All checks passed, git working tree clean (no uncommitted diff, no untracked files), git diff --check clean (exit 0). Shadow-only AST verified: NO_SERVICE_CALLS_FOUND (no call_service/fire_service/register_service/hass.services in custom_components/)."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Pre-Release-Suffix '-rc.2' im Tag, CHANGELOG und GitHub Release."
+      "evidence": "2026-08-13T19:40Z LIVE: CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Pre-Release-Suffix '-rc.2' im Git-Tag, CHANGELOG und GitHub Release."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "gh release view v0.1.10-rc.2: draft=False, prerelease=True, published. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 auf origin/main (commit ea54733). Asset: universal_energy_manager.zip (30795 bytes). Target-Branch: main."
+      "evidence": "2026-08-13T19:40Z LIVE: gh release view v0.1.10-rc.2: draft=False, prerelease=True, published 2026-08-12T05:58:39Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 auf origin/main (commit ea547330). Asset: universal_energy_manager.zip (30795 bytes). Target-Branch: main."
     },
     "4": {
       "status": "completed",
@@ -32,12 +32,12 @@
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env ist truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 erreichbar (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich. /api/auth/login → 404 (HA 2024+ entfernt). Kein alternativer Auth-Pfad verfügbar."
+      "evidence": "2026-08-13T19:40Z BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env ist truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 erreichbar (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich. GitHub Pre-release v0.1.10-rc.2 confirmed (draft=False, prerelease=True, published 2026-08-12T05:58:39Z). /api/auth/login → 404 (HA 2024+ entfernt). Kein alternativer Auth-Pfad verfügbar."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "BLOCKED: Hängt von Gate 5 ab (HA-Auth erforderlich). HACS-Install + config-entry-shadow-Kontrolle nicht möglich."
+      "evidence": "2026-08-13T19:40Z BLOCKED: Hängt von Gate 5 ab (HA-Auth erforderlich). HACS-Install + config-entry-shadow-Kontrolle nicht möglich. 192.168.10.51:8123 HTTP 200 root, 401 /api/config."
     }
   },
   "plan": {
@@ -45,15 +45,15 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-12T18:44Z"
+    "last_evidence_at": "2026-08-13T19:40Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-12T18:44Z",
-    "basis": "LIVE Verifikation 2026-08-12T18:44Z: pytest 658/658 pass (1.44s, 0 failures), ruff clean, git working tree clean, git diff --check clean, shadow-only AST verified (NO_SERVICE_CALLS_FOUND). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published, asset universal_energy_manager.zip 30795 bytes). CI green on release commit 83df15d + tag commit ea54733 (2/2 success each). Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 401 on /api/config. No auth refresh path available.",
-    "earliest_check_at": "2026-08-12T18:44Z",
-    "recommended_check_at": "2026-08-13T06:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~11.5 Stunden (nächster Morgen). Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
+    "checked_at": "2026-08-13T19:40Z",
+    "basis": "LIVE Verifikation 2026-08-13T19:40Z: pytest 658/658 pass (1.45s, 0 failures), ruff check clean, git working tree clean (no uncommitted diff, no untracked files), git diff --check clean, shadow-only AST verified (NO_SERVICE_CALLS_FOUND). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip 30795 bytes). CI green 3/3 on all recent runs including release commit 83df15d and tag commit ea547330. Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg) in /home/hermes/.hermes/profiles/uem-test/.env, 192.168.10.51:8123 401 on /api/config. No auth refresh path available (HA 2024+ removed /api/auth/login).",
+    "earliest_check_at": "2026-08-13T19:40Z",
+    "recommended_check_at": "2026-08-14T03:40:00Z",
+    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~8 Stunden (conservative estimate). Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
