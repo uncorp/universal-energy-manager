@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.1.10 – Grid-Vorzeichen- und Shadow-Testbeta
+## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)
+
+- **Feature:** Multi-Generator-Unterstützung — beliebige Anzahl lokaler Stromerzeuger konfigurierbar und in der Coordinator-Lastbilanz aggregiert.
+- **Feature:** Multi-Battery-Unterstützung — beliebige Anzahl Batterien konfigurierbar mit individuellem SOC, Lade-/Entladeleistung und Kapazität.
+- **UX:** Reconfigure-Flow erlaubt nachträgliche Hinzufügung von Generatoren und Batterien ohne Überschreiben bestehender Werte.
+- **UX:** Forecast.Solar-Integration im Reconfigure-Flow für zusätzliche Prognosequellen.
+- **Fix:** Grid-Vorzeichen-Konvention durchgängig korrekt (Netzbezug positiv, Einspeisung negativ).
+- **Shadow-Safety:** UEM bleibt sensor-only: keine aktiven Steuerbefehle, `active_control=false` und `commands_sent=false`.
+- **Test:** 20+ neue Tests für Multi-Generator/Multi-Battery-Flow, Reconfigure, Coordinator-Bilanz und Forecast-Solar.
+- **Release-Konvention:** Manifest bleibt `0.1.10` (3-teilig, wie bei v0.1.10-rc.1); Pre-Release-Suffix `-rc.2` erscheint im Git-Tag, CHANGELOG und GitHub Release.
+
+## 0.1.10-rc.1 – Grid-Vorzeichen- und Shadow-Testbeta
 
 - **Fix:** E3DC-RSCP `grid-netchange` folgt nun durchgängig der UEM-Konvention: Netzbezug positiv, Einspeisung negativ. Abweichende Quellen können ihr Vorzeichen explizit umkehren.
 - **UX:** Die Netz-Vorzeichenoption ist ein klarer Boolean-Schalter; Reconfigure und E3DC-Rescan bewahren die Auswahl.

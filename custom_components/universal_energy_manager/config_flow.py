@@ -239,11 +239,10 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ]
 
-            await self.async_set_unique_id(
-                uem_identity_from_source(
-                    source_entry.unique_id, source_entry.entry_id
-                )
+            uid = uem_identity_from_source(
+                source_entry.unique_id, source_entry.entry_id
             )
+            await self.async_set_unique_id(uid)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
@@ -277,6 +276,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             description_placeholders=description_placeholders,
             data_schema=vol.Schema(self._build_full_schema(entity_data)),
+            last_step=True,
         )
 
     # ------------------------------------------------------------------ #
@@ -298,6 +298,7 @@ class UemConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._prefill_data
                 ),
                 data_schema=vol.Schema(self._build_full_schema(self._prefill_data)),
+                last_step=True,
             )
 
         # Keep every field optional. An incomplete entry is intentional: the

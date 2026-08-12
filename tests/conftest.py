@@ -444,9 +444,20 @@ if not _HA_AVAILABLE:
         "homeassistant.helpers.entity_registry",
         "homeassistant.helpers.update_coordinator",
         "homeassistant.helpers.script",
+        "homeassistant.helpers.selector",
     ]:
         if _sub not in sys.modules:
             sys.modules[_sub] = _make_stub(_sub)
+
+    # Inject selector.BooleanSelector into the homeassistant.helpers.selector stub
+    _ha_helpers_selector = sys.modules.get("homeassistant.helpers.selector")
+    if _ha_helpers_selector:
+        _ha_helpers_selector.BooleanSelector = type(
+            "BooleanSelector", (), {
+                "__init__": lambda self, **kw: None,
+                "__voluptuous_compile__": lambda self, _: lambda kp, v: v,
+            }
+        )
 
     # Populate namespace packages
     _ha_const = sys.modules.get("homeassistant.const")
