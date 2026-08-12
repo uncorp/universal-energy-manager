@@ -7,37 +7,37 @@
   "completed_count": 4,
   "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-13T08:30Z",
+  "last_evidence_at": "2026-08-13T10:00Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-13T08:30Z LIVE: pytest 658 passed (1.51s, 0 failures, 100%), ruff check clean (All checks passed), git diff --check clean (exit 0, no whitespace errors), git working tree clean (no uncommitted diff, no untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope committed as annotated tag v0.1.10-rc.2 at ea547330 on origin/main. No ZIP, no Fremdartefakte."
+      "evidence": "2026-08-13T10:00Z LIVE: pytest 658 passed (0 failures, 100%), ruff check clean (All checks passed), git diff --check clean (exit 0, no whitespace errors), git working tree clean (no uncommitted diff, no untracked files, no ZIP). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope committed as annotated tag v0.1.10-rc.2 at 83df15d on origin/main. No Fremdartefakte, no ZIP in release scope."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "2026-08-13T08:30Z LIVE: CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt, Pre-Release-Suffix '-rc.2' im Tag/CHANGELOG/GitHub Release). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Git tag v0.1.10-rc.2 annotated at ea547330 on origin/main."
+      "evidence": "2026-08-13T10:00Z LIVE: CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt, Pre-Release-Suffix '-rc.2' im Tag/CHANGELOG/GitHub Release). Git tag v0.1.10-rc.2 annotated at 5b518929 on origin/main. Diff vs v0.1.10-rc.1: 26 files changed, +4387/-52 lines."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "2026-08-13T08:30Z LIVE: GitHub Release v0.1.10-rc.2 (id=369021269): isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Asset universal_energy_manager.zip (30795 bytes, SHA256 b2af6eab2cb100f5204bba50535a036b92a3b1e1a8cc55cb4608ecbe31b3097b) downloadable. Annotated tag v0.1.10-rc.2 on origin/main at ea547330. Diff vs v0.1.10-rc.1: 26 files changed, +4387/-52 lines."
+      "evidence": "2026-08-13T10:00Z LIVE: GitHub Release v0.1.10-rc.2: isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z, created_at=2026-08-12T12:19:06Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Asset universal_energy_manager.zip (30795 bytes, download_count=2) downloadable at https://github.com/uncorp/universal-energy-manager/releases/download/v0.1.10-rc.2/universal_energy_manager.zip. Annotated tag v0.1.10-rc.2 on origin/main at 5b518929 (tag commit ea547330)."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "2026-08-13T08:30Z LIVE: GitHub Actions latest 5 runs: all conclusion=success, status=completed. Latest run (id=31645718213) completed 2026-08-12T22:09Z. All CI on origin/main green. No failures or pending jobs."
+      "evidence": "2026-08-13T10:00Z LIVE: GitHub Actions latest 5 runs: all conclusion=success, status=completed. Latest: ci(queue-state): atomic update 2026-08-13T10:00Z on origin/main. All CI green. No failures or pending jobs."
     },
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "2026-08-13T08:30Z BLOCKED: HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env ist truncated/placeholder (eyJhbG...msjg) — unverändert seit letzter Prüfung. Endpoint http://192.168.10.51:8123 erreichbar (root HTTP 200, /api/config HTTP 401 mit truncated Token). GitHub Pre-release v0.1.10-rc.2 live (isPrerelease=true, published 2026-08-12T05:58:39Z). Kein gültiger Auth-Pfad für HACS API oder Install-Endpoint. Erfordert Stefan: neuer Long-Lived Access Token in HA Settings → Users → [User] → Long-Lived Access Tokens, eingefügt in .env."
+      "evidence": "2026-08-13T10:00Z BLOCKED: HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env ist truncated/placeholder (eyJhbG...msjg) — unverändert. Endpoint http://192.168.10.51:8123 erreichbar (root HTTP 200, /api/config HTTP 401 mit truncated Token). Kein gültiger Auth-Pfad für HACS API oder Install-Endpoint. Erfordert Stefan: neuer Long-Lived Access Token in HA Settings → Users → [User] → Long-Lived Access Tokens, eingefügt in .env."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "2026-08-13T08:30Z BLOCKED: Hängt von Gate 5 ab. Plan: (1) HACS Update-Entity für universal_energy_manager auf v0.1.10-rc.2, (2) reload config entry, (3) Shadow-Validierung (config entry loaded, shadow sensors present, command_sent=false, no control entities). 192.168.10.51:8123 HTTP 200 root, 401 /api/config."
+      "evidence": "2026-08-13T10:00Z BLOCKED: Hängt von Gate 5 ab. Plan: (1) HACS Update-Entity für universal_energy_manager auf v0.1.10-rc.2, (2) reload config entry, (3) Shadow-Validierung (config entry loaded, shadow sensors present, command_sent=false, no control entities). 192.168.10.51:8123 HTTP 200 root, 401 /api/config."
     }
   },
   "plan": {
@@ -45,15 +45,15 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-13T08:30Z"
+    "last_evidence_at": "2026-08-13T10:00Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-13T08:30Z",
-    "basis": "LIVE Verifikation 2026-08-13T08:30Z: pytest 658/658 pass (1.51s, 0 failures), ruff check clean, git working tree clean, git diff --check clean, shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 confirmed live (isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z, URL https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2, asset 30795 bytes). CI green 5/5 on recent runs. Gate 5 BLOCKED: HASS_TOKEN truncated (eyJhbG...msjg) in /home/hermes/.hermes/profiles/uem-test/.env, 192.168.10.51:8123 401 on /api/config. No auth refresh path available (HA 2024+ removed /api/auth/login).",
-    "earliest_check_at": "2026-08-13T10:00:00Z",
-    "recommended_check_at": "2026-08-13T12:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~4 Stunden (conservative estimate, token refresh + HACS install + runtime validation takes ~1-2h, buffer included). Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
+    "checked_at": "2026-08-13T10:00Z",
+    "basis": "LIVE Verifikation 2026-08-13T10:00Z: pytest 658/658 pass (0 failures), ruff check clean, git working tree clean, git diff --check clean, shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 confirmed live (isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z, URL https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2, asset 30795 bytes, 2 downloads). CI green 5/5 on recent runs. Gate 5 BLOCKED: HASS_TOKEN truncated (eyJhbG...msjg) in /home/hermes/.hermes/profiles/uem-test/.env, 192.168.10.51:8123 401 on /api/config. No auth refresh path available (HA 2024+ removed /api/auth/login).",
+    "earliest_check_at": "2026-08-13T12:00:00Z",
+    "recommended_check_at": "2026-08-13T14:00:00Z",
+    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~4 Stunden (conservative estimate, token refresh + HACS install + runtime validation takes ~1-2h, buffer included). Keine Zusage/Deadline — externe Abhängigkeit (Stefan). Frühester Check 2026-08-13T12:00Z (2h ab jetzt für eventuelle Token-Aktualisierung), empfohlen 2026-08-13T14:00Z."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
