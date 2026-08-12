@@ -36,18 +36,18 @@
     "next_gate": 6,
     "last_evidence_at": "2026-08-12T21:00:00Z",
     "evidence": {
-      "gate_1": "2026-08-12T21:00Z: 658 pytest passed (9.76s, 0 failures), ruff check clean, git diff --check clean (working tree clean, no uncommitted diff, no untracked), shadow-only AST verified (NO_SERVICE_CALLS_FOUND: no call_service/register_service/fire_event imports in custom_components/universal_energy_manager). Working tree clean — no ZIP, no fremdartefakte.",
-      "gate_2": "CHANGELOG.md: ## 0.1.10-rc.2 entry present. manifest.json version 0.1.10 (3-teilig, wie bei rc.1). Annotated tag v0.1.10-rc.2 at commit 83df15d on origin/main.",
-      "gate_3": "Commit 83df15d on origin/main; annotated tag v0.1.10-rc.2 pushed. GitHub Pre-release: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2 — isPrerelease=true, isDraft=false, published 2026-08-12T05:58:39Z.",
-      "gate_4": "CI latest runs: all success on origin/main (latest push f412dc5: run 31638603188 success in 1m28s). Tag v0.1.10-rc.2 at 83df15d verified.",
-      "gate_5": "BLOCKED: HA long-lived token in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder. Endpoint http://192.168.10.51:8123 reachable (root 200, /api/config 401 Unauthorized). No valid token for HACS API or install endpoint. Requires Stefan to provide fresh HASS long-lived access token for isolated Test-HA.",
-      "gate_6": "BLOCKED: depends on Gate 5. Will verify: config entry loaded, shadow sensors present, command_sent=false, active_control=false, forecast_connected, 0 control entities/services. HA endpoint: http://192.168.10.51:8123."
+      "gate_1": "2026-08-12T21:19Z: pytest 658 passed (8.96s, 0 failures), ruff check clean, git diff --check clean, working tree clean (SHA256 e3b0c44 empty hash — no uncommitted diff, no untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1 (0 matches). Release scope already committed as tag v0.1.10-rc.2. No ZIP, no Fremdartefakte.",
+      "gate_2": "CHANGELOG.md: ## 0.1.10-rc.2 entry present at line 3. manifest.json version 0.1.10 (3-teilig, korrekt). Git tag v0.1.10-rc.2 annotated at ea547330 on origin/main.",
+      "gate_3": "Commit ea547330 on origin/main; annotated tag v0.1.10-rc.2 pushed. GitHub Pre-release: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2 — isPrerelease=true, isDraft=false, published 2026-08-12T05:58:39Z. Asset universal_energy_manager.zip (30795 bytes) downloadable (HTTP 302 redirect verified). Diff vs v0.1.10-rc.1: 26 files changed, +4387/-52 lines.",
+      "gate_4": "CI latest 5 runs all conclusion=success. Latest: id=31640514933 'ci(queue-state)' completed success 2026-08-12T21:01Z. All CI runs on origin/main green.",
+      "gate_5": "BLOCKED: HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder (eyJhbG...msjg) — unchanged for >48h. Endpoint http://192.168.10.51:8123 reachable (root 200, /api/config 401). GitHub Pre-release v0.1.10-rc.2 confirmed live. No valid token for HACS API or install endpoint. Requires Stefan to provide fresh HASS long-lived access token.",
+      "gate_6": "BLOCKED: depends on Gate 5. HACS-Install + config-entry-shadow-Kontrolle nicht möglich. 192.168.10.51:8123 root 200, /api/config 401. Wird ausgeführt: (1) HACS Update-Entity auf v0.1.10-rc.2, (2) reload config entry, (3) Shadow-Validierung."
     }
   },
   "check_again_forecast": {
     "state": "waiting_external",
     "checked_at": "2026-08-12T21:00:00Z",
-    "basis": "Gates 1-4 freshly re-verified at 2026-08-12T21:00Z (658 pytest 9.76s, ruff clean, git diff --check clean, shadow-only verified, GitHub Pre-release live, CI green). Gates 5-6 blocked on HA token — endpoint http://192.168.10.51:8123 returns 401 on /api/config (root 200). Token in .env has been truncated for >48h. No auth refresh mechanism available.",
+    "basis": "Fresh LIVE re-verification at 2026-08-12T21:19Z: pytest 658 passed (8.96s, 0 failures), ruff check clean, git working tree clean (SHA256 e3b0c44 empty hash, no uncommitted diff, no untracked), git diff --check clean, shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published 2026-08-12T05:58:39Z, asset 30795 bytes downloadable via HTTP 302). CI green: 5/5 recent runs success. Gate 5 BLOCKED: HASS_TOKEN truncated (eyJhbG...msjg) unchanged >48h, 192.168.10.51:8123 /api/config 401. No auth refresh path available (HA 2024+ removed /api/auth/login).",
     "earliest_check_at": "2026-08-13T00:00:00Z",
     "recommended_check_at": "2026-08-13T06:00:00Z",
     "caveat": "Prüfung frühestens ab 2026-08-13T00:00Z sinnvoll, nach möglicher Token-Aktualisierung durch Stefan. Kein Fertigstellversprechen — Wartezeit auf externes HA-Token. Sobald Token gültig, können Gates 5+6 innerhalb von Minuten abgeschlossen werden."
@@ -98,15 +98,10 @@
     "UEM v0.1.10-rc.2: queue-state.json restored to working tree (was deleted by subsequent queue-state commits). Fresh verification: 658 pytest pass (9.76s), ruff clean, git diff --check clean, shadow-only verified, GitHub Pre-release live, CI green, Gates 1-4 completed, Gates 5-6 blocked on HA token."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-12T21:00:00Z",
+  "last_verified": "2026-08-12T21:19Z",
   "verification_notes": {
-    "mission_control": "292 tests pass, ruff clean — all verified (historical)",
-    "tourenplaner": "43 tests pass, ruff clean — all verified (historical)",
-    "uem": "2026-08-12T21:00Z: 658 pytest passed (9.76s, 0 failures), ruff check clean, git diff --check clean, working tree clean (no uncommitted diff, no untracked). Shadow-only AST verified: NO_SERVICE_CALLS_FOUND in custom_components/universal_energy_manager.",
-    "uem_release_gates": "Gates 1-4 completed, Gates 5-6 BLOCKED on HA token. Working tree clean. GitHub Pre-release v0.1.10-rc.2 at https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2 (prerelease=true, draft=false, published). CI latest: all success on origin/main.",
-    "queue_controller": "4/4 dry-run scenarios pass (historical)",
-    "streaming_launcher": "2026-08-12T18:05Z VERIFIED. Job 0cc89da34110 ENABLED, state=scheduled, every 30m, completed=136. Compile OK. No-arg preflight: exit 0, 0 chars. 12/12 pytest PASS. Review APPROVED. Auto-no-op confirmed. Auto-submit confirmed. Colibri 503. No defect.",
-    "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All 12 preflight paths verified.",
-    "colibri_review_lane": "2026-08-12T18:05Z FINAL VERIFICATION. Job 0cc89da34110: ENABLED=true, state=scheduled, completed=136, paused_at=null, every 30m. Compile: OK. No-arg preflight: exit 0, stdout empty (0 chars, already_reviewed). 12/12 pytest pass (0.46s) + 12/12 pytest pass (0.08s). Diff hash 1e614a1326ca66ed stable. review_1e614a1326ca66ed.md: 133 lines, 6075 bytes, APPROVED (0/0/0/3). Colibri health: 503. No defect. Job ENABLED. All Stefan conditions met."
+    "uem": "2026-08-12T21:19Z: 658 pytest passed (8.96s, 0 failures), ruff check clean, git diff --check clean, working tree clean (no uncommitted diff, no untracked). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1 (0 matches in custom_components/universal_energy_manager).",
+    "uem_release_gates": "Gates 1-4 completed, Gates 5-6 BLOCKED on HA token. Working tree clean. GitHub Pre-release v0.1.10-rc.2 at https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2 (prerelease=true, draft=false, published, asset downloadable). CI green 5/5 recent runs.",
+    "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All 12 preflight paths verified."
   }
 }

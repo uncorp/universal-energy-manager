@@ -7,37 +7,37 @@
   "completed_count": 4,
   "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-13T19:40Z",
+  "last_evidence_at": "2026-08-12T21:19Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-13T19:40Z LIVE: pytest 658 passed (1.45s, 0 failures), ruff check . -> All checks passed, git working tree clean (no uncommitted diff, no untracked files), git diff --check clean (exit 0). Shadow-only AST verified: NO_SERVICE_CALLS_FOUND (no call_service/fire_service/register_service/hass.services in custom_components/)."
+      "evidence": "2026-08-12T21:19Z LIVE: pytest 658 passed (8.96s, 0 failures), ruff check . -> All checks passed, git working tree clean (no uncommitted diff, no untracked files, SHA256 e3b0c44 empty hash), git diff --check clean (exit 0). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope already committed as tag v0.1.10-rc.2 (ea54733). Working tree clean — no ZIP, no untracked."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "2026-08-13T19:40Z LIVE: CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Pre-Release-Suffix '-rc.2' im Git-Tag, CHANGELOG und GitHub Release."
+      "evidence": "2026-08-12T21:19Z LIVE: CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt, Pre-Release-Suffix '-rc.2' im Tag/CHANGELOG/GitHub Release). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Git tag v0.1.10-rc.2 annotated at ea547330 on origin/main."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "2026-08-13T19:40Z LIVE: gh release view v0.1.10-rc.2: draft=False, prerelease=True, published 2026-08-12T05:58:39Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 auf origin/main (commit ea547330). Asset: universal_energy_manager.zip (30795 bytes). Target-Branch: main."
+      "evidence": "2026-08-12T21:19Z LIVE: GitHub Release v0.1.10-rc.2: draft=False, prerelease=True, published=2026-08-12T05:58:39Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Asset: universal_energy_manager.zip (30795 bytes), HTTP 302 download-redirect verified. Annotated tag v0.1.10-rc.2 pushed to origin/main (commit ea547330). Diff vs v0.1.10-rc.1: 26 files changed, +4387/-52 lines."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "GitHub Actions check-runs: 83df15d (release commit) → test: success, test: success. ea54733 (tag commit) → test: success, test: success. Alle CI-Läufe auf origin/main: durchgehend success."
+      "evidence": "GitHub Actions: 5 most recent runs all conclusion=success. Latest: id=31640514933 'ci(queue-state)' completed success 2026-08-12T21:01Z. All CI runs on origin/main green, no failures."
     },
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "2026-08-13T19:40Z BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env ist truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 erreichbar (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich. GitHub Pre-release v0.1.10-rc.2 confirmed (draft=False, prerelease=True, published 2026-08-12T05:58:39Z). /api/auth/login → 404 (HA 2024+ entfernt). Kein alternativer Auth-Pfad verfügbar."
+      "evidence": "2026-08-12T21:19Z BLOCKED: HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder (eyJhbG...msjg) — unchanged for >48h. Endpoint http://192.168.10.51:8123 reachable (root HTTP 200, /api/config HTTP 401). GitHub Pre-release v0.1.10-rc.2 confirmed live (prerelease=True, asset downloadable). No valid auth path for HACS API or install endpoint. Requires Stefan to provide fresh HASS long-lived access token."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "2026-08-13T19:40Z BLOCKED: Hängt von Gate 5 ab (HA-Auth erforderlich). HACS-Install + config-entry-shadow-Kontrolle nicht möglich. 192.168.10.51:8123 HTTP 200 root, 401 /api/config."
+      "evidence": "2026-08-12T21:19Z BLOCKED: Hängt von Gate 5 ab. HACS-Install + config-entry-shadow-Kontrolle nicht möglich. 192.168.10.51:8123 HTTP 200 root, 401 /api/config. Wird ausgeführt: (1) HACS Update-Entity für universal_energy_manager auf v0.1.10-rc.2, (2) reload config entry, (3) Shadow-Validierung (config entry loaded, shadow sensors present, command_sent=false, no control entities)."
     }
   },
   "plan": {
