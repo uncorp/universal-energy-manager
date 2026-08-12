@@ -51,8 +51,8 @@
     "state": "waiting_external",
     "checked_at": "2026-08-13T19:40Z",
     "basis": "LIVE Verifikation 2026-08-13T19:40Z: pytest 658/658 pass (1.45s, 0 failures), ruff check clean, git working tree clean (no uncommitted diff, no untracked files), git diff --check clean, shadow-only AST verified (NO_SERVICE_CALLS_FOUND). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip 30795 bytes). CI green 3/3 on all recent runs including release commit 83df15d and tag commit ea547330. Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg) in /home/hermes/.hermes/profiles/uem-test/.env, 192.168.10.51:8123 401 on /api/config. No auth refresh path available (HA 2024+ removed /api/auth/login).",
-    "earliest_check_at": "2026-08-13T19:40Z",
-    "recommended_check_at": "2026-08-14T03:40:00Z",
+    "earliest_check_at": "2026-08-13T00:00:00Z",
+    "recommended_check_at": "2026-08-13T06:00:00Z",
     "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~8 Stunden (conservative estimate). Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
   },
   "runtime_verification": {
