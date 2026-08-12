@@ -7,37 +7,37 @@
   "completed_count": 4,
   "active_gate": 1,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-13T00:00Z",
+  "last_evidence_at": "2026-08-12T17:50Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-13T00:00Z FRESH: pytest 658 passed (1.63s, 0 failures), ruff check . → All checks passed, git diff --check clean, git working tree clean. Shadow-only AST: NO call_service/fire_service/register_service/hass.services found in custom_components/universal_energy_manager/. Working tree clean. GitHub Pre-release v0.1.10-rc.2 annotated tag exists on origin/main."
+      "evidence": "2026-08-12T17:50Z LIVE: pytest 658 passed (1.45s, 0 failures), ruff check . → All checks passed, git working tree clean. Shadow-only AST verified: NO call_service/fire_service/register_service/hass.services found in custom_components/universal_energy_manager/."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Pre-Release-Suffix '-rc.2' im Tag, CHANGELOG und GitHub Release. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True)."
+      "evidence": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Pre-Release-Suffix '-rc.2' im Tag, CHANGELOG und GitHub Release."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "Tag v0.1.10-rc.2 → annotated tag on origin/main. GitHub Pre-release: draft=False, prerelease=True, published. SHA on main. CI: check-runs on release commit completed with conclusion=success (2/2 green)."
+      "evidence": "gh release view v0.1.10-rc.2: draft=False, prerelease=True, published. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 on origin/main (commit ea54733)."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "GitHub Actions check-runs on release commit: 2 check-runs completed with conclusion=success (test green). GitHub Pre-release verified: exists at tag v0.1.10-rc.2."
+      "evidence": "GitHub Actions check-runs: 2/2 on release commit 83df15d completed with conclusion=success (test green). Also verified on tag commit ea54733: 2/2 success."
     },
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder (eyJhbG...msjg). Endpoint 192.168.10.51:8123 reachable (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich vor HACS-Install."
+      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 reachable (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich. /api/auth/login returns 404 (HA 2024+ removed). No alternative auth path available."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "BLOCKED: Depends on Gate 5 (HA auth required for runtime validation). HACS-Install + config-entry-shadow-Kontrolle nicht möglich."
+      "evidence": "BLOCKED: Depends on Gate 5 (HA auth required). HACS-Install + config-entry-shadow-Kontrolle nicht möglich."
     }
   },
   "plan": {
@@ -45,29 +45,29 @@
     "completed_count": 4,
     "active_gate": 1,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-13T00:00Z"
+    "last_evidence_at": "2026-08-12T17:50Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-13T00:00Z",
-    "basis": "LIVE Verifikation 2026-08-13T00:00Z: pytest 658/658 pass (1.63s), ruff clean, git diff --check clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True). CI green on release commit. Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 reachable (200 root, 401 /api/config).",
-    "earliest_check_at": "2026-08-13T00:00Z",
-    "recommended_check_at": "2026-08-13T08:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check nach Token-Erneuerung: 2026-08-13T08:00. Keine Zusage/Deadline — externe Abhängigkeit (Token-Refresh durch Stefan)."
+    "checked_at": "2026-08-12T17:50Z",
+    "basis": "LIVE Verifikation 2026-08-12T17:50Z: pytest 658/658 pass (1.45s), ruff clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published). CI green 2/2. Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 401 on /api/config. No auth refresh available.",
+    "earliest_check_at": "2026-08-12T17:50Z",
+    "recommended_check_at": "2026-08-12T20:00:00Z",
+    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~2 Stunden. Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
     "ha_reachable": true,
     "ha_root_status": 200,
     "ha_auth_status": 401,
-    "token_source": "/home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN=truncated/placeholder)",
+    "token_source": "/home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN=truncated/placeholder eyJhbG...msjg)",
     "paket_version": "N/A (Gate 5 blocked)",
     "shadow_sensors": {},
     "hacs_update_entity": {},
     "config_entry_status": "N/A (Gate 5 blocked)"
   },
   "known_issues": {
-    "ha_token_truncated": "HASS_TOKEN in .env is placeholder value (eyJhbG...msjg). Previous successful runs used a valid token. Token must be refreshed to complete Gates 5-6.",
+    "ha_token_truncated": "HASS_TOKEN in .env is permanently truncated placeholder (eyJhbG...msjg). Gates 5-6 cannot proceed. Stefan must generate a new long-lived access token in HA Settings → Users → [User] → Long-Lived Access Tokens and paste it into the .env file.",
     "sensor_s10e_pro_current_power_value": "unavailable — E3DC adapter data source not reachable (expected in shadow mode, not a UEM bug)"
   }
 }
