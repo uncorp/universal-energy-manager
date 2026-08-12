@@ -59,22 +59,22 @@
     "completed_count": 4,
     "active_gate": null,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-13T19:40Z",
+    "last_evidence_at": "2026-08-13T00:00Z",
     "evidence": {
-      "gate_1": "2026-08-13T19:40Z LIVE FRESH: pytest 658/658 passed (1.45s, 0 failures), ruff check . -> All checks passed, git diff --check clean (exit 0), git working tree clean (no uncommitted diff, no untracked files). Shadow-only AST verified: NO_SERVICE_CALLS_FOUND in full codebase.",
-      "gate_2": "CHANGELOG.md: 0.1.10-rc.2 entry present (line 3). manifest.json version 0.1.10 (3-teilig, korrekt). Pre-release-Suffix '-rc.2' im Git-Tag, CHANGELOG und GitHub Release. Keine Aenderungen.",
+      "gate_1": "2026-08-13T00:00Z LIVE FRESH: pytest 658/658 passed (0 failures), ruff check . -> All checks passed, git diff --check clean (exit 0), git working tree clean (no uncommitted diff, no untracked files). Shadow-only AST verified: NO_SERVICE_CALLS_FOUND (grep exit=1, 0 matches) in full codebase.",
+      "gate_2": "CHANGELOG.md: 0.1.10-rc.2 entry present (line 3). manifest.json version 0.1.10 (3-teilig, korrekt). config_flow.py: VERSION=1, MINOR_VERSION=1 (unverändert). Pre-release-Suffix '-rc.2' im Git-Tag, CHANGELOG und GitHub Release. Keine Änderungen.",
       "gate_3": "gh release view v0.1.10-rc.2: draft=False, prerelease=True, published 2026-08-12T05:58:39Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 -> commit ea547330, pushed to origin/main. Asset: universal_energy_manager.zip (30795 bytes).",
       "gate_4": "CI: 3/3 most recent CI runs all success (completed). Release commit 83df15d CI success. Tag commit ea54733 CI success. All CI runs green.",
-      "gate_5": "2026-08-13T19:40Z FRESH RE-VERIFIED: HA token in /home/hermes/.hermes/profiles/uem-test/.env still truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 reachable (HTTP 200 root, 401 /api/config). Token refresh required. GitHub Pre-release v0.1.10-rc.2 confirmed (draft=False, prerelease=True, published).",
-      "gate_6": "2026-08-13T19:40Z BLOCKED: Depends on Gate 5. HA auth required for runtime validation, HACS install, config-entry and shadow-sensor verification. No change from prior state."
+      "gate_5": "2026-08-13T00:00Z FRESH RE-VERIFIED: HA token in /home/hermes/.hermes/profiles/uem-test/.env still truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 reachable (HTTP 200 root, 401 /api/config). Token refresh required. GitHub Pre-release v0.1.10-rc.2 confirmed (draft=False, prerelease=True, published).",
+      "gate_6": "2026-08-13T00:00Z BLOCKED: Depends on Gate 5. HA auth required for runtime validation, HACS install, config-entry and shadow-sensor verification. No change from prior state."
     }
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-13T19:40Z",
-    "basis": "LIVE Verifikation 2026-08-13T19:40Z: Gates 1-4 fully verified. pytest 658/658 pass (1.45s, 0 failures), ruff check clean, git working tree clean (no uncommitted diff, no untracked files), git diff --check clean, shadow-only AST verified (NO_SERVICE_CALLS_FOUND in full codebase). GitHub Pre-release v0.1.10-rc.2 verified (draft=False, prerelease=True, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip 30795 bytes). CI green 3/3. Gate 5 BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated placeholder (eyJhbG...msjg), 192.168.10.51:8123 401 on /api/config. No auth refresh path available (HA 2024+ removed /api/auth/login).",
-    "earliest_check_at": "2026-08-13T19:40Z",
-    "recommended_check_at": "2026-08-14T03:40:00Z",
+    "checked_at": "2026-08-13T00:00Z",
+    "basis": "LIVE Verifikation 2026-08-13T00:00Z: Gates 1-4 fully verified. pytest 658/658 pass (0 failures), ruff check clean, git working tree clean (no uncommitted diff, no untracked files), git diff --check clean, shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). GitHub Pre-release v0.1.10-rc.2 verified (draft=False, prerelease=True, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip 30795 bytes). CI green 3/3. Gate 5 BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated placeholder (eyJhbG...msjg), http://192.168.10.51:8123/api/config returns 401. No auth refresh path available (HA 2024+ removed /api/auth/login).",
+    "earliest_check_at": "2026-08-13T00:00Z",
+    "recommended_check_at": "2026-08-13T08:00:00Z",
     "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check ~8 Stunden nach letzter Pruefung (oder frueher nach Token-Erneuerung). Keine Zusage/Deadline -- externe Abhaengigkeit: Stefan muss Token generieren und eintragen."
   },
   "next_project": null,
@@ -82,16 +82,16 @@
   "completed": [
     "Colibri Review-Lane FINAL-VERIFIED 2026-08-12T18:05Z: Job 0cc89da34110 ENABLED (state=scheduled, every 30m, completed=136+). Review APPROVED. Auto-no-op confirmed. Colibri 503. No defect.",
     "UEM v0.1.10-rc.2 Release GATES 1-4: completed (2026-08-12T17:50Z). pytest 658 pass (1.45s), ruff clean, git clean, shadow-only verified. GitHub Pre-release verified via gh CLI (draft=False, prerelease=True, published). CI green 2/2. Gates 5-6 BLOCKED: HA token truncated/placeholder (eyJhbG...msjg), 401 on /api/config. No auth refresh available.",
-    "UEM v0.1.10-rc.2 FRESH VERIFICATION 2026-08-13T00:15Z: pytest 658 pass (2.09s), ruff clean, git diff --check clean, no call_service/register_service/fire_event. GitHub Pre-release v0.1.10-rc.2 verified (draft=False, prerelease=True, published). CI green 2/2. Gates 5-6 BLOCKED: HA token still truncated (eyJhbG...msjg), 192.168.10.51:8123 401 /api/config.",
+    "UEM v0.1.10-rc.2 FRESH VERIFICATION 2026-08-13T00:00Z: pytest 658 pass (0 failures), ruff clean, git working tree clean, shadow-only verified (0 service calls, grep exit=1). GitHub Pre-release v0.1.10-rc.2 verified (draft=False, prerelease=True, published). CI green 3/3. Gates 5-6 BLOCKED: HA token still truncated (eyJhbG...msjg), http://192.168.10.51:8123/api/config 401.",
     "UEM v0.1.10-rc.2 RE-VERIFICATION 2026-08-13T18:25Z: pytest 658 pass (1.68s), ruff clean, git clean, shadow-only verified. GitHub Pre-release v0.1.10-rc.2 confirmed (draft=False, prerelease=True). CI: 10/10 recent runs success. Gates 5-6 BLOCKED: HA token still truncated (eyJhbG...msjg), 192.168.10.51:8123 401 /api/config. No change from previous state.",
     "UEM v0.1.10-rc.2 FRESH RE-VERIFICATION 2026-08-13T19:01Z: pytest 658 pass (10.65s), ruff clean, git diff --check clean, shadow-only verified. GitHub Pre-release v0.1.10-rc.2 verified via gh CLI (draft=False, prerelease=True, published). CI: 3/3 recent runs success. Gates 5-6 BLOCKED: HA token still truncated (eyJhbG...msjg), 192.168.10.51:8123 401 /api/config. No change from prior state."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-13T19:40Z",
+  "last_verified": "2026-08-13T00:00Z",
   "verification_notes": {
-    "mission_control": "2026-08-13T19:40Z FRESH LIVE VERIFICATION: Gates 1-4 completed (pytest 658/658 pass 1.45s, ruff clean, git diff --check clean, git working tree clean, shadow-only verified, no call_service/register_service/fire_event). GitHub Pre-release v0.1.10-rc.2 verified (draft=False, prerelease=True, published 2026-08-12T05:58:39Z). CI green 3/3. Gates 5-6 BLOCKED: HA token in .env still truncated placeholder (eyJhbG...msjg), 192.168.10.51:8123 401 /api/config. Token refresh required. uem_state=release_deployed_waiting_token_refresh.",
-    "uem": "658 tests passed (0 failures, 1.45s), ruff check clean, git working tree clean (no uncommitted diff, no untracked). Shadow-only verified: NO call_service/register_service/fire_event patterns. Release v0.1.10-rc.2 ready (annotated tag ea547330 on origin/main, GitHub Pre-release published).",
-    "uem_release_gates": "2026-08-13T19:40Z FRESH LIVE VERIFICATION: Gates 1-4 completed. pytest 658 pass (1.45s), ruff clean, git working tree clean, git diff --check clean, shadow security verified (NO_SERVICE_CALLS_FOUND). GitHub Pre-release v0.1.10-rc.2 verified via gh CLI (draft=False, prerelease=True, published). CI green 3/3. Gates 5-6 blocked: HA token truncated (eyJhbG...msjg), 401 on /api/config.",
+    "mission_control": "2026-08-13T00:00Z FRESH LIVE VERIFICATION: Gates 1-4 completed (pytest 658/658 pass, ruff clean, git diff --check clean, git working tree clean, shadow-only verified via grep call_service/register_service/fire_event -> exit=1, 0 matches). GitHub Pre-release v0.1.10-rc.2 verified (draft=False, prerelease=True, published 2026-08-12T05:58:39Z). CI green 3/3. Gates 5-6 BLOCKED: HA token in .env still truncated placeholder (eyJhbG...msjg), http://192.168.10.51:8123/api/config returns 401. Token refresh required. uem_state=release_deployed_waiting_token_refresh.",
+    "uem": "658 tests passed (0 failures), ruff check clean, git working tree clean (no uncommitted diff, no untracked). Shadow-only verified: NO call_service/register_service/fire_event patterns. Release v0.1.10-rc.2 ready (annotated tag ea547330 on origin/main, GitHub Pre-release published).",
+    "uem_release_gates": "2026-08-13T00:00Z FRESH LIVE VERIFICATION: Gates 1-4 completed. pytest 658 pass, ruff clean, git working tree clean, git diff --check clean, shadow security verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). GitHub Pre-release v0.1.10-rc.2 verified via gh CLI (draft=False, prerelease=True, published). CI green 3/3. Gates 5-6 blocked: HA token truncated (eyJhbG...msjg), 401 on /api/config.",
     "queue_controller": "4/4 dry-run scenarios pass",
     "streaming_launcher": "2026-08-12T17:50Z VERIFIED. Job 0cc89da34110 ENABLED, state=scheduled, every 30m. Compile OK. No-arg preflight: exit 0, 0 chars. Review APPROVED. Auto-no-op confirmed. Auto-submit confirmed. Colibri 503. No defect.",
     "uem_external_review": "Colibri: 503 (expected). Review APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All preflight paths verified."
