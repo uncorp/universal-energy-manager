@@ -1,18 +1,18 @@
 {
   "version": 2,
   "lane": "custom:llama/Qwen3.6-35B-A3B-UD-Q4_K_M",
-  "uem_state": "release_deployed",
+  "uem_state": "release_deployed_blocked",
   "uem_code_active": true,
   "uem_tests_passed": true,
   "uem_test_count": 698,
   "uem_review_performed": true,
-  "uem_complete": true,
+  "uem_complete": false,
   "uem_release_version": "v0.1.10-rc.2",
   "uem_external_review_blocker": {
     "provider": "colibri/glm-5.2-colibri",
     "url": "https://colibri.home.zachs.de/v1",
     "health_endpoint": "https://colibri.home.zachs.de/health",
-    "latest_health": "2026-08-12T18:05:00.000000+00:00",
+    "latest_health": "2026-08-12T23:30Z",
     "health_data": {
       "active": null,
       "queued": null,
@@ -20,7 +20,7 @@
       "status": "503 (no server)"
     },
     "status": "auto-reviewing",
-    "streaming_launcher_status": "2026-08-12T18:05Z VERIFIED. Job 0cc89da34110: ENABLED=true, state=scheduled, every 30m, completed=136, paused_at=null. Compile: OK. No-arg preflight: exit 0, stdout 0 chars (already_reviewed). 12/12 pytest (test_streaming_review_launcher.py) PASS (0.46s). 12/12 pytest (review-artifacts/uem) PASS (0.08s). Diff hash 1e614a1326ca66ed stable. review_1e614a1326ca66ed.md: 133 lines, 6075 bytes, APPROVED (0/0/0/3), visible delta.content: 10 assessment categories A-J. Status artifact: status_1e614a1326ca66ed.json (empty_diff, prior offline). Raw SSE: 0 bytes (older GLM pipeline). Auto-no-op: CONFIRMED (exit 0, 0 chars). Auto-submit on new diff: CONFIRMED. Colibri health: 503 (expected). No technical defect. Job ENABLED. All Stefan conditions met."
+    "streaming_launcher_status": "2026-08-12T23:30Z FRESH VALIDATION: Job 0cc89da34110: ENABLED=true, state=scheduled, every 30m, completed=136+, paused_at=null. Compile: OK. No-arg preflight: exit 0, stdout 0 chars (already_reviewed). Diff hash 1e614a1326ca66ed stable. review_1e614a1326ca66ed.md: 133 lines, APPROVED (0/0/0/3). Auto-no-op: CONFIRMED (exit 0, 0 chars). Auto-submit on new diff: CONFIRMED. Colibri health: 503 (expected). No technical defect. Job ENABLED. All Stefan conditions met."
   },
   "plan": {
     "gates": [
@@ -28,46 +28,45 @@
       {"id": 2, "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2", "status": "completed"},
       {"id": 3, "name": "Commit + Push + annotierter Tag + GitHub Pre-release", "status": "completed"},
       {"id": 4, "name": "CI-Abschlussprüfung", "status": "completed"},
-      {"id": 5, "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA", "status": "completed"},
-      {"id": 6, "name": "Reload + Runtime-/Shadow-Validierung", "status": "completed"}
+      {"id": 5, "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA", "status": "blocked"},
+      {"id": 6, "name": "Reload + Runtime-/Shadow-Validierung", "status": "blocked"}
     ],
     "total": 6,
-    "completed_count": 6,
-    "active_gate": null,
-    "next_gate": null,
-    "last_evidence_at": "2026-08-12T22:00:00Z",
+    "completed_count": 4,
+    "active_gate": 5,
+    "next_gate": 5,
+    "last_evidence_at": "2026-08-12T23:30Z",
     "evidence": {
-      "gate_1": "2026-08-12T22:00Z FRESH VALIDATION: 698 pytest collected+pass (full suite, 0 failures, 7.01s), ruff check . → All checks passed, git diff --check HEAD → 0 whitespace errors, shadow-only AST verified: NO service/control/write-path violations. Working tree clean (HEAD=2c02f8d). Git SHA 1e614a1326ca66ed NOT a real commit object — it was the diff hash of the original release scope which is already committed in 83df15d (ancest of ea54733). All release code present in main. Shadow-only: grep for fire/call_service/async_call/register_service → 0 matches in UEM modules.",
-      "gate_2": "CHANGELOG.md: ## 0.1.10-rc.2 entry present (multi-generator + multi-battery, shadow-safety, comprehensive); manifest.json version 0.1.10 (3-teilig, korrekt); annotated tag v0.1.10-rc.2 at commit ea54733 (contains full release code via ancestor 83df15d).",
-      "gate_3": "origin/main=HEAD=2c02f8d; annotated tag v0.1.10-rc.2 at ea54733; GitHub Pre-release live (prerelease=true, draft=false, tag=v0.1.10-rc.2, published 2026-08-12T05:58:39Z, URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2). Target commit: ea54733 (contains release scope via ancestor 83df15d).",
-      "gate_4": "CI: GitHub check-runs on main → 2x 'test' completed+success. CI on ea54733 (tag target) → 2x 'test' completed+success. CI green on all relevant commits.",
-      "gate_5": "HACS update entity: update.uem_universal_energy_manager_update.installed_version = v0.1.10-rc.2 (VERIFIED via HA /api/states at 2026-08-12T22:00Z). HA 2026.7.4. Token valid (HTTP 200 on /api/config). Components loaded: universal_energy_manager + universal_energy_manager.sensor.",
-      "gate_6": "Runtime validation at 2026-08-12T22:00Z: sensor.status state='Shadow – Messdatenfehler', active_control=False, commands_sent=False, forecast_connected=True, last_error='unavailable source entity: sensor.s10e_pro_current_power_value'. sensor.soll_akku_ladelimit: shadow_only=True, command_sent=False, state=0.0. No UEM control entities, no UEM services, no write paths. Shadow boundary preserved. E3DC source entities unavailable → expected shadow mode with incomplete data. Restart verified: HA back, entities unchanged."
+      "gate_1": "2026-08-12T23:30Z FRESH VALIDATION: 698 pytest collected+pass (full suite, 0 failures), ruff check . → All checks passed, git diff --check HEAD → 0 whitespace errors (working tree clean except queue-state.json). Shadow-only AST verified: HomeAssistant type imports in sensor.py/coordinator.py (standard HA integration pattern, NO fire/call_service/register_service/service-control violations). Release scope at tag v0.1.10-rc.2 (ea54733, ancestor 83df15d): CHANGELOG.md, config_flow.py, e3dc_rscp.py, conftest.py, tests/test_e3dc_diff_verify.py, tests/test_e3dc_rscp_diff.py.",
+      "gate_2": "CHANGELOG.md: 0.1.10-rc.2 entry present (multi-generator + multi-battery, shadow-safety, comprehensive). manifest.json version 0.1.10 (3-teilig, korrekt). Annotated tag v0.1.10-rc.2 at ea54733.",
+      "gate_3": "origin/main=HEAD=196ce73 (pushed). Annotated tag v0.1.10-rc.2 at ea54733. GitHub Pre-release exists at ea54733.",
+      "gate_4": "CI green on ea54733 (verified by previous runs).",
+      "gate_5": "BLOCKED: HA token in .env is truncated/placeholder (eyJhbG...msjg). http://192.168.10.51:8123/api/config → 401. HA root → 200 (reachable). Token refresh required.",
+      "gate_6": "BLOCKED: Depends on Gate 5."
     }
   },
   "check_again_forecast": {
-    "state": "forecast",
-    "checked_at": "2026-08-12T22:00:00Z",
-    "basis": "Alle 6 Gates LIVE verifiziert. Release v0.1.10-rc.2 deployed in Test-HA (192.168.10.51:8123). Working tree clean, 698 pytest pass, ruff clean, shadow-only verified. GitHub Pre-release live (URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2). CI green (2x test success). HA-Endpoint reachable (HTTP 200), Token valid. UEM components loaded, installed_version=v0.1.10-rc.2. Runtime: sensor.status='Shadow – Messdatenfehler' (active_control=False, commands_sent=False), sensor.soll_akku_ladelimit (shadow_only=True, command_sent=False). E3DC source unvollständig → korrekter Shadow-Mode. Keine Control-Entitäten.",
-    "earliest_check_at": null,
+    "state": "waiting_external",
+    "checked_at": "2026-08-12T23:30Z",
+    "basis": "Gates 1-4 LIVE verifiziert. pytest pass (full suite, 0 failures), ruff clean, git diff --check clean, shadow-only AST verified, working tree clean. origin/main=HEAD=196ce73. v0.1.10-rc.2 tag at ea54733. GitHub Pre-release existiert. Gate 5 BLOCKED: HA Token truncated in .env (401 on /api/config). HA endpoint erreichbar (200 root). Token-Erneuerung erforderlich für HACS-Installation und Runtime-Validierung.",
+    "earliest_check_at": "2026-08-12T23:30Z",
     "recommended_check_at": "2026-08-13T08:00:00Z",
-    "caveat": "Alle 6 Gates completed — keine externe Wartezeit. HA-Endpoint 192.168.10.51:8123 erreichbar (Token gültig, 200). Empfehlung: nächster Live-Check morgen 08:00 für kontinuierliche Shadow-Validierung. Keine Zusage/Deadline — nur praktische Einschätzung wann Statusprüfung sinnvoll."
+    "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check: 2026-08-13T08:00 für Token-Erneuerung + HACS-Installation. Keine Zusage/Deadline."
   },
   "next_project": null,
   "next_concrete_slice": null,
   "completed": [
-    "Colibri Review-Lane FINAL-VERIFIED 2026-08-12T18:05Z: Job 0cc89da34110 ENABLED (state=scheduled, every 30m, completed=136). 12/12 pytest pass. Review APPROVED. Auto-no-op confirmed. Colibri 503. No defect.",
-    "UEM v0.1.10-rc.2 Release: 2026-08-12T22:00Z FRESH MISSION-CONTROL UPDATE. 698 pytest pass (0 failures), ruff clean, git diff --check clean (0 whitespace errors). Working tree clean (HEAD=2c02f8d). All 6 gates completed with LIVE runtime validation. GitHub Pre-release at ea54733. HA 192.168.10.51:8123 → 200 (Token gültig). HACS update entity: installed_version=v0.1.10-rc.2 VERIFIED. Runtime: sensor.status active_control=False, commands_sent=False, shadow_only sensors confirmed. No control entities/services. Shadow boundary PRESERVED."
+    "Colibri Review-Lane FINAL-VERIFIED 2026-08-12T18:05Z: Job 0cc89da34110 ENABLED (state=scheduled, every 30m, completed=136+). Review APPROVED. Auto-no-op confirmed. Colibri 503. No defect.",
+    "UEM v0.1.10-rc.2 Release PARTIAL: Gates 1-4 LIVE completed (2026-08-12T23:30Z). 698 pytest pass (0 failures), ruff clean, git diff --check clean, shadow-only AST verified, working tree clean. GitHub Pre-release exists at ea54733. CI green. Gate 5 BLOCKED: HA token truncated in .env (401 on /api/config). Gate 6 BLOCKED. HA endpoint reachable (200 root). Token refresh required."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-12T22:00:00Z",
+  "last_verified": "2026-08-12T23:30Z",
   "verification_notes": {
-    "mission_control": "292 tests pass, ruff clean — all verified (no changes needed)",
-    "tourenplaner": "43 tests pass, ruff clean — all verified (no changes needed)",
-    "uem": "698 tests passed (full suite, 0 failures, 7.01s), ruff clean, shadow-only verified (AST: NO service/control/write-path violations; working tree clean; diff SHA 1e614a13 is NOT a real git object — original release scope already committed in 83df15d). Reviewed APPROVED (0/0/0/3). Streaming launcher ready. Release v0.1.10-rc.2 complete (commit ea54733, annotated tag, GitHub Pre-release live, CI green). HACS installed: installed_version=v0.1.10-rc.2 (VERIFIED at 2026-08-12T22:00Z). Runtime: sensor.status='Shadow – Messdatenfehler' (active_control=False, commands_sent=False, forecast_connected=True); sensor.soll_akku_ladelimit shadow_only=True, command_sent=False, state=0.0; no control entities/services. Shadow boundary PRESERVED.",
-    "uem_release_gates": "2026-08-12T22:00Z LIVE VERIFICATION: Alle 6 Gates completed. 698 pytest pass (0 failures, 7.01s), ruff clean, git diff --check clean, working tree clean (HEAD=2c02f8d). GitHub Pre-release live (URL verified). HA 192.168.10.51:8123 → 200 (Token gültig). HACS: installed_version=v0.1.10-rc.2. Runtime validated: sensor.status active_control=False, commands_sent=False, shadow_only sensors confirmed. No control entities/services.",
+    "mission_control": "queue-state.json updated with fresh validation — 4/6 gates completed, Gates 5-6 blocked on HA token. plan/forecast block present (total=6, completed=4, active_gate=5, recommended_check_at=2026-08-13T08:00:00Z).",
+    "uem": "698 tests passed (full suite, 0 failures), ruff clean, git diff --check clean, working tree clean (nur queue-state.json changes). Shadow-only AST verified: NO service/control/write-path violations (HomeAssistant type imports in sensor.py/coordinator.py are standard HA integration pattern). Release v0.1.10-rc.2 ready (tag v0.1.10-rc.2 at ea54733, origin/main=HEAD=196ce73 pushed).",
+    "uem_release_gates": "2026-08-12T23:30Z FRESH: Gates 1-4 completed, Gates 5-6 BLOCKED on HA token. pytest 698 pass (0 failures), ruff clean, git diff --check clean. Shadow-only verified. GitHub Pre-release at ea54733. CI green. HA 192.168.10.51:8123 → 200 root, 401 /api/config (token truncated).",
     "queue_controller": "4/4 dry-run scenarios pass",
-    "streaming_launcher": "2026-08-12T18:05Z VERIFIED. Job 0cc89da34110 ENABLED, state=scheduled, every 30m, completed=136. Compile OK. No-arg preflight: exit 0, 0 chars. 12/12 pytest PASS. 12/12 pytest (uem artifacts) PASS. Review APPROVED. Auto-no-op confirmed. Auto-submit confirmed. Colibri 503. No defect.",
+    "streaming_launcher": "2026-08-12T23:30Z VERIFIED. Job 0cc89da34110 ENABLED, state=scheduled, every 30m. Compile OK. No-arg preflight: exit 0, 0 chars. Review APPROVED. Auto-no-op confirmed. Auto-submit confirmed. Colibri 503. No defect.",
     "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All 12 preflight paths verified."
   }
 }
