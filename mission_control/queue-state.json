@@ -2,17 +2,17 @@
   "project": "universal_energy_manager",
   "active_release": "v0.1.10-rc.2",
   "state": "in_progress",
-  "current_gate": 1,
+  "current_gate": 5,
   "total_gates": 6,
   "completed_count": 4,
-  "active_gate": 1,
+  "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-12T17:50Z",
+  "last_evidence_at": "2026-08-12T18:44Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-12T17:50Z LIVE: pytest 658 passed (1.45s, 0 failures), ruff check . → All checks passed, git working tree clean. Shadow-only AST verified: NO call_service/fire_service/register_service/hass.services found in custom_components/universal_energy_manager/."
+      "evidence": "2026-08-12T18:44Z LIVE: pytest 658 passed (1.44s, 0 failures), ruff check . → All checks passed, git working tree clean, git diff --check clean. Shadow-only AST verified: NO_SERVICE_CALLS_FOUND (no call_service/fire_service/register_service/hass.services in custom_components/)."
     },
     "2": {
       "status": "completed",
@@ -22,38 +22,38 @@
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "gh release view v0.1.10-rc.2: draft=False, prerelease=True, published. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 on origin/main (commit ea54733)."
+      "evidence": "gh release view v0.1.10-rc.2: draft=False, prerelease=True, published. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Annotated tag v0.1.10-rc.2 auf origin/main (commit ea54733). Asset: universal_energy_manager.zip (30795 bytes). Target-Branch: main."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "GitHub Actions check-runs: 2/2 on release commit 83df15d completed with conclusion=success (test green). Also verified on tag commit ea54733: 2/2 success."
+      "evidence": "GitHub Actions check-runs: 83df15d (release commit) → test: success, test: success. ea54733 (tag commit) → test: success, test: success. Alle CI-Läufe auf origin/main: durchgehend success."
     },
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env is truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 reachable (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich. /api/auth/login returns 404 (HA 2024+ removed). No alternative auth path available."
+      "evidence": "BLOCKED: HA token in /home/hermes/.hermes/profiles/uem-test/.env ist truncated/placeholder (eyJhbG...msjg). Endpoint http://192.168.10.51:8123 erreichbar (HTTP 200 root, 401 /api/config). Token-Erneuerung erforderlich. /api/auth/login → 404 (HA 2024+ entfernt). Kein alternativer Auth-Pfad verfügbar."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "BLOCKED: Depends on Gate 5 (HA auth required). HACS-Install + config-entry-shadow-Kontrolle nicht möglich."
+      "evidence": "BLOCKED: Hängt von Gate 5 ab (HA-Auth erforderlich). HACS-Install + config-entry-shadow-Kontrolle nicht möglich."
     }
   },
   "plan": {
     "total": 6,
     "completed_count": 4,
-    "active_gate": 1,
+    "active_gate": 5,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-12T17:50Z"
+    "last_evidence_at": "2026-08-12T18:44Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-12T17:50Z",
-    "basis": "LIVE Verifikation 2026-08-12T17:50Z: pytest 658/658 pass (1.45s), ruff clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published). CI green 2/2. Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 401 on /api/config. No auth refresh available.",
-    "earliest_check_at": "2026-08-12T17:50Z",
-    "recommended_check_at": "2026-08-12T20:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~2 Stunden. Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
+    "checked_at": "2026-08-12T18:44Z",
+    "basis": "LIVE Verifikation 2026-08-12T18:44Z: pytest 658/658 pass (1.44s, 0 failures), ruff clean, git working tree clean, git diff --check clean, shadow-only AST verified (NO_SERVICE_CALLS_FOUND). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 exists (draft=False, prerelease=True, published, asset universal_energy_manager.zip 30795 bytes). CI green on release commit 83df15d + tag commit ea54733 (2/2 success each). Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 401 on /api/config. No auth refresh path available.",
+    "earliest_check_at": "2026-08-12T18:44Z",
+    "recommended_check_at": "2026-08-13T06:00:00Z",
+    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check nach Token-Erneuerung: ~11.5 Stunden (nächster Morgen). Keine Zusage/Deadline — externe Abhängigkeit (Stefan)."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
@@ -67,7 +67,7 @@
     "config_entry_status": "N/A (Gate 5 blocked)"
   },
   "known_issues": {
-    "ha_token_truncated": "HASS_TOKEN in .env is permanently truncated placeholder (eyJhbG...msjg). Gates 5-6 cannot proceed. Stefan must generate a new long-lived access token in HA Settings → Users → [User] → Long-Lived Access Tokens and paste it into the .env file.",
-    "sensor_s10e_pro_current_power_value": "unavailable — E3DC adapter data source not reachable (expected in shadow mode, not a UEM bug)"
+    "ha_token_truncated": "HASS_TOKEN in .env ist dauerhaft truncated placeholder (eyJhbG...msjg). Gates 5-6 können nicht proceeden. Stefan muss einen neuen Long-Lived Access Token in HA Settings → Users → [User] → Long-Lived Access Tokens generieren und in die .env-Datei einfügen.",
+    "sensor_s10e_pro_current_power_value": "unavailable — E3DC Adapter-Datenquelle nicht erreichbar (erwartet im Shadow-Mode, kein UEM-Bug)"
   }
 }
