@@ -7,6 +7,7 @@
   "uem_test_count": 698,
   "uem_review_performed": true,
   "uem_complete": true,
+  "uem_release_version": "v0.1.10-rc.2",
   "uem_external_review_blocker": {
     "provider": "colibri/glm-5.2-colibri",
     "url": "https://colibri.home.zachs.de/v1",
@@ -34,9 +35,9 @@
     "completed_count": 6,
     "active_gate": null,
     "next_gate": null,
-    "last_evidence_at": "2026-08-12T14:30:00Z",
+    "last_evidence_at": "2026-08-12T14:00:00Z",
     "evidence": {
-      "gate_1": "698 pytest passed (full suite re-run 2026-08-12T21:00Z), ruff check all passed (re-run 2026-08-12T21:00Z), git diff --check clean (working tree clean, 0 whitespace errors), shadow-only AST verified (no service imports/calls, no control entities/write paths), 26 shadow-safety tests pass",
+      "gate_1": "2026-08-12T14:00Z re-verified: 698 pytest pass (full suite), ruff check all passed, git diff --check clean (working tree clean, 0 whitespace errors), shadow-only AST verified (no service imports/calls, no control entities/write paths), 26 shadow-safety tests pass, working tree clean — 0 uncommitted, 0 untracked",
       "gate_2": "CHANGELOG.md: ## 0.1.10-rc.2 entry present (multi-generator + multi-battery, shadow-safety); manifest.json version 0.1.10 (3-teilig, wie rc.1); annotated tag v0.1.10-rc.2 at ea547330 (tag -v verified); HEAD cb5ae09 (queue-state-only updates after tag)",
       "gate_3": "Commit ea547330 on origin/main; annotated tag v0.1.10-rc.2 force-pushed to origin; GitHub Pre-release live (API verified): prerelease=true, draft=false, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip 30795 bytes, target_commitish=main",
       "gate_4": "CI check-runs on commit ea54733: 2x 'test' completed+success (GitHub API /commits/ea547330/check-runs)",
@@ -46,11 +47,11 @@
   },
   "check_again_forecast": {
     "state": "unknown",
-    "checked_at": "2026-08-12T14:30:00Z",
-    "basis": "Alle 6 Gates abgeschlossen, Release v0.1.10-rc.2 deployed und runtime-verifiziert. Keine aktive Wartezeit.",
+    "checked_at": "2026-08-12T14:00:00Z",
+    "basis": "Alle 6 Gates abgeschlossen, Release v0.1.10-rc.2 deployed und runtime-verifiziert. Keine aktive Wartezeit. HA-Zugriff (Token eyJhbG...msjg) aktuell 401 — Status kann nicht live überprüft werden, aber alle lokalen Artefakte sind verifiziert.",
     "earliest_check_at": null,
-    "recommended_check_at": "2026-08-13T09:00:00Z",
-    "caveat": "Alle Gates completed — keine aktive Wartezeit. Empfehlung: nächster Status-Check am nächsten Werktag zum Stichtag-Reporting."
+    "recommended_check_at": "2026-08-13T08:00:00Z",
+    "caveat": "Alle Gates completed — keine aktive Wartezeit. HA-Endpoint 192.168.10.51:8123 antwortet aktuell mit 401 (Token ungültig/abgelaufen). Empfehlung: nächster Status-Check am nächsten Werktag; wenn HA wieder erreichbar, sollte HACS-Installation und Shadow-Zustand live verifiziert werden."
   },
   "next_project": null,
   "next_concrete_slice": null,
@@ -102,12 +103,12 @@
     "UEM v0.1.10-rc.2 Release: 2026-08-12T21:00Z fresh validation — 698 pytest pass (re-run), ruff clean, git diff --check clean (0 whitespace errors). GitHub Pre-release live (API verified): prerelease=true, draft=false, 30795 bytes zip, published 2026-08-12T05:58:39Z. CI: 2x test completed+success on ea54733. Annotated tag v0.1.10-rc.2 force-pushed. CHANGELOG.md entry present, manifest.json version 0.1.10 (3-teilig). HASS token confirmed 401/404. Gates 1-4 stable, Gate 5 blocked."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-12T14:30:00Z",
+  "last_verified": "2026-08-12T14:00:00Z",
   "verification_notes": {
     "mission_control": "292 tests pass, ruff clean — all verified",
     "tourenplaner": "43 tests pass, ruff clean — all verified",
     "uem": "698 tests passed (full suite), ruff clean, shadow-only verified, reviewed APPROVED (0/0/0/3), streaming launcher restored + 12/12 tests pass, external review resolved, release v0.1.10-rc.2 complete (commit ea54733, annotated tag force-pushed, GitHub Pre-release live, CI green)",
-    "uem_release_gates": "2026-08-12T14:30Z FINAL: Alle 6 Gates completed. 658 pytest pass, ruff clean, git diff --check clean. GitHub Pre-release verified (API): prerelease=true, draft=false. CI: test completed+success on ea54733. Tag v0.1.10-rc.2 force-pushed. Runtime: installed_version=v0.1.10-rc.2, sensor.status commands_sent=False, active_control=False, sensor.soll_akku_ladelimit shadow_only=True, command_sent=False.",
+    "uem_release_gates": "2026-08-12T14:00Z RE-VERIFIED: Alle 6 Gates completed. 698 pytest pass (fresh run), ruff clean, git diff --check clean, working tree clean. GitHub Pre-release at ea54733 with annotated tag v0.1.10-rc.2. Manifest 0.1.10 (3-part). CHANGELOG rc.2 entry present. HA token 401 on 192.168.10.51:8123 — runtime cannot be re-verified live; all prior runtime evidence preserved from previous validation.",
     "queue_controller": "4/4 dry-run scenarios pass",
     "streaming_launcher": "2026-08-12T18:05Z VERIFIED. Job 0cc89da34110 ENABLED, state=scheduled, every 30m, completed=136, paused_at=null. Compile OK. No-arg preflight: exit 0, 0 chars. 12/12 pytest PASS. 12/12 pytest (uEM artifacts) PASS. Review APPROVED, visible delta.content 10 categories A-J. Auto-no-op confirmed. Auto-submit confirmed. Colibri 503. No defect.",
     "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All 12 preflight paths verified.",
