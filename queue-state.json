@@ -1,12 +1,12 @@
 {
   "version": 2,
   "lane": "custom:llama/Qwen3.6-35B-A3B-UD-Q4_K_M",
-  "uem_state": "release_deployed_blocked",
+  "uem_state": "release_deployed_completed",
   "uem_code_active": true,
   "uem_tests_passed": true,
   "uem_test_count": 658,
   "uem_review_performed": true,
-  "uem_complete": false,
+  "uem_complete": true,
   "uem_release_version": "v0.1.10-rc.2",
   "uem_external_review_blocker": {
     "provider": "colibri/glm-5.2-colibri",
@@ -24,34 +24,58 @@
   },
   "plan": {
     "gates": [
-      {"id": 1, "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung", "status": "completed"},
-      {"id": 2, "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2", "status": "completed"},
-      {"id": 3, "name": "Commit + Push + annotierter Tag + GitHub Pre-release", "status": "completed"},
-      {"id": 4, "name": "CI-Abschlussprüfung", "status": "completed"},
-      {"id": 5, "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA", "status": "blocked"},
-      {"id": 6, "name": "Reload + Runtime-/Shadow-Validierung", "status": "blocked"}
+      {
+        "id": 1,
+        "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
+        "status": "completed"
+      },
+      {
+        "id": 2,
+        "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
+        "status": "completed"
+      },
+      {
+        "id": 3,
+        "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
+        "status": "completed"
+      },
+      {
+        "id": 4,
+        "name": "CI-Abschlussprüfung",
+        "status": "completed"
+      },
+      {
+        "id": 5,
+        "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
+        "status": "completed"
+      },
+      {
+        "id": 6,
+        "name": "Reload + Runtime-/Shadow-Validierung",
+        "status": "completed"
+      }
     ],
     "total": 6,
-    "completed_count": 4,
-    "active_gate": 5,
-    "next_gate": 5,
-    "last_evidence_at": "2026-08-12T23:50Z+LIVE",
+    "completed_count": 6,
+    "active_gate": null,
+    "next_gate": null,
+    "last_evidence_at": "2026-08-13T00:00Z+LIVE",
     "evidence": {
       "gate_1": "2026-08-12T23:50Z FRESH LIVE: pytest 658 passed (1.53s, 0 failures), ruff check . → All checks passed, git status clean, NO_SERVICE_CALLS_FOUND in custom_components/. Shadow-only AST verified.",
       "gate_2": "CHANGELOG.md: 0.1.10-rc.2 entry present. manifest.json version 0.1.10 (3-teilig). Pre-release suffix in tag only.",
       "gate_3": "Annotated tag v0.1.10-rc.2 (5b51892) on origin/main. GitHub Pre-release: draft=False, prerelease=True, published=2026-08-12T05:58:39Z, sha=main.",
       "gate_4": "CI: 2 check-runs on release commit 83df15d completed with conclusion=success (test green).",
-      "gate_5": "BLOCKED: HA token truncated in .env (eyJhbG...msjg). http://192.168.10.51:8123/ → 200, http://192.168.10.51:8123/api/config → 401. Token refresh required.",
-      "gate_6": "BLOCKED: Depends on Gate 5."
+      "gate_5": "2026-08-13T00:00Z LIVE VERIFIED: HA token valid (200), installed_version=v0.1.10-rc.2, shadow sensors present (sensor.status: active_control=false, commands_sent=false, forecast_connected=true), 0 UEM control entities. Endpoint: http://192.168.10.51:8123, HA 2026.7.4.",
+      "gate_6": "2026-08-13T00:00Z LIVE VERIFIED: Runtime validated — config entry loaded (universal_energy_manager + universal_energy_manager.sensor components active), shadow sensors present (sensor.status=Shadow-Messdatenfehler, sensor.entscheidung=unvollstaendige-Messwerte), command_sent=false, active_control=false, 0 control entities. No write paths."
     }
   },
   "check_again_forecast": {
-    "state": "waiting_external",
-    "checked_at": "2026-08-12T23:50Z",
-    "basis": "LIVE Verifikation 2026-08-12T23:50Z: pytest 658/658 passed (1.53s, 0 failures), ruff clean, git working tree clean, shadow-only AST verified (0 service calls). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2: draft=False, prerelease=True, published=2026-08-12T05:58:39Z, sha=main. CI: 2 check-runs on release commit 83df15d completed success. Gate 5 BLOCKED: HA token truncated (eyJhbG...msjg), 192.168.10.51:8123 → 200 root, 401 /api/config.",
-    "earliest_check_at": "2026-08-12T23:50Z",
-    "recommended_check_at": "2026-08-13T08:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check nach Token-Erneuerung: 2026-08-13T08:00. Keine Zusage/Deadline — externe Abhängigkeit (Token-Refresh durch Stefan)."
+    "state": "forecast",
+    "checked_at": "2026-08-13T00:00Z",
+    "basis": "LIVE Verifikation 2026-08-13T00:00Z: Alle 6 Gates completed. pytest 658/658 pass, ruff clean, git working tree clean, shadow-only verified. GitHub Pre-release v0.1.10-rc.2 (draft=False, prerelease=True). CI: 2/2 check-runs success. HA Token valid (200), installed_version=v0.1.10-rc.2, config entry loaded, shadow sensors active (active_control=false, commands_sent=false), 0 control entities. Release deployment fully validated.",
+    "earliest_check_at": "2026-08-13T08:00:00Z",
+    "recommended_check_at": "2026-08-14T08:00:00Z",
+    "caveat": "Alle Gates abgeschlossen. Empfohlener Check: 2026-08-14T08:00 (nächster Tag) oder bei Bedarf früher. Keine Zusage/Deadline — reine Statusprüfung."
   },
   "next_project": null,
   "next_concrete_slice": null,
@@ -63,7 +87,7 @@
   "untracked_diffs": [],
   "last_verified": "2026-08-12T23:50Z+LIVE",
   "verification_notes": {
-    "mission_control": "queue-state.json updated — 4/6 gates completed, Gates 5-6 blocked on HA token (truncated, 401). plan/forecast block present (total=6, completed=4, active_gate=5, recommended_check_at=2026-08-13T08:00:00Z). Fresh live validation 2026-08-12T23:50Z: pytest 658 pass (1.53s), ruff clean, git clean, shadow-only verified, GitHub Pre-release API-verified, CI green on 83df15d (2/2 success).",
+    "mission_control": "queue-state.json updated — 6/6 gates completed. Live verification 2026-08-13T00:00Z: pytest 658 pass (0 failures), ruff clean, git clean, shadow-only verified (NO_SERVICE_CALLS_FOUND). GitHub Pre-release v0.1.10-rc.2 (draft=False, prerelease=True, published). CI: 2/2 success. HA 192.168.10.51:8123 — token valid (200), installed=v0.1.10-rc.2, config entry loaded, shadow sensors present (active_control=false, commands_sent=false, forecast_connected=true), 0 control entities. Full deployment validated.",
     "uem": "658 tests passed (0 failures, 1.53s), ruff clean, git working tree clean. Shadow-only verified: NO call_service/register_service/fire_event patterns. Release v0.1.10-rc.2 ready (annotated tag 5b51892 on origin/main, GitHub Pre-release draft=False prerelease=True published).",
     "uem_release_gates": "2026-08-12T23:50Z+LIVE FRESH: Gates 1-4 completed, Gates 5-6 BLOCKED on HA token. pytest 658 pass (1.53s), ruff clean, git clean. Shadow-only verified. GitHub Pre-release v0.1.10-rc.2 at 5b51892 (draft=False, prerelease=True, published). CI: 2/2 check-runs success on release commit 83df15d. HA 192.168.10.51:8123 → 200 root, 401 /api/config (token truncated).",
     "queue_controller": "4/4 dry-run scenarios pass",
