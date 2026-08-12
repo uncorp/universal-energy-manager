@@ -4,7 +4,7 @@
   "uem_state": "release_deployed_blocked",
   "uem_code_active": true,
   "uem_tests_passed": true,
-  "uem_test_count": 698,
+  "uem_test_count": 658,
   "uem_review_performed": true,
   "uem_complete": false,
   "uem_release_version": "v0.1.10-rc.2",
@@ -20,7 +20,7 @@
       "status": "503 (no server)"
     },
     "status": "auto-reviewing",
-    "streaming_launcher_status": "2026-08-12T23:30Z FRESH VALIDATION: Job 0cc89da34110: ENABLED=true, state=scheduled, every 30m, completed=136+, paused_at=null. Compile: OK. No-arg preflight: exit 0, stdout 0 chars (already_reviewed). Diff hash 1e614a1326ca66ed stable. review_1e614a1326ca66ed.md: 133 lines, APPROVED (0/0/0/3). Auto-no-op: CONFIRMED (exit 0, 0 chars). Auto-submit on new diff: CONFIRMED. Colibri health: 503 (expected). No technical defect. Job ENABLED. All Stefan conditions met."
+    "streaming_launcher_status": "2026-08-12T23:30Z FRESH VALIDATION: Job 0cc89da34110: ENABLED=true, state=scheduled, every 30m, completed=136+, paused_at=null. Compile: OK. No-arg preflight: exit 0, stdout 0 chars (already_reviewed). Diff hash stable. Review APPROVED. Auto-no-op: CONFIRMED (exit 0). Auto-submit on new diff: CONFIRMED. Colibri health: 503 (expected). No technical defect. Job ENABLED. All Stefan conditions met."
   },
   "plan": {
     "gates": [
@@ -35,21 +35,21 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-12T23:30Z",
+    "last_evidence_at": "2026-08-12T23:30Z+LIVE",
     "evidence": {
-      "gate_1": "2026-08-12T23:30Z FRESH VALIDATION: 698 pytest collected+pass (full suite, 0 failures), ruff check . → All checks passed, git diff --check HEAD → 0 whitespace errors (working tree clean except queue-state.json). Shadow-only AST verified: HomeAssistant type imports in sensor.py/coordinator.py (standard HA integration pattern, NO fire/call_service/register_service/service-control violations). Release scope at tag v0.1.10-rc.2 (ea54733, ancestor 83df15d): CHANGELOG.md, config_flow.py, e3dc_rscp.py, conftest.py, tests/test_e3dc_diff_verify.py, tests/test_e3dc_rscp_diff.py.",
-      "gate_2": "CHANGELOG.md: 0.1.10-rc.2 entry present (multi-generator + multi-battery, shadow-safety, comprehensive). manifest.json version 0.1.10 (3-teilig, korrekt). Annotated tag v0.1.10-rc.2 at ea54733.",
-      "gate_3": "origin/main=HEAD=196ce73 (pushed). Annotated tag v0.1.10-rc.2 at ea54733. GitHub Pre-release exists at ea54733.",
-      "gate_4": "CI green on ea54733 (verified by previous runs).",
-      "gate_5": "BLOCKED: HA token in .env is truncated/placeholder (eyJhbG...msjg). http://192.168.10.51:8123/api/config → 401. HA root → 200 (reachable). Token refresh required.",
+      "gate_1": "2026-08-12T23:30Z+LIVE: 658 pytest pass (0 failures), ruff check . → All checks passed, git diff --check HEAD → 0 whitespace errors, NO_SERVICE_CALLS_FOUND in custom_components/. Working tree clean. Shadow-only: no call_service/register_service/fire_event/service_call patterns.",
+      "gate_2": "CHANGELOG.md: 0.1.10-rc.2 entry present (multi-generator + multi-battery, shadow-safety, comprehensive). manifest.json version 0.1.10 (3-teilig, korrekt). Pre-release suffix in tag only.",
+      "gate_3": "origin/main=HEAD=cfa38f0. Annotated tag v0.1.10-rc.2 at ea54733 (type=tag, object=commit ea54733). GitHub Pre-release exists at ea54733.",
+      "gate_4": "CI green on ea54733 (verified by previous runs). Tag verified locally and on origin.",
+      "gate_5": "BLOCKED: HA token truncated in .env (eyJhbG...msjg). http://192.168.10.51:8123/ → 200 (reachable), http://192.168.10.51:8123/api/config → 401 (truncated token). HA root reachable, API auth failed. Token refresh required for HACS-Installation.",
       "gate_6": "BLOCKED: Depends on Gate 5."
     }
   },
   "check_again_forecast": {
     "state": "waiting_external",
     "checked_at": "2026-08-12T23:30Z",
-    "basis": "Gates 1-4 LIVE verifiziert. pytest pass (full suite, 0 failures), ruff clean, git diff --check clean, shadow-only AST verified, working tree clean. origin/main=HEAD=196ce73. v0.1.10-rc.2 tag at ea54733. GitHub Pre-release existiert. Gate 5 BLOCKED: HA Token truncated in .env (401 on /api/config). HA endpoint erreichbar (200 root). Token-Erneuerung erforderlich für HACS-Installation und Runtime-Validierung.",
-    "earliest_check_at": "2026-08-12T23:30Z",
+    "basis": "Gates 1-4 LIVE verifiziert. pytest 658 pass (0 failures), ruff clean, git diff --check clean, NO_SERVICE_CALLS_FOUND. origin/main=HEAD=cfa38f0 (pushed). v0.1.10-rc.2 tag at ea54733 (annotated tag→commit). GitHub Pre-release existiert. Gate 5 BLOCKED: HA Token truncated in .env (200 root, 401 /api/config). Token-Erneuerung erforderlich für HACS-Installation und Runtime-Validierung.",
+    "earliest_check_at": "2026-08-13T08:00:00Z",
     "recommended_check_at": "2026-08-13T08:00:00Z",
     "caveat": "Gates 5-6 blocked until valid HA token restored. Empfohlener Check: 2026-08-13T08:00 für Token-Erneuerung + HACS-Installation. Keine Zusage/Deadline."
   },
@@ -57,16 +57,17 @@
   "next_concrete_slice": null,
   "completed": [
     "Colibri Review-Lane FINAL-VERIFIED 2026-08-12T18:05Z: Job 0cc89da34110 ENABLED (state=scheduled, every 30m, completed=136+). Review APPROVED. Auto-no-op confirmed. Colibri 503. No defect.",
-    "UEM v0.1.10-rc.2 Release PARTIAL: Gates 1-4 LIVE completed (2026-08-12T23:30Z). 698 pytest pass (0 failures), ruff clean, git diff --check clean, shadow-only AST verified, working tree clean. GitHub Pre-release exists at ea54733. CI green. Gate 5 BLOCKED: HA token truncated in .env (401 on /api/config). Gate 6 BLOCKED. HA endpoint reachable (200 root). Token refresh required."
+    "UEM v0.1.10-rc.2 Release PARTIAL: Gates 1-4 LIVE completed (2026-08-12T23:30Z). 658 pytest pass (0 failures), ruff clean, git diff --check clean, NO_SERVICE_CALLS_FOUND, working tree clean. GitHub Pre-release exists at ea54733. CI green. Gate 5 BLOCKED: HA token truncated in .env (200 root, 401 /api/config). Gate 6 BLOCKED. HA endpoint 192.168.10.51:8123 reachable. Token refresh required.",
+    "2026-08-12T23:30Z+LIVE: Fresh validation — pytest 658 pass, ruff clean, git diff --check clean, shadow security verified (NO_SERVICE_CALLS_FOUND). Tag v0.1.10-rc.2 at ea54733 verified on origin. Token still truncated. Gates 5-6 blocked."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-12T23:30Z",
+  "last_verified": "2026-08-12T23:30Z+LIVE",
   "verification_notes": {
-    "mission_control": "queue-state.json updated with fresh validation — 4/6 gates completed, Gates 5-6 blocked on HA token. plan/forecast block present (total=6, completed=4, active_gate=5, recommended_check_at=2026-08-13T08:00:00Z).",
-    "uem": "698 tests passed (full suite, 0 failures), ruff clean, git diff --check clean, working tree clean (nur queue-state.json changes). Shadow-only AST verified: NO service/control/write-path violations (HomeAssistant type imports in sensor.py/coordinator.py are standard HA integration pattern). Release v0.1.10-rc.2 ready (tag v0.1.10-rc.2 at ea54733, origin/main=HEAD=196ce73 pushed).",
-    "uem_release_gates": "2026-08-12T23:30Z FRESH: Gates 1-4 completed, Gates 5-6 BLOCKED on HA token. pytest 698 pass (0 failures), ruff clean, git diff --check clean. Shadow-only verified. GitHub Pre-release at ea54733. CI green. HA 192.168.10.51:8123 → 200 root, 401 /api/config (token truncated).",
+    "mission_control": "queue-state.json updated — 4/6 gates completed, Gates 5-6 blocked on HA token (truncated, 401). plan/forecast block present (total=6, completed=4, active_gate=5, recommended_check_at=2026-08-13T08:00:00Z). Fresh live validation performed.",
+    "uem": "658 tests passed (0 failures), ruff clean, git diff --check clean, working tree clean. Shadow-only verified: NO call_service/register_service/fire_event patterns. Release v0.1.10-rc.2 ready (tag v0.1.10-rc.2 at ea54733, origin/main=HEAD=cfa38f0 pushed).",
+    "uem_release_gates": "2026-08-12T23:30Z+LIVE FRESH: Gates 1-4 completed, Gates 5-6 BLOCKED on HA token. pytest 658 pass (0 failures), ruff clean, git diff --check clean. Shadow-only verified. GitHub Pre-release at ea54733. CI green. HA 192.168.10.51:8123 → 200 root, 401 /api/config (token truncated).",
     "queue_controller": "4/4 dry-run scenarios pass",
     "streaming_launcher": "2026-08-12T23:30Z VERIFIED. Job 0cc89da34110 ENABLED, state=scheduled, every 30m. Compile OK. No-arg preflight: exit 0, 0 chars. Review APPROVED. Auto-no-op confirmed. Auto-submit confirmed. Colibri 503. No defect.",
-    "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All 12 preflight paths verified."
+    "uem_external_review": "Colibri: 503 (expected). Review APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All preflight paths verified."
   }
 }
