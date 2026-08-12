@@ -1,0 +1,47 @@
+{
+  "project": "universal_energy_manager",
+  "active_release": "v0.1.10-rc.2",
+  "state": "completed",
+  "current_gate": 6,
+  "total_gates": 6,
+  "completed_count": 6,
+  "active_gate": null,
+  "next_gate": null,
+  "last_evidence_at": "2026-08-12T14:30:00Z",
+  "gates": {
+    "1": {"status": "completed", "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung", "evidence": "658 pytest pass (2.82s), ruff clean, git diff --check clean, Shadow-Safety AST guards verified: no service/control imports in any Shadow-Modul"},
+    "2": {"status": "completed", "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2", "evidence": "CHANGELOG.md line 3: v0.1.10-rc.2 documented; manifest.json version=0.1.10 (3-teilig, wie bei rc.1); Pre-Release-Suffix im Tag/CHANGELOG/GitHub Release; config_flow VERSION/MINOR_VERSION unverändert"},
+    "3": {"status": "completed", "name": "Commit + Push + annotierter Tag + GitHub Pre-release", "evidence": "Tag v0.1.10-rc.2 → commit ea54733; origin push verifiziert; GitHub Pre-release API-verified: prerelease=True, name='v0.1.10-rc.2 — Multi-Generator + Multi-Battery (Beta Pre-Release)'"},
+    "4": {"status": "completed", "name": "CI-Abschlussprüfung", "evidence": "GitHub Actions check-runs auf ea54733: test status=completed conclusion=success (zwei Läufe)"},
+    "5": {"status": "completed", "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA", "evidence": "update.uem_universal_energy_manager_update.installed_version = v0.1.10-rc.2; HA 2026.7.4 RUNNING; components: universal_energy_manager + universal_energy_manager.sensor loaded"},
+    "6": {"status": "completed", "name": "Reload + Runtime-/Shadow-Validierung", "evidence": "sensor.status: state='Shadow – Messdatenfehler', commands_sent=False, active_control=False, forecast_connected=True; sensor.soll_akku_ladelimit: shadow_only=True, command_sent=False, state=0.0; keine Control-Entitäten/Services"}
+  },
+  "plan": {
+    "total": 6,
+    "completed_count": 6,
+    "active_gate": null,
+    "next_gate": null,
+    "last_evidence_at": "2026-08-12T14:30:00Z"
+  },
+  "check_again_forecast": {
+    "state": "unknown",
+    "checked_at": "2026-08-12T14:30:00Z",
+    "basis": "Alle 6 Gates abgeschlossen, Release v0.1.10-rc.2 deployed und runtime-verifiziert",
+    "earliest_check_at": null,
+    "recommended_check_at": "2026-08-13T09:00:00Z",
+    "caveat": "Alle Gates completed — keine aktive Wartezeit. Empfehlung: nächster Status-Check am nächsten Werktag zum Stichtag-Reporting."
+  },
+  "runtime_verification": {
+    "endpoint": "http://192.168.10.51:8123",
+    "ha_version": "2026.7.4",
+    "paket_version": "v0.1.10-rc.2",
+    "shadow_sensors": {
+      "sensor.status": {"commands_sent": false, "active_control": false, "forecast_connected": true, "state": "Shadow – Messdatenfehler"},
+      "sensor.soll_akku_ladelimit": {"command_sent": false, "shadow_only": true, "state": "0.0"}
+    },
+    "config_entry_status": "Integration loaded (components present), no config_entries/entries accessible via HA 2026.7.4 API (API changed)"
+  },
+  "known_issues": {
+    "sensor_s10e_pro_current_power_value": "unavailable — E3DC adapter data source not reachable, not a UEM bug"
+  }
+}
