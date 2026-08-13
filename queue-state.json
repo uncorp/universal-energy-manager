@@ -34,23 +34,23 @@
     "completed_count": 6,
     "active_gate": null,
     "next_gate": null,
-    "last_evidence_at": "2026-08-14T08:00:00Z",
+    "last_evidence_at": "2026-08-14T08:15:00Z",
     "evidence": {
-      "gate_1": "2026-08-14T08:00Z LIVE: pytest 658 passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope committed at ea547330, tagged v0.1.10-rc.2, 26 files changed (+4387 lines).",
+      "gate_1": "2026-08-14T08:15Z LIVE: pytest 658 collected, 658 passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope committed at ea547330, tagged v0.1.10-rc.2, 26 files changed (+4387 lines).",
       "gate_2": "CHANGELOG.md: ## 0.1.10-rc.2 entry at line 3, consistent with pre-release naming. manifest.json version 0.1.10 (3-teilig, korrekt). Tags v0.1.10-rc.1, v0.1.10-rc.2 annotated. Working tree clean, scope already committed at ea547330.",
-      "gate_3": "Tag v0.1.10-rc.2 (annotated at ea54733^{}) pushed to origin/main. GitHub Pre-release confirmed: isPrerelease=true, isDraft=false, publishedAt=2026-08-12T05:58:39Z, asset universal_energy_manager.zip (30795 bytes, downloadable). CI 3/3 success on recent runs.",
-      "gate_4": "CI: all recent runs on origin/main conclusion=success, status=completed. All CI green on ea547330 and v0.1.10-rc.2 tag.",
-      "gate_5": "COMPLETED 2026-08-14T08:00Z: Token valid (183 chars, /api/config=200). HACS entity update.uem_universal_energy_manager_update called update.install with version=v0.1.10-rc.2. Installed version confirmed: v0.1.10-rc.2 (was v0.1.2). HA 2026.7.4, 132 entities total. HACS metadata still shows latest=v0.1.2 (cache not refreshed), but installed version is correct.",
-      "gate_6": "COMPLETED 2026-08-14T08:00Z: HA restart performed (5s recovery). Config entry loaded (title=UEM – Universal Energy Manager, state=loaded). Installed version: v0.1.10-rc.2. Shadow-only verified: no control entities (0 switch/select/button/number entities). Config entry has empty options/data (expected for shadow-only integration with no configured source entities — no crash, no sensor creation, correct behavior)."
+      "gate_3": "Tag v0.1.10-rc.2 (annotated at ea54733^{}) pushed to origin/main. GitHub Pre-release confirmed via gh CLI: isPrerelease=true, isDraft=false, publishedAt=2026-08-12T05:58:39Z, asset universal_energy_manager.zip (30795 bytes, 2 downloads), targetCommitish=main.",
+      "gate_4": "CI: last 5 runs on origin/main all conclusion=success, status=completed. CI green.",
+      "gate_5": "COMPLETED 2026-08-14T08:15Z: Token valid (183 chars, /api/config=200). HA 2026.7.4, RUNNING, 132 entities. HACS update entity installed_version=v0.1.10-rc.2. HACS cache latest_version=v0.1.2 (not refreshed).",
+      "gate_6": "COMPLETED 2026-08-14T08:15Z: Config entry loaded (entry_id=01KZA411A30HMWD3HW3FZF27A2, state=loaded, no errors). 0 UEM sensor entities (no source entities configured — correct shadow behavior). 0 control entities. 0 UEM services. Shadow-only boundary confirmed."
     }
   },
   "check_again_forecast": {
     "state": "forecast",
-    "checked_at": "2026-08-14T08:00:00Z",
-    "basis": "Alle 6 Gates abgeschlossen. UEM v0.1.10-rc.2 installiert in Test-HA 192.168.10.51:8123 (HA 2026.7.4). Config entry loaded. Shadow-only verified: 0 control entities, no service calls, no active control. Installed version v0.1.10-rc.2 confirmed. Keine weiteren Aktionen erforderlich — Beta-Release vollständig bereit für Test-HA.",
-    "earliest_check_at": "2026-08-15T08:00:00Z",
-    "recommended_check_at": "2026-08-15T08:00:00Z",
-    "caveat": "Nächste Statusprüfung sinnvoll am 2026-08-15T08:00Z (24h nach Abschluss), um Test-HA Runtime-Verhalten zu beobachten. Keine externen Abhängigkeiten mehr. HACS-Metadaten-Refresh manuell in HACS-UI möglich (aktuell zeigt HACS noch v0.1.2 als latest_version an, aber Installation ist korrekt v0.1.10-rc.2)."
+    "checked_at": "2026-08-14T08:15:00Z",
+    "basis": "Alle 6 Gates abgeschlossen. UEM v0.1.10-rc.2 installiert in Test-HA 192.168.10.51:8123 (HA 2026.7.4). Config entry loaded, state=loaded. Shadow-only: 0 control entities, 0 service calls, no active control. Installed version v0.1.10-rc.2 confirmed via HACS update entity. Keine externen Abhängigkeiten. HACS-Metadaten-Refresh manuell in HACS-UI möglich (aktuell zeigt HACS noch v0.1.2 als latest_version an, aber Installation ist korrekt v0.1.10-rc.2).",
+    "earliest_check_at": "2026-08-15T08:15:00Z",
+    "recommended_check_at": "2026-08-15T08:15:00Z",
+    "caveat": "Nächste Statusprüfung sinnvoll am 2026-08-15T08:15Z (24h nach Abschluss), um Test-HA Runtime-Verhalten zu beobachten. Keine externen Abhängigkeiten mehr. HACS-Metadaten-Cache zeigt noch v0.1.2 — kein Problem, da installierte Version korrekt v0.1.10-rc.2."
   },
   "next_project": null,
   "next_concrete_slice": null,
@@ -73,13 +73,14 @@
     "UEM v0.1.10-rc.2 Release: queue-state.json plan/forecast block refreshed 2026-08-13T23:00Z. Gates 1-4 completed, Gates 5-6 blocked on HA token. Forecast: earliest 2026-08-14T06:00Z, recommended 2026-08-14T08:00Z.",
     "UEM v0.1.10-rc.2 Release: 2026-08-14T00:15Z LIVE re-verification: pytest 658 passed, ruff clean, git diff --check clean, working tree clean, shadow-only verified. HA 401 /api/config. No uncommitted diff — working tree clean, scope already committed at ea54733. Gates 1-4 completed, 5-6 blocked on HA token. Forecast: earliest 2026-08-14T06:00Z, recommended 2026-08-14T08:00Z.",
     "UEM v0.1.10-rc.2 Release: 2026-08-14T03:00Z LIVE re-verification: pytest 658 passed (0 failures, 100%), ruff clean, git diff --check clean, working tree clean, shadow-only verified. HA 401 /api/config. Token unchanged >24h. Gates 1-4 completed, 5-6 blocked on HA token. Forecast: earliest 2026-08-14T09:00Z, recommended 2026-08-14T10:00Z.",
-    "UEM v0.1.10-rc.2 RELEASE COMPLETE: 2026-08-14T08:00Z — Alle 6 Gates abgeschlossen. pytest 658 passed (100%), ruff clean, shadow-only verified. Token valid, HACS install v0.1.10-rc.2 successful, installed_version=v0.1.10-rc.2 confirmed. HA restart, config entry loaded. No control entities, no service calls, command_sent=false, active_control=false. HACS metadata cache still shows v0.1.2 but installed version correct. Forecast: next check 2026-08-15T08:00Z."
+    "UEM v0.1.10-rc.2 RELEASE COMPLETE: 2026-08-14T08:15Z — Alle 6 Gates abgeschlossen. Token valid (183 chars, /api/config=200). pytest 658 passed (100%), ruff clean, shadow-only verified. HACS installed_version=v0.1.10-rc.2 confirmed. HA 2026.7.4, RUNNING. Config entry loaded (state=loaded, no errors). 0 UEM sensor entities (no source entities configured — correct shadow behavior). 0 control entities, 0 services. HACS cache latest_version=v0.1.2 (stale, no impact). Forecast: next check 2026-08-15T08:15Z."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-14T08:00:00Z",
+  "last_verified": "2026-08-14T08:15:00Z",
   "verification_notes": {
-    "uem": "2026-08-14T08:00Z: 658 pytest passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean. Shadow-only verified. Alle 6 Gates abgeschlossen.",
-    "uem_release_gates": "Gates 1-6 completed. Gate 5: Token valid, HACS install v0.1.10-rc.2 successful, installed_version=v0.1.10-rc.2. Gate 6: HA restart, config entry loaded, no control entities, shadow-only verified.",
-    "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m."
+    "uem": "2026-08-14T08:15Z: 658 pytest passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean. Shadow-only verified. Alle 6 Gates abgeschlossen.",
+    "uem_release_gates": "Gates 1-6 completed. Gate 5: Token valid (183 chars), HACS installed_version=v0.1.10-rc.2 confirmed. Gate 6: Config entry loaded, 0 control entities, 0 services, shadow-only verified.",
+    "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m.",
+    "runtime": "HA 2026.7.4, RUNNING, 132 entities. Config entry loaded. Installed version v0.1.10-rc.2. 0 UEM sensor entities (no source entities). 0 control entities. 0 UEM services. HACS cache stale (v0.1.2) but installation correct."
   }
 }
