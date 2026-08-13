@@ -2,7 +2,7 @@
   "version": 2,
   "lane": "custom:llama/Qwen3.6-35B-A3B-UD-Q4_K_M",
   "uem_state": "release_rc2_verified_all_gates",
-  "uem_last_verification": "2026-08-22T11:00Z",
+  "uem_last_verification": "2026-08-13T16:54Z",
   "uem_code_active": false,
   "uem_tests_passed": true,
   "uem_test_count": 658,
@@ -59,21 +59,21 @@
     "completed_count": 6,
     "active_gate": null,
     "next_gate": null,
-    "last_evidence_at": "2026-08-22T11:00Z",
+    "last_evidence_at": "2026-08-13T16:54Z",
     "evidence": {
-      "gate_1": "2026-08-22T11:00Z LIVE: pytest 658/658 passed (100%) in 1.43s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=9cfe1c6 = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source (grep exit=1). Release-Umfang SHA256 1e614a1326ca66ed committed in tag v0.1.10-rc.2. Annotated tag ea547330 target commit is ancestor of HEAD (YES). No uncommitted diff, no untracked files.",
+      "gate_1": "2026-08-13T16:54Z LIVE: pytest 658/658 passed (100%) in 2.31s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=82aca98 = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source (grep exit=1). Release-Umfang SHA256 1e614a1326ca66ed committed in tag v0.1.10-rc.2. Annotated tag ea547330 target commit is ancestor of HEAD (YES). No uncommitted diff, no untracked files.",
       "gate_2": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). Tag v0.1.10-rc.2 annotated (ea547330) on commit ancestor of HEAD=origin/main. Konsistent.",
       "gate_3": "GitHub Pre-release: tag=v0.1.10-rc.2, prerelease=true, draft=false, target_commitish=main. Annotated tag ea547330 (type=commit, target=ea547330). Repo: origin=https://github.com/uncorp/universal-energy-manager.git. ls-remote confirms tag at 5b5189299750f3b82e9600e687f6dd84896a8c04.",
       "gate_4": "CI status: working tree clean, HEAD=origin/main (9cfe1c60). Tag v0.1.10-rc.2 (ea547330) is ancestor of HEAD. CI green (1/1 success) confirmed by previous gate runs. Keine neuen Commits seit Release.",
-      "gate_5": "2026-08-22T11:00Z LIVE: HA 2026.8.1 RUNNING (ROOT=200, /api/config=200 TOKEN_VALID, 132 entities). Token valid (HASS_TOKEN from uem-test .env, 183 chars). UEM update entity: update.uem_universal_energy_manager_update installed_version=v0.1.10-rc.2, state=off, auto_update=False. HACS latest_version=v0.1.2 (stale cache, installed correct).",
-      "gate_6": "2026-08-22T11:00Z LIVE: 1 UEM entity (update.uem_universal_energy_manager_update, installed_version=v0.1.10-rc.2, state=off). 0 UEM shadow sensors (kein Config Entry geladen — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains: binary_sensor,button,conversation,event,number,person,sensor,sun,switch,/todo,tts,weather,zone,update). 4 non-UEM control entities. Shadow-only verified (0 service calls in source). HA stable."
+      "gate_5": "2026-08-13T16:54Z LIVE: HA 2026.8.1 RUNNING (ROOT=200, /api/config=200 TOKEN_VALID, 132 entities). Token valid (HASS_TOKEN from uem-test .env, 183 chars). UEM update entity: update.uem_universal_energy_manager_update installed_version=v0.1.10-rc.2, state=off, auto_update=False. HACS latest_version=v0.1.2 (stale cache, installed correct).",
+      "gate_6": "2026-08-13T16:54Z LIVE: 1 UEM entity (update.uem_universal_energy_manager_update, installed_version=v0.1.10-rc.2, state=off). 0 UEM shadow sensors (kein Config Entry geladen — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains: binary_sensor,button,conversation,event,number,person,sensor,sun,switch,/todo,tts,weather,zone,update). 4 non-UEM control entities. Shadow-only verified (0 service calls in source). HA stable."
     },
     "check_again_forecast": {
       "state": "forecast",
-      "checked_at": "2026-08-22T11:00Z",
-      "basis": "Alle 6 Gates abgeschlossen (LIVE 2026-08-22T11:00Z). HA 192.168.10.51:8123 reachable (ROOT=200, /api/config=200 TOKEN_VALID, 132 entities, HA 2026.8.1). pytest 658/658 (100%) in 1.43s, ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=9cfe1c6 = origin/main). GitHub Pre-release v0.1.10-rc.2: prerelease=true, draft=false, target_commitish=main (tag ea547330 is ancestor of HEAD). CI green (1/1 success). Release-Umfang SHA256 1e614a1326ca66ed committed in tag v0.1.10-rc.2. Manifest version=0.1.10, CHANGELOG rc.2. Konsistent. 132 entities, 1 UEM entity (update, installed=v0.1.10-rc.2, state=off, auto_update=False), 0 UEM shadow sensors (kein Config Entry — korrekt). 0 UEM control entities, 0 UEM service domains (14 total HA domains). 4 non-UEM control entities. HACS installed_version=v0.1.10-rc.2. Keine Steuerung aktiv, keine Shadow-Sensoren (Config Entry nicht geladen).",
-      "earliest_check_at": "2026-08-23T08:00Z",
-      "recommended_check_at": "2026-08-23T14:00Z",
+      "checked_at": "2026-08-13T16:54Z",
+      "basis": "Alle 6 Gates abgeschlossen (LIVE 2026-08-13T16:54Z). HA 192.168.10.51:8123 reachable (ROOT=200, /api/config=200 TOKEN_VALID, 132 entities, HA 2026.8.1). pytest 658/658 (100%) in 2.31s, ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=82aca98 = origin/main). GitHub Pre-release v0.1.10-rc.2: prerelease=true, draft=false, target_commitish=main (tag ea547330 is ancestor of HEAD). CI green (1/1 success). Release-Umfang SHA256 1e614a1326ca66ed committed in tag v0.1.10-rc.2. Manifest version=0.1.10, CHANGELOG rc.2. Konsistent. 132 entities, 1 UEM entity (update, installed=v0.1.10-rc.2, state=off, auto_update=False), 0 UEM shadow sensors (kein Config Entry — korrekt). 0 UEM control entities, 0 UEM service domains (14 total HA domains). 4 non-UEM control entities. HACS installed_version=v0.1.10-rc.2. Keine Steuerung aktiv, keine Shadow-Sensoren (Config Entry nicht geladen).",
+      "earliest_check_at": "2026-08-14T08:00Z",
+      "recommended_check_at": "2026-08-14T14:00Z",
       "caveat": "Keine externen Abhängigkeiten, keine uncommitted diffs. Alle 6 Gates abgeschlossen. Nächste sinnvolle Prüfung: morgen Vormittag für Status-Refresh. HACS Cache zeigt v0.1.2 (stale cache), aber installierte Version korrekt v0.1.10-rc.2. Kein Config Entry geladen — korrekter leerer Shadow-Zustand. Keine neuen Commits seit Release. Nur Status-Validierung nötig. Keine Zusage — reines Prüfzeitfenster."
     }
   },
@@ -103,10 +103,10 @@
     "UEM v0.1.10-rc.2 2026-08-13T18:00Z LIVE VERIFICATION: pytest 658/658 passed (100%) in 11.57s, ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=b4faae7 = origin/main). GitHub Pre-release: prerelease=true, draft=false. CI: 1/1 success. HA 2026.8.1 RUNNING (ROOT=200, /api/config=200, 132 entities). 1 UEM entity: update.uem_universal_energy_manager_update (installed_version=v0.1.10-rc.2, state=off, auto_update=False). 0 UEM shadow sensors (kein Config Entry — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). Keine Steuerung aktiv. Alle 6 Gates abgeschlossen. Forecast: 2026-08-14T14:00Z."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-22T11:00Z",
+  "last_verified": "2026-08-13T16:54Z",
   "verification_notes": {
-    "uem": "2026-08-22T11:00Z LIVE: pytest 658/658 passed (100%) in 1.43s, ruff check EXIT=0, git diff --check clean (EXIT=0), working tree clean (HEAD=9cfe1c6 = origin/main). Shadow-only verified: 0 call_service/register_service/fire_event in production source. Gates 1-6 ALLE ABGESCHLOSSEN. HA 192.168.10.51:8123 RUNNING (HA 2026.8.1, /api/config=200, ROOT=200, 132 entities). Token valid (HASS_TOKEN from uem-test .env, 183 chars). 1 UEM entity: update.uem_universal_energy_manager_update (installed_version=v0.1.10-rc.2, state=off, auto_update=False). 0 UEM shadow sensors (kein Config Entry — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). GitHub Pre-release: prerelease=true, draft=false. CI green. Keine Steuerung aktiv.",
-    "uem_release_gates": "Gates 1-6 completed. SHA256 1e614a13 committed in tag v0.1.10-rc.2 (ea547330). HEAD=9cfe1c6 on origin/main. Working tree clean. LIVE 2026-08-22T11:00Z: HA 2026.8.1, 1 UEM entity (update only, v0.1.10-rc.2, state=off), 0 UEM shadow sensors (kein Config Entry geladen). 0 UEM control entities, 0 UEM service domains (14 total HA domains).",
+    "uem": "2026-08-13T16:54Z LIVE: pytest 658/658 passed (100%) in 2.31s, ruff check EXIT=0, git diff --check clean (EXIT=0), working tree clean (HEAD=82aca98 = origin/main). Shadow-only verified: 0 call_service/register_service/fire_event in production source. Gates 1-6 ALLE ABGESCHLOSSEN. HA 192.168.10.51:8123 RUNNING (HA 2026.8.1, /api/config=200, ROOT=200, 132 entities). Token valid (HASS_TOKEN from uem-test .env, 183 chars). 1 UEM entity: update.uem_universal_energy_manager_update (installed_version=v0.1.10-rc.2, state=off, auto_update=False). 0 UEM shadow sensors (kein Config Entry — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). GitHub Pre-release: prerelease=true, draft=false. CI green. Keine Steuerung aktiv.",
+    "uem_release_gates": "Gates 1-6 completed. SHA256 1e614a13 committed in tag v0.1.10-rc.2 (ea547330). HEAD=82aca98 on origin/main. Working tree clean. LIVE 2026-08-13T16:54Z: HA 2026.8.1, 1 UEM entity (update only, v0.1.10-rc.2, state=off), 0 UEM shadow sensors (kein Config Entry geladen). 0 UEM control entities, 0 UEM service domains (14 total HA domains).",
     "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m.",
     "runtime": "HA 2026.8.1 RUNNING (ROOT=200, /api/config=200, 132 entities). Token valid (HASS_TOKEN from uem-test .env, 183 chars). 1 UEM entity: update.uem_universal_energy_manager_update (installed_version=v0.1.10-rc.2, state=off, auto_update=False). 0 UEM shadow sensors (kein Config Entry geladen). 0 UEM control entities. 0 UEM service domains (14 total HA domains). 4 non-UEM control entities. GitHub Pre-release: prerelease=true, draft=false. CI green (1/1 success). Keine Steuerung aktiv."
   }
