@@ -2,7 +2,7 @@
   "version": 2,
   "lane": "custom:llama/Qwen3.6-35B-A3B-UD-Q4_K_M",
   "uem_state": "release_rc2_verified_all_gates",
-  "uem_last_verification": "2026-08-14T18:30Z",
+  "uem_last_verification": "2026-08-15T08:00Z",
   "uem_code_active": false,
   "uem_tests_passed": true,
   "uem_test_count": 658,
