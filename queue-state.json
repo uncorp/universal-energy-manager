@@ -34,23 +34,23 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 6,
-    "last_evidence_at": "2026-08-14T00:15:00Z",
+    "last_evidence_at": "2026-08-14T03:00:00Z",
     "evidence": {
-      "gate_1": "2026-08-14T00:15Z: pytest 658 passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (git status --short empty, 0 untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/.",
+      "gate_1": "2026-08-14T03:00Z LIVE: pytest 658 passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope already committed at ea547330, tagged v0.1.10-rc.2.",
       "gate_2": "CHANGELOG.md: ## 0.1.10-rc.2 entry at line 3, consistent with pre-release naming. manifest.json version 0.1.10 (3-teilig, korrekt). No version changes needed — working tree clean, scope already committed at ea547330.",
-      "gate_3": "Tag v0.1.10-rc.2 (lightweight 5b51892 -> annotated v0.1.10-rc.2 at ea54733^{}) pushed to origin/main. GitHub Pre-release confirmed via gh CLI: isPrerelease=true, isDraft=false, publishedAt=2026-08-12T05:58:39Z, asset universal_energy_manager.zip downloadable.",
-      "gate_4": "CI: 5/5 recent runs all conclusion=success, status=completed on origin/main. All CI green on ea547330.",
-      "gate_5": "BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in /home/hermes/.hermes/profiles/uem-test/.env invalid (truncated/placeholder). No auth refresh path. Requires Stefan to provide valid Long-Lived Access Token.",
+      "gate_3": "Tag v0.1.10-rc.2 (annotated at ea54733^{}) pushed to origin/main. GitHub Pre-release confirmed via gh CLI: isPrerelease=true, isDraft=false, publishedAt=2026-08-12T05:58:39Z, asset universal_energy_manager.zip (30795 bytes, 2 downloads).",
+      "gate_4": "CI: all recent runs on origin/main conclusion=success, status=completed. All CI green on ea547330.",
+      "gate_5": "BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in /home/hermes/.hermes/profiles/uem-test/.env invalid (truncated/placeholder eyJhbG...msjg). No auth refresh path. Requires Stefan to provide valid Long-Lived Access Token.",
       "gate_6": "BLOCKED: depends on Gate 5. No UEM config entry loaded, no UEM shadow sensors present."
     }
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-14T00:15:00Z",
-    "basis": "Live re-verification at 2026-08-14T00:15Z: pytest 658 passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked files). Shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 confirmed live (isPrerelease=true, isDraft=false, published 2026-08-12T05:58:39Z). CI 5/5 success. Gate 5 BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in .env invalid. No uncommitted diff SHA 1e614a13 exists in repo — working tree clean. Diff SHA 1e614a13 was the original uncommitted scope, already committed at ea547330 and tagged v0.1.10-rc.2. Tests test_e3dc_diff_verify.py and test_e3dc_rscp_diff.py are tracked. No additional work required — only Gate 5 needs external action (HA token refresh + HACS metadata update).",
-    "earliest_check_at": "2026-08-14T06:00:00Z",
-    "recommended_check_at": "2026-08-14T08:00:00Z",
-    "caveat": "Prüfung frühestens ab 2026-08-14T06:00Z sinnvoll, nach möglicher Token-Aktualisierung durch Stefan. Empfohlener Check: 2026-08-14T08:00Z (~8h, conservative estimate). Kein Fertigstellversprechen — Wartezeit auf externes HASS_TOKEN von Stefan. Sobald gültiger Token in .env, können Gates 5+6 innerhalb von Minuten abgeschlossen werden."
+    "checked_at": "2026-08-14T03:00:00Z",
+    "basis": "Live re-verification at 2026-08-14T03:00Z: pytest 658 passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked files). Shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 confirmed live (isPrerelease=true, isDraft=false, published 2026-08-12T05:58:39Z, asset downloadable, tag annotated). CI green on all recent runs. Gate 5 BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in .env invalid (truncated placeholder unchanged >24h). No uncommitted diff SHA 1e614a13 — working tree clean, scope already committed at ea547330 and tagged v0.1.10-rc.2. Tests test_e3dc_diff_verify.py and test_e3dc_rscp_diff.py tracked. No additional work required — only Gate 5 needs external action (HA token refresh + HACS metadata update).",
+    "earliest_check_at": "2026-08-14T09:00:00Z",
+    "recommended_check_at": "2026-08-14T10:00:00Z",
+    "caveat": "Prüfung frühestens ab 2026-08-14T09:00Z sinnvoll, nach möglicher Token-Aktualisierung durch Stefan. Empfohlener Check: 2026-08-14T10:00Z (~7h, conservative estimate). Kein Fertigstellversprechen — Wartezeit auf externes HASS_TOKEN von Stefan. Token seit >24h unverändert. Sobald gültiger Token in .env, können Gates 5+6 innerhalb von Minuten abgeschlossen werden."
   },
   "next_project": "UEM v0.1.10-rc.2 HACS-Installation in Test-HA (Gate 5)",
   "next_concrete_slice": "Stefan muss: (1) neuen Long-Lived Access Token in HA Settings → Users → [User] → Long-Lived Access Tokens generieren und in /home/hermes/.hermes/profiles/uem-test/.env als HASS_TOKEN einfügen; (2) HACS-UI: Repository 'universal-energy-manager' aktualisieren, sodass HACS v0.1.10-rc.2 als latest_version anzeigt; (3) HACS Update-Entity update/install auf v0.1.10-rc.2; (4) homeassistant.restart; (5) config entry reload; (6) Runtime/Shadow-Validierung (config entry loaded, shadow sensors present, command_sent=false, no control entities).",
@@ -71,13 +71,14 @@
     "UEM v0.1.10-rc.2 Release: Gates 1-4 completed — scope verified, 658 tests pass, ruff clean, shadow-only verified, manifest=0.1.10, CHANGELOG rc.2, annotated tag + GitHub Pre-release at ea547330, CI green.",
     "UEM v0.1.10-rc.2 Release: Gate 5 blocked — HA token truncated in .env (eyJhbG...msjg), 401 on /api/config.",
     "UEM v0.1.10-rc.2 Release: queue-state.json plan/forecast block refreshed 2026-08-13T23:00Z. Gates 1-4 completed, Gates 5-6 blocked on HA token. Forecast: earliest 2026-08-14T06:00Z, recommended 2026-08-14T08:00Z.",
-    "UEM v0.1.10-rc.2 Release: 2026-08-14T00:15Z LIVE re-verification: pytest 658 passed, ruff clean, git diff --check clean, working tree clean, shadow-only verified. HA 401 /api/config. No uncommitted diff — working tree clean, scope already committed at ea54733. Gates 1-4 completed, 5-6 blocked on HA token. Forecast: earliest 2026-08-14T06:00Z, recommended 2026-08-14T08:00Z."
+    "UEM v0.1.10-rc.2 Release: 2026-08-14T00:15Z LIVE re-verification: pytest 658 passed, ruff clean, git diff --check clean, working tree clean, shadow-only verified. HA 401 /api/config. No uncommitted diff — working tree clean, scope already committed at ea54733. Gates 1-4 completed, 5-6 blocked on HA token. Forecast: earliest 2026-08-14T06:00Z, recommended 2026-08-14T08:00Z.",
+    "UEM v0.1.10-rc.2 Release: 2026-08-14T03:00Z LIVE re-verification: pytest 658 passed (0 failures, 100%), ruff clean, git diff --check clean, working tree clean, shadow-only verified. HA 401 /api/config. Token unchanged >24h. Gates 1-4 completed, 5-6 blocked on HA token. Forecast: earliest 2026-08-14T09:00Z, recommended 2026-08-14T10:00Z."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-14T00:15:00Z",
+  "last_verified": "2026-08-14T03:00:00Z",
   "verification_notes": {
-    "uem": "2026-08-14T00:15Z: 658 pytest passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean. Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches.",
-    "uem_release_gates": "Gates 1-4 completed. Gate 5 BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in .env invalid. GitHub Pre-release v0.1.10-rc.2 confirmed live. CI 5/5 success. No uncommitted diff SHA 1e614a13 — working tree clean. All release scope already committed at ea547330 and tagged v0.1.10-rc.2.",
+    "uem": "2026-08-14T03:00Z: 658 pytest passed (0 failures, 100%), ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked files). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches.",
+    "uem_release_gates": "Gates 1-4 completed. Gate 5 BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in .env invalid (truncated placeholder eyJhbG...msjg, unchanged >24h). GitHub Pre-release v0.1.10-rc.2 confirmed live. CI green. No uncommitted diff — working tree clean, scope committed at ea547330, tagged v0.1.10-rc.2.",
     "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m. All 12 preflight paths verified."
   }
 }

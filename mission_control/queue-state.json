@@ -7,37 +7,37 @@
   "completed_count": 4,
   "active_gate": 5,
   "next_gate": 5,
-  "last_evidence_at": "2026-08-13T23:00Z",
+  "last_evidence_at": "2026-08-14T03:00Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-13T23:00Z LIVE: pytest 658/658 pass (0 failures, 100%), ruff check clean (All checks passed), git diff --check clean (exit 0, no whitespace errors), git working tree clean (no uncommitted diff, no untracked files, no ZIP). Shadow-only verified: grep call_service/register_service/fire_event -> exit=1, 0 matches in custom_components/universal_energy_manager/. Release scope committed as annotated tag v0.1.10-rc.2 at ea547330 on origin/main."
+      "evidence": "2026-08-14T03:00Z LIVE: pytest 658/658 pass (0 failures, 100%), ruff check clean, git diff --check clean (exit 0), working tree clean. Shadow-only: grep call_service/register_service/fire_event -> exit=1, 0 matches. Scope committed at ea547330, tagged v0.1.10-rc.2."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "2026-08-13T23:00Z LIVE: CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). Git tag v0.1.10-rc.2 annotated at ea547330 on origin/main."
+      "evidence": "2026-08-14T03:00Z: CHANGELOG.md line 3 '## 0.1.10-rc.2' present. manifest.json version=0.1.10. Correct."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "2026-08-13T23:00Z LIVE: GitHub Release v0.1.10-rc.2: isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2. Asset universal_energy_manager.zip (30795 bytes, 2 downloads) downloadable."
+      "evidence": "2026-08-14T03:00Z: GitHub Release v0.1.10-rc.2: isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z. Asset 30795 bytes, 2 downloads."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "2026-08-13T23:00Z LIVE: GitHub Actions latest 3 runs: all conclusion=success, status=completed. Latest: ci(queue-state): atomic update 2026-08-13T00:05Z on origin/main. All CI green."
+      "evidence": "2026-08-14T03:00Z: CI green on origin/main."
     },
     "5": {
       "status": "blocked",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "2026-08-13T23:00Z BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in /home/hermes/.hermes/profiles/uem-test/.env truncated (eyJhbG...msjg) — unverändert. Kein gültiger Auth-Pfad für HACS API oder Install-Endpoint. Erfordert Stefan: neuer Long-Lived Access Token in HA Settings → Users → [User] → Long-Lived Access Tokens, eingefügt in .env."
+      "evidence": "2026-08-14T03:00Z BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token truncated eyJhbG...msjg unchanged >24h."
     },
     "6": {
       "status": "blocked",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "2026-08-13T23:00Z BLOCKED: Hängt von Gate 5 ab. Plan: (1) HACS Update-Entity für universal_energy_manager auf v0.1.10-rc.2, (2) reload config entry, (3) Shadow-Validierung. HA 200 root, 401 /api/config."
+      "evidence": "2026-08-14T03:00Z BLOCKED: Hängt von Gate 5 ab."
     }
   },
   "plan": {
@@ -53,15 +53,15 @@
     "completed_count": 4,
     "active_gate": 5,
     "next_gate": 6,
-    "last_evidence_at": "2026-08-13T23:00Z"
+    "last_evidence_at": "2026-08-14T03:00Z"
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-13T23:00Z",
-    "basis": "LIVE Verifikation 2026-08-13T23:00Z: pytest 658/658 pass (0 failures), ruff check clean, git working tree clean (git status --short empty), git diff --check clean, shadow-only verified (grep call_service/register_service/fire_event -> exit=1, 0 matches). Gates 1-4 fully verified. GitHub Pre-release v0.1.10-rc.2 confirmed live (isPrerelease=true, isDraft=false, published_at=2026-08-12T05:58:39Z, asset 30795 bytes, 2 downloads). CI green 3/3 on recent runs (all conclusion=success). Gate 5 BLOCKED: HA 192.168.10.51:8123 root=200, /api/config=401. Token in /home/hermes/.hermes/profiles/uem-test/.env truncated (eyJhbG...msjg) — unverändert seit >24h. Kein Auth-Pfad für HACS API. Erfordert Stefan: neuer Long-Lived Access Token in .env.",
-    "earliest_check_at": "2026-08-14T06:00:00Z",
-    "recommended_check_at": "2026-08-14T08:00:00Z",
-    "caveat": "Gates 5-6 blocked until valid HA long-lived access token is placed in /home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN). Empfohlener Check: ~9h ab jetzt (2026-08-14T08:00Z, conservative estimate). Keine Zusage/Deadline — externe Abhängigkeit (Stefan). Token seit >24h unverändert."
+    "checked_at": "2026-08-14T03:00Z",
+    "basis": "LIVE 2026-08-14T03:00Z: pytest 658 pass, ruff clean, git clean, shadow-only verified. Gates 1-4 complete. GitHub Pre-release v0.1.10-rc.2 live. Gate 5 BLOCKED: HA 401, token truncated >24h.",
+    "earliest_check_at": "2026-08-14T09:00:00Z",
+    "recommended_check_at": "2026-08-14T10:00:00Z",
+    "caveat": "Gates 5-6 blocked on HA token from Stefan. Check at 2026-08-14T10:00Z (~7h)."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
@@ -75,7 +75,7 @@
     "config_entry_status": "N/A (Gate 5 blocked)"
   },
   "known_issues": {
-    "ha_token_truncated": "HASS_TOKEN in .env ist dauerhaft truncated placeholder (eyJhbG...msjg). Gates 5-6 können nicht proceeden. Stefan muss einen neuen Long-Lived Access Token in HA Settings → Users → [User] → Long-Lived Access Tokens generieren und in die .env-Datei einfügen.",
-    "sensor_s10e_pro_current_power_value": "unavailable — E3DC Adapter-Datenquelle nicht erreichbar (erwartet im Shadow-Mode, kein UEM-Bug)"
+    "ha_token_truncated": "HASS_TOKEN truncated placeholder. Gates 5-6 blocked. Stefan needs new LLAT.",
+    "sensor_s10e_pro_current_power_value": "unavailable — E3DC not reachable (expected in Shadow-Mode)"
   }
 }
