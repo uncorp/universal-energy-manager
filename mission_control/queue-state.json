@@ -7,37 +7,37 @@
   "completed_count": 6,
   "active_gate": null,
   "next_gate": null,
-  "last_evidence_at": "2026-08-19T17:00:00Z",
+  "last_evidence_at": "2026-08-20T08:00:00Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-19T17:00Z LIVE: pytest 658/658 passed (100%) in 3.23s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=38bf036 = origin/main). Shadow-only verified: 0 call_service/register_service/fire_event matches in production source. Tag v0.1.10-rc.2 on origin/main. SHA256 1e614a1326ca66ed stable."
+      "evidence": "2026-08-20T08:00Z LIVE: pytest 658/658 passed (100%) in 11.15s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=5078ba8 = origin/main). Shadow-only verified: 0 call_service/register_service/fire_event matches in production source (grep exit=1). Tag v0.1.10-rc.2 on origin/main (5b51892). SHA256 1e614a1326ca66ed stable."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). Tag v0.1.10-rc.2 annotated on origin/main (ea54733). Konsistent. Working tree clean."
+      "evidence": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). Tag v0.1.10-rc.2 annotated on origin/main (5b51892). Konsistent. Working tree clean."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "GitHub Pre-release live: tag=v0.1.10-rc.2, prerelease=true, draft=false, target_commitish=main. GitHub API: 200 OK. Tag v0.1.10-rc.2 annotated on origin/main. origin/main at 38bf036."
+      "evidence": "GitHub Pre-release live: tag=v0.1.10-rc.2, prerelease=true, draft=false, target_commitish=main. GitHub API: 200 OK. Tag v0.1.10-rc.2 annotated on origin/main (5b51892). origin/main at 5078ba8."
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "CI check-runs on v0.1.10-rc.2 tag: success. pytest 658/658 (100%), ruff clean, git diff --check clean."
+      "evidence": "CI check-runs on HEAD 5078ba8: test (success completed). pytest 658/658 (100%), ruff clean, git diff --check clean."
     },
     "5": {
       "status": "completed",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "2026-08-19T17:00Z LIVE: HA 2026.8.1 RUNNING (ROOT=200, /api/config=200, 132 entities). Token valid (183 chars, Bearer 200). UEM update entity: update.uem_universal_energy_manager_update installed_version=v0.1.10-rc.2, state=off. 14 total HA domains. HACS latest_version=v0.1.2 (stale cache, but installed is correct v0.1.10-rc.2)."
+      "evidence": "2026-08-20T08:00Z LIVE: HA 2026.8.1 RUNNING (ROOT=200, /api/config=200, 132 entities). Token valid (HASS_TOKEN from uem-test .env). UEM update entity: update.uem_universal_energy_manager_update installed_version=v0.1.10-rc.2, state=off. 14 total HA domains. HACS latest_version=v0.1.2 (stale cache, but installed is correct v0.1.10-rc.2)."
     },
     "6": {
       "status": "completed",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "2026-08-19T17:00Z LIVE: 1 UEM entity (update only, installed_version=v0.1.10-rc.2, state=off). 0 UEM shadow sensors (kein UEM Config Entry geladen — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). Shadow-only verified (0 service calls). Config entries API=404 (known issue, inferred from entity presence)."
+      "evidence": "2026-08-20T08:00Z LIVE: 1 UEM entity (update only, installed_version=v0.1.10-rc.2, state=off). 0 UEM shadow sensors (kein UEM Config Entry geladen — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). 9 non-UEM control entities (E3DC/Garage/Carport). Shadow-only verified (0 service calls in source)."
     }
   },
   "plan": {
@@ -53,22 +53,22 @@
     "completed_count": 6,
     "active_gate": null,
     "next_gate": null,
-    "last_evidence_at": "2026-08-19T17:00:00Z",
+    "last_evidence_at": "2026-08-20T08:00:00Z",
     "evidence": {
-      "gate_1": "2026-08-19T17:00Z LIVE: pytest 658/658 (100%) in 3.23s, ruff check EXIT=0, git diff --check clean (EXIT=0), working tree clean (HEAD=38bf036 = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source. SHA256 1e614a1326ca66ed stable.",
-      "gate_2": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). Tag v0.1.10-rc.2 annotated on origin/main (ea54733). Konsistent.",
-      "gate_3": "GitHub Pre-release: tag=v0.1.10-rc.2, prerelease=true, draft=false, target_commitish=main. GitHub API 200. Tag on origin/main at HEAD 38bf036.",
-      "gate_4": "CI check-runs success on tag v0.1.10-rc.2. pytest 658/658 (100%), ruff clean, git diff --check clean.",
-      "gate_5": "2026-08-19T17:00Z LIVE: HA 2026.8.1 RUNNING (ROOT=200, /api/config=200, 132 entities). Token valid (183 chars, Bearer 200). UEM update entity: installed_version=v0.1.10-rc.2, state=off. 14 HA domains. HACS latest_version=v0.1.2 (stale cache, installed correct).",
-      "gate_6": "2026-08-19T17:00Z LIVE: 1 UEM entity (update only, v0.1.10-rc.2, state=off). 0 shadow sensors (kein UEM Config Entry — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). Shadow-only verified (0 service calls). Config entries API=404 (known issue)."
+      "gate_1": "2026-08-20T08:00Z LIVE: pytest 658/658 (100%) in 11.15s, ruff check EXIT=0, git diff --check clean (EXIT=0), working tree clean (HEAD=5078ba8 = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source (grep exit=1). SHA256 1e614a1326ca66ed stable.",
+      "gate_2": "CHANGELOG.md line 3: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). Tag v0.1.10-rc.2 annotated on origin/main (5b51892). Konsistent.",
+      "gate_3": "GitHub Pre-release: tag=v0.1.10-rc.2, prerelease=true, draft=false, target_commitish=main. GitHub API 200. Tag on origin/main at 5b51892.",
+      "gate_4": "CI check-runs on HEAD 5078ba8: test success (completed). pytest 658/658 (100%), ruff clean, git diff --check clean.",
+      "gate_5": "2026-08-20T08:00Z LIVE: HA 2026.8.1 RUNNING (ROOT=200, /api/config=200, 132 entities). Token valid (HASS_TOKEN from uem-test .env). UEM update entity: installed_version=v0.1.10-rc.2, state=off. 14 HA domains. HACS latest_version=v0.1.2 (stale cache, installed correct).",
+      "gate_6": "2026-08-20T08:00Z LIVE: 1 UEM entity (update only, v0.1.10-rc.2, state=off). 0 shadow sensors (kein UEM Config Entry — korrekter leerer Zustand). 0 UEM control entities, 0 UEM service domains (14 total HA domains). 9 non-UEM control entities (E3DC/Garage/Carport). Shadow-only verified (0 service calls in source)."
     },
     "check_again_forecast": {
       "state": "forecast",
-      "checked_at": "2026-08-19T17:00:00Z",
-      "basis": "Alle 6 Gates abgeschlossen (LIVE 2026-08-19T17:00Z). HA 2026.8.1 reachable (ROOT=200, /api/config=200 TOKEN VALID). Token refreshed since prior 401. pytest 658/658 (100%), ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=38bf036 = origin/main). GitHub Pre-release v0.1.10-rc.2: prerelease=true, draft=false. CI success. Release-Umfang sha256 1e614a1326ca66ed stable on origin/main. Manifest version=0.1.10, CHANGELOG rc.2. Konsistent. 132 entities, 1 UEM update entity (installed=v0.1.10-rc.2, state=off). 0 shadow sensors, 0 control entities, 0 UEM service domains.",
-      "earliest_check_at": "2026-08-20T10:00:00Z",
-      "recommended_check_at": "2026-08-20T14:00:00Z",
-      "caveat": "Keine externen Abhängigkeiten. Token jetzt valid (2026-08-19T17:00Z). Nächste sinnvolle Prüfung: morgen Vormittag für Status-Refresh. HACS Cache zeigt noch v0.1.2 (latest_version), aber installierte Version korrekt v0.1.10-rc.2 — kein Installationsproblem."
+      "checked_at": "2026-08-20T08:00:00Z",
+      "basis": "Alle 6 Gates abgeschlossen (LIVE 2026-08-20T08:00Z). HA 2026.8.1 reachable (ROOT=200, /api/config=200 TOKEN VALID). pytest 658/658 (100%) in 11.15s, ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=5078ba8 = origin/main). GitHub Pre-release v0.1.10-rc.2: prerelease=true, draft=false. CI test: success. Release-Umfang sha256 1e614a1326ca66ed stable on origin/main. Manifest version=0.1.10, CHANGELOG rc.2. Konsistent. 132 entities, 1 UEM update entity (installed=v0.1.10-rc.2, state=off). 0 shadow sensors, 0 UEM control entities, 0 UEM service domains. 9 non-UEM control entities. HACS installed_version=v0.1.10-rc.2.",
+      "earliest_check_at": "2026-08-21T10:00:00Z",
+      "recommended_check_at": "2026-08-21T14:00:00Z",
+      "caveat": "Keine externen Abhängigkeiten, keine uncommitted diffs. Nächste sinnvolle Prüfung: morgen Vormittag für Status-Refresh. HACS Cache zeigt noch v0.1.2 (latest_version), aber installierte Version korrekt v0.1.10-rc.2 — kein Installationsproblem."
     }
   },
   "runtime_verification": {
@@ -79,7 +79,7 @@
     "ha_version": "2026.8.1",
     "ha_state": "RUNNING (ROOT=200, /api/config=200 TOKEN_VALID)",
     "total_entities": 132,
-    "token_source": "/home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN valid, 183 chars, Bearer 200)",
+    "token_source": "/home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN valid, Bearer 200)",
     "paket_version": "v0.1.10-rc.2",
     "config_entry_status": "none loaded — inferred from 0 shadow sensors (korrekter leerer Zustand, Config Entries API=404 known issue)",
     "shadow_sensors": {
@@ -87,17 +87,19 @@
       "note": "Kein UEM Config Entry geladen — korrekter leerer Zustand. Keine Shadow-Sensoren vorhanden."
     },
     "control_entities": 0,
+    "non_uew_control_entities": 9,
+    "non_uew_control_note": "9 control entities present (E3DC/Garage/Carport: 3 switches, 4 buttons, 2 numbers) — nicht UEM, keine UEM-Steuerung",
     "uem_services": 0,
     "uem_entities": 1,
     "uem_entity_details": {
-      "update.uem_universal_energy_manager_update": {"installed_version": "v0.1.10-rc.2", "state": "off", "source": "2026-08-19T17:00Z LIVE", "auth": "200"}
+      "update.uem_universal_energy_manager_update": {"installed_version": "v0.1.10-rc.2", "state": "off", "source": "2026-08-20T08:00Z LIVE", "auth": "200"}
     },
     "hacs_update_entity": {
       "installed_version": "v0.1.10-rc.2",
       "state": "off",
       "latest_version": "v0.1.2",
-      "latest_version_note": "HACS metadata cache stale — installed version is correct v0.1.10-rc.2",
-      "source": "2026-08-19T17:00Z LIVE",
+      "latest_version_note": "HACS-Metadaten-Cache stale — installierte Version korrekt v0.1.10-rc.2",
+      "source": "2026-08-20T08:00Z LIVE",
       "auth": "200"
     }
   },
