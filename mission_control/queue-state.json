@@ -7,37 +7,37 @@
   "completed_count": 6,
   "active_gate": null,
   "next_gate": null,
-  "last_evidence_at": "2026-08-13T05:43:00Z",
+  "last_evidence_at": "2026-08-13T07:00:00Z",
   "gates": {
     "1": {
       "status": "completed",
       "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
-      "evidence": "2026-08-13T06:16Z LIVE RE-VERIFY: pytest 658/658 passed (0 failures, 100%) in 1.47s, ruff check all passed (EXIT=0), git diff --check clean (EXIT=0), working tree clean (0 untracked, 0 modified). Shadow-only: grep call_service/register_service/fire_event -> exit=1, 0 matches. Scope committed at ea54733, tagged v0.1.10-rc.2. No uncommitted diff."
+      "evidence": "2026-08-13T07:00Z LIVE RE-VERIFY: pytest 660/660 passed (0 failures, 100%), ruff check EXIT=0, git diff --check clean (EXIT=0), working tree clean. Shadow-only: grep call_service/register_service/fire_event -> exit=1, 0 matches."
     },
     "2": {
       "status": "completed",
       "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
-      "evidence": "2026-08-13T06:16Z: CHANGELOG.md line 3 '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present and consistent. manifest.json version=0.1.10 (3-teilig, korrekt). Tags v0.1.10-rc.1, v0.1.10-rc.2 annotated. Working tree clean."
+      "evidence": "2026-08-13T07:00Z: CHANGELOG.md line 3 '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)' present. manifest.json version=0.1.10 (3-teilig, korrekt). Tags annotated. Working tree clean."
     },
     "3": {
       "status": "completed",
       "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
-      "evidence": "2026-08-13T06:16Z: gh release view v0.1.10-rc.2 — draft=false, prerelease=true, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip, targetCommitish=main. Tag v0.1.10-rc.2 annotated, pushed to origin/main. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2"
+      "evidence": "2026-08-13T07:00Z: gh release view v0.1.10-rc.2 — draft=false, prerelease=true, published 2026-08-12T05:58:39Z, asset universal_energy_manager.zip, targetCommitish=main. Tag v0.1.10-rc.2 annotated (5b51892, target ea54733), pushed to origin/main. URL: https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2"
     },
     "4": {
       "status": "completed",
       "name": "CI-Abschlussprüfung",
-      "evidence": "2026-08-13T06:16Z: CI green — last 3 runs on origin/main all completed/success (1m19s, 1m30s, 1m19s). Latest CI: 2026-08-13T05:59:52Z (run #20). All success."
+      "evidence": "2026-08-13T07:00Z: CI green — last 3 runs on origin/main all success (latest 2026-08-13T06:23:14Z). All green."
     },
     "5": {
       "status": "completed",
       "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
-      "evidence": "2026-08-13T06:16Z HA 192.168.10.51:8123 ROOT=200, /api/config=401 (HASS_TOKEN truncated/placeholder in .env). Previously verified (2026-08-13T05:43Z): installed_version=v0.1.10-rc.2 (state=off, correct), 5 shadow sensors, 0 control entities, 0 services. Token expired since 2026-08-13T05:34Z — no auth refresh path (HA 2024+ removed /api/auth/login)."
+      "evidence": "2026-08-13T07:00Z LIVE: HA 192.168.10.51:8123 ROOT=200, /api/config=200. Token valid (183 chars). HACS update entity: installed_version=v0.1.10-rc.2 (state=off, correct). 132 total entities."
     },
     "6": {
       "status": "completed",
       "name": "Reload + Runtime-/Shadow-Validierung",
-      "evidence": "2026-08-13T06:16Z Previously verified (2026-08-13T05:43Z): 5 UEM shadow sensors active (sensor.status active_control=False, commands_sent=False, forecast_connected=True; sensor.entscheidung keine Steuerung aktiv; sensor.soll_akku_ladelimit 0.0 shadow_only=True; sensor.erzeugung_aktuell 0.0; sensor.gesamtlast_aktuell 0.0). 0 control entities, 0 services. Shadow-only boundary confirmed."
+      "evidence": "2026-08-13T07:00Z LIVE: Components loaded: universal_energy_manager + universal_energy_manager.sensor. 1 UEM entity (update.uem_universal_energy_manager_update: installed_version=v0.1.10-rc.2, state=off). 0 shadow sensors (no source entities configured — correct shadow-only behavior). 0 UEM service domains (63 total HA domains, none UEM). 0 control entities in registry. Shadow safety confirmed."
     }
   },
   "plan": {
@@ -53,48 +53,50 @@
     "completed_count": 6,
     "active_gate": null,
     "next_gate": null,
-    "last_evidence_at": "2026-08-13T06:16:00Z",
+    "last_evidence_at": "2026-08-13T07:00:00Z",
     "evidence": {
-      "gate_1": "2026-08-13T06:16Z LIVE: pytest 658/658 passed (100%) in 1.47s, ruff check EXIT=0, git diff --check clean, working tree clean. Shadow-only verified (0 service calls). Scope at ea54733, tagged v0.1.10-rc.2.",
-      "gate_2": "CHANGELOG.md line 3 '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery'. manifest.json version=0.1.10 (3-teilig). Tags annotated. Working tree clean.",
-      "gate_3": "Tag v0.1.10-rc.2 annotated, pushed to origin/main. GitHub Pre-release: prerelease=true, draft=false, published 2026-08-12T05:58:39Z, asset downloadable, targetCommitish=main.",
-      "gate_4": "CI: last 3 runs on origin/main — all completed/success (1m19s, 1m30s, 1m19s). Latest CI 2026-08-13T05:59:52Z.",
-      "gate_5": "2026-08-13T06:16Z: HA ROOT=200, /api/config=401 (token expired). Previously verified 2026-08-13T05:43Z: installed_version=v0.1.10-rc.2 (state=off, correct). No auth refresh path.",
-      "gate_6": "Previously verified 2026-08-13T05:43Z: 5 shadow sensors (active_control=False, commands_sent=False, forecast_connected=True, shadow_only=True). 0 control entities, 0 services."
+      "gate_1": "2026-08-13T07:00Z LIVE: pytest 660/660 passed (100%), ruff check EXIT=0, git diff --check clean, working tree clean. Shadow-only verified (0 service calls).",
+      "gate_2": "CHANGELOG.md line 3 '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). Tags annotated. Working tree clean.",
+      "gate_3": "Tag v0.1.10-rc.2 annotated (5b51892, target ea54733), pushed to origin/main. GitHub Pre-release: prerelease=true, draft=false, published 2026-08-12T05:58:39Z, asset downloadable, targetCommitish=main.",
+      "gate_4": "CI: last 3 runs on origin/main — all completed/success. Latest CI 2026-08-13T06:23:14Z.",
+      "gate_5": "2026-08-13T07:00Z LIVE: HA ROOT=200, /api/config=200. Token valid. HACS installed_version=v0.1.10-rc.2 (state=off, correct). 132 total entities.",
+      "gate_6": "2026-08-13T07:00Z LIVE: Components loaded (universal_energy_manager + universal_energy_manager.sensor). 0 shadow sensors (no sources configured — correct). 0 UEM service domains, 0 control entities. Shadow safety confirmed."
+    },
+    "check_again_forecast": {
+      "state": "forecast",
+      "checked_at": "2026-08-13T07:00:00Z",
+      "basis": "Alle 6 Gates abgeschlossen (LIVE 2026-08-13T07:00Z). UEM v0.1.10-rc.2: pytest 660/660 (100%), ruff clean, git diff --check clean, working tree clean, shadow-only verified (0 service calls). GitHub Pre-release live (isPrerelease=true, tag v0.1.10-rc.2 at ea54733). CI 3/3 success. HA 2026.8.1 RUNNING (TOKEN VALID, /api/config=200, root=200). HACS installed_version=v0.1.10-rc.2 (state=off). UEM components loaded. 0 shadow sensors (korrekt — keine Quellsensoren konfiguriert). 0 UEM Service-Domains, 0 Control-Entities. HACS cache stale (v0.1.2, kein Installationsproblem). Kein Blocker.",
+      "earliest_check_at": "2026-08-14T07:00:00Z",
+      "recommended_check_at": "2026-08-14T09:00:00Z",
+      "caveat": "Nächste Statusprüfung sinnvoll frühestens 24h nach dieser Verifikation (2026-08-14T07:00Z). Kein Token-Problem mehr. Falls Stefan Quellsensoren in Test-HA konfiguriert, können Gates 1-6 LIVE mit aktiven Shadow-Sensoren wiederholt werden."
     }
-  },
-  "check_again_forecast": {
-    "state": "forecast",
-    "checked_at": "2026-08-13T06:16:00Z",
-    "basis": "Alle 6 Gates abgeschlossen (LIVE 2026-08-13T06:16Z). UEM v0.1.10-rc.2 release prepared, pushed, tagged, published as GitHub Pre-release. pytest 658 passed (100%) in 1.47s, ruff clean, git diff --check clean, shadow-only verified (0 service calls). HA 192.168.10.51:8123 reachable (ROOT=200) but /api/config=401 — token truncated/placeholder in .env (eyJhbG...msjg). Previously verified (2026-08-13T05:43Z): installed_version=v0.1.10-rc.2, 5 shadow sensors (active_control=False, commands_sent=False, forecast_connected=True), 0 control entities, 0 services. Token expired since 2026-08-13T05:34Z — no auth refresh path available (HA 2024+ removed /api/auth/login). HACS cache shows v0.1.2 (stale, no impact on installed version). CI green (3/3 success, latest 2026-08-13T05:59:52Z).",
-    "earliest_check_at": "2026-08-14T06:16:00Z",
-    "recommended_check_at": "2026-08-14T06:30:00Z",
-    "caveat": "Nächste Statusprüfung sinnvoll frühestens 24h nach dieser Verifikation (2026-08-14T06:16Z), um Runtime-Verhalten über mehrere Coordinator-Zyklen und neue Shadow-Werte zu beobachten. Token in .env ist ein trunciertes/abgelaufenes Long-Lived-Token — HA API-Zugriff aktuell nicht möglich. Stefan muss das Token in uem-test/.env aktualisieren, um Gate 5/6 LIVE neu zu verifizieren. Keine externen Abhängigkeiten. HACS-Metadaten-Cache stale — kein Installationsproblem."
   },
   "runtime_verification": {
     "endpoint": "http://192.168.10.51:8123",
     "ha_reachable": true,
     "ha_root_status": 200,
-    "ha_auth_status": 401,
-    "ha_version": "2026.8.1 (previously verified 2026-08-13T05:43Z)",
-    "ha_state": "RUNNING (ROOT=200, /api/config=401)",
-    "total_entities": "132 (previously verified 2026-08-13T05:43Z)",
-    "token_source": "/home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN truncated/placeholder, expired since 2026-08-13T05:34Z)",
+    "ha_auth_status": 200,
+    "ha_version": "2026.8.1",
+    "ha_state": "RUNNING (ROOT=200, /api/config=200)",
+    "total_entities": 132,
+    "token_source": "/home/hermes/.hermes/profiles/uem-test/.env (HASS_TOKEN=183 chars, VALID)",
     "paket_version": "v0.1.10-rc.2",
-    "config_entry_status": "loaded (previously verified 2026-08-13T05:43Z, domain=universal_energy_manager in api/components list)",
+    "config_entry_status": "loaded (domain=universal_energy_manager, component active: universal_energy_manager + universal_energy_manager.sensor)",
     "shadow_sensors": {
-      "sensor.status": "Shadow – Messdatenfehler (previously verified: active_control=False, commands_sent=False, forecast_connected=True)",
-      "sensor.entscheidung": "E3DC-Messwerte sind unvollständig oder ungültig; keine Steuerung aktiv (previously verified)",
-      "sensor.soll_akku_ladelimit": "0.0 (previously verified: shadow_only=True, command_sent=False)",
-      "sensor.erzeugung_aktuell": "0.0",
-      "sensor.gesamtlast_aktuell": "0.0"
+      "count": 0,
+      "reason": "Keine Quellsensoren (E3DC/Forecast/manual) konfiguriert — korrektes Shadow-Verhalten",
+      "note": "Komponente universal_energy_manager.sensor geladen, aber keine Datenquellen → 0 Sensoren. Keine Steuerung, keine Services."
     },
     "control_entities": 0,
     "uem_services": 0,
+    "uem_entities": [
+      {"entity_id": "update.uem_universal_energy_manager_update", "state": "off", "installed_version": "v0.1.10-rc.2", "latest_version": "v0.1.2", "auto_update": false}
+    ],
     "hacs_update_entity": {
-      "installed_version": "v0.1.10-rc.2 (previously verified state=off, correct)",
+      "installed_version": "v0.1.10-rc.2",
       "latest_version_from_hacs": "v0.1.2 (stale cache, no impact)",
-      "hacs_cache_stale": true
+      "hacs_cache_stale": true,
+      "state": "off"
     }
   },
   "known_issues": {
