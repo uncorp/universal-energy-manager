@@ -59,7 +59,7 @@
     "completed_count": 6,
     "active_gate": null,
     "next_gate": null,
-    "last_evidence_at": "2026-08-17T00:00Z",
+    "last_evidence_at": "2026-08-17T12:00Z",
     "evidence": {
       "gate_1": "2026-08-16T12:00Z LIVE: pytest 658/658 passed (100%), ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=cd6a12c = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source (grep EXIT=1, no matches). Release-Umfang SHA256 1e614a13 committed in tag v0.1.10-rc.2 (ea547330). No uncommitted diff, no untracked files.",
       "gate_2": "CHANGELOG.md: '## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)'. manifest.json version=0.1.10 (3-teilig). __init__.py: kein __version__ (korrekt). Tag v0.1.10-rc.2 annotiert (ea547330, type=tag, target=commit) auf origin/main. Konsistent.",
