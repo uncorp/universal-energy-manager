@@ -81,7 +81,7 @@
   "last_verified": "2026-08-14T16:00:00Z",
   "verification_notes": {
     "uem": "2026-08-14T16:00Z LIVE: pytest 658/658 passed (100%) in 1.55s, ruff check EXIT=0, git diff --check clean, working tree clean. Shadow-only verified: 0 call_service/register_service/fire_event calls (grep exit=1, 0 matches). Gates 1-4 abgeschlossen. Gates 5-6 unverifiziert (HA-Token abgelaufen, 13 chars truncated).",
-    "uem_release_gates": "Gates 1-6 completed. Release-Umfang: manifest(0.1.10), CHANGELOG(rc.2), config_flow, e3dc_rscp, conftest, 2 neue test files committed. Keine ZIP/Fremdartefakte. SHA256 1e614a13 bereits bei ea54733 committed.",
+    "uem_release_gates": "Gates 1-6 completed. Release-Umfang: manifest(0.1.10), CHANGELOG(rc.2), config_flow, e3dc_rscp, conftest, 2 neue test files committed. Keine ZIP/Fremdartefakte. SHA256 1e614a13 bereits bei ea54733 committed. Commit 34bc04a pushed.",
     "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m.",
     "runtime": "HA 2026.8.1 RUNNING (ROOT=200). HA API /api/config=401 (token expired: eyJhbG...msjg, 13 chars). Keine live Gate-5/6-Verifikation möglich ohne Token-Update in /home/hermes/.hermes/profiles/uem-test/.env."
   }
