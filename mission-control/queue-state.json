@@ -1,21 +1,21 @@
 {
   "version": 3,
-  "updated_at": "2026-08-14T00:58:02Z",
+  "updated_at": "2026-08-14T02:50Z",
   "project": "universal-energy-manager",
   "current_release": "v0.1.10-rc.2",
   "next_project": "UEM v0.1.10-rc.2 Gate 5-6: HACS-Installation + Runtime-Validierung — erfordert gültigen HASS_TOKEN",
-  "next_concrete_slice": "Stefan ersetzt HASS_TOKEN (183-char long-lived access token) in /home/hermes/.hermes/profiles/uem-test/.env. Anschließend: Gate 5 (HACS update entity v0.1.10-rc.2) und Gate 6 (reload + shadow validation) durchführbar.",
+  "next_concrete_slice": "Stefan setzt gültigen HASS_TOKEN (183-char long-lived access token) in /home/hermes/.hermes/profiles/uem-test/.env ein. Anschließend: Gate 5 (HACS update entity v0.1.10-rc.2) und Gate 6 (reload + shadow validation) durchführbar.",
   "plan": {
     "total": 6,
     "completed_count": 4,
     "active_gate": null,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-14T00:58:02Z",
+    "last_evidence_at": "2026-08-14T02:50Z",
     "gates": {
       "1": {
         "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
         "status": "completed",
-        "evidence": "2026-08-14T00:58:02Z LIVE: pytest 658/658 (100%) in 1.82s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=d7e7a0f=origin/main). Shadow-only AST: 0 call_service/register_service/fire_event. Release commit 83df15d (SHA256 diff: b1c3550e) on origin/main. Tag v0.1.10-rc.2 (annotated ea547330 → commit 5b518929 tag → target ea547330) on origin. Annotated tag is Ancestor of HEAD. No untracked files, no ZIP artifacts."
+        "evidence": "2026-08-14T02:50Z LIVE: pytest 658/658 (100%) in 9.06s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=e872b61=origin/main). Shadow-only AST: 0 call_service/register_service/fire_event. Release commit in tag v0.1.10-rc.2 (ea547330 → commit 5b518929 tag → target ea547330) on origin/main. Annotated tag is Ancestor of HEAD. No untracked files, no ZIP artifacts."
       },
       "2": {
         "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
@@ -30,29 +30,27 @@
       "4": {
         "name": "CI-Abschlussprüfung",
         "status": "completed",
-        "evidence": "HEAD=origin/main (d7e7a0f). Tag v0.1.10-rc.2 (ea547330) is Ancestor of HEAD. pytest 658/658 passed (100%) in 1.82s, ruff check EXIT=0, git diff --check clean. GitHub CI check-runs: 2 checks, both 'test' | success | completed."
+        "evidence": "HEAD=origin/main (e872b61). Tag v0.1.10-rc.2 (ea547330) is Ancestor of HEAD. pytest 658/658 passed (100%) in 9.06s, ruff check EXIT=0, git diff --check clean. GitHub CI check-runs: 2 checks, both 'test' | success | completed."
       },
       "5": {
         "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
         "status": "blocked",
-        "blocker": "HASS_TOKEN truncated in .env (13 chars: eyJhbG...msjg), 401 Unauthorized on /api/config. Token valid at 2026-08-18T15:00Z (183 chars), truncated at 2026-08-18T22:00Z (13 chars). Same state persists at 2026-08-14T00:58:02Z.",
-        "evidence": "HA 192.168.10.51:8123 ROOT=200 (reachable), /api/config=401. Token length=13, first 10 chars: eyJhbG..., last 4: ...msjg. File: /home/hermes/.hermes/profiles/uem-test/.env"
+        "blocker": "HASS_TOKEN truncated/placeholder in .env (322 bytes literal: eyJhbG...msjg), 401 Unauthorized on /api/config. Token unchanged — no external event (token replacement) observed. No HA API access possible."
       },
       "6": {
         "name": "Reload + Runtime-/Shadow-Validierung",
         "status": "blocked",
-        "blocker": "Abhängig von Gate 5 (HACS-Installation).",
-        "evidence": "Wartet auf Gate 5 completion und validen HA-Token."
+        "blocker": "Abhängig von Gate 5 (HACS-Installation)."
       }
     }
   },
   "check_again_forecast": {
     "state": "waiting_external",
-    "checked_at": "2026-08-14T00:58:02Z",
-    "basis": "Gates 1-4 completed (LIVE 2026-08-14T00:58:02Z): pytest 658/658 (100%) in 1.82s, ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=d7e7a0f = origin/main). Tag v0.1.10-rc.2 (annotated ea547330) confirmed on origin. GitHub Pre-release exists and CI green. Gate 5 blocked: HASS_TOKEN truncated in .env (13 chars: eyJhbG...msjg), 401 Unauthorized on /api/config. Root=200 (HA reachable). Gates 5-6 require valid HA token.",
-    "earliest_check_at": "2026-08-14T08:00:00Z",
-    "recommended_check_at": "2026-08-14T08:00:00Z",
-    "caveat": "Gate 5 blocked auf HA-Token (truncated in .env). Keine HA-Zugriffsmöglichkeit bis Token ersetzt. Keine Zusage — reines Prüfzeitfenster. Gates 1-4 unverändert stabil seit 2026-08-14T00:58:02Z. Empfehlung: Stefan ersetzt HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env."
+    "checked_at": "2026-08-14T02:50Z",
+    "basis": "Gates 1-4 completed (LIVE 2026-08-14T02:50Z): pytest 658/658 (100%) in 9.06s, ruff check EXIT=0, git diff --check clean, working tree clean (HEAD=e872b61 = origin/main). Tag v0.1.10-rc.2 (annotated ea547330) confirmed on origin. GitHub Pre-release exists and CI green. Gate 5 blocked: HASS_TOKEN truncated/placeholder in .env (322 bytes literal, not 183-char long-lived access token), 401 Unauthorized on /api/config. Root=200 (HA reachable). Gates 5-6 require valid HA token.",
+    "earliest_check_at": "2026-08-14T06:00:00Z",
+    "recommended_check_at": "2026-08-14T10:00:00Z",
+    "caveat": "Gate 5 blocked auf HA-Token (322-byte literal placeholder in .env, nicht 183-char long-lived access token). Keine HA-Zugriffsmöglichkeit bis Token ersetzt. Keine auth refresh path (HA 2024+). Keine Zusage — reines Prüfzeitfenster. Empfehlung: Stefan setzt gültigen HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env ein."
   },
   "release_artifacts": {
     "tag": "v0.1.10-rc.2",
@@ -67,9 +65,9 @@
   "test_ha": {
     "endpoint": "http://192.168.10.51:8123",
     "reachable": true,
-    "auth_status": "401 Unauthorized — token truncated (13 chars)",
+    "auth_status": "401 Unauthorized — token truncated/placeholder (322 bytes literal)",
     "token_file": "/home/hermes/.hermes/profiles/uem-test/.env",
-    "token_length": 13,
+    "token_length": 322,
     "token_partial": "eyJhbG...msjg"
   },
   "shadow_security_summary": {
