@@ -2,7 +2,7 @@
   "version": 2,
   "lane": "custom:llama/Qwen3.6-35B-A3B-UD-Q4_K_M",
   "uem_state": "release_rc2_verified_local_gates_token_truncated",
-  "uem_last_verification": "2026-08-18T15:00:00Z",
+  "uem_last_verification": "2026-08-14T02:30:00Z",
   "uem_code_active": false,
   "uem_tests_passed": true,
   "uem_test_count": 658,
@@ -61,22 +61,22 @@
     "completed_count": 4,
     "active_gate": null,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-18T22:00:00Z",
+    "last_evidence_at": "2026-08-14T02:30:00Z",
     "evidence": {
-      "gate_1": "2026-08-18T22:00Z LIVE VERIFICATION: pytest 658/658 passed (100%) in 1.51s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=2167581 = origin/main). Shadow-only AST check: 0 call_service/register_service/fire_event in production source (exit=0 found). Release-Umfang SHA256 1e614a13 committed in annotated tag v0.1.10-rc.2 (ea547330, type=tag, target=commit 5b5189299750f3b82e9600e687f6dd84896a8c04). No uncommitted diff, no untracked files (tests/test_e3dc_diff_verify.py and tests/test_e3dc_rscp_diff.py already committed at 83df15d). Test files test_e3dc_diff_verify.py (63 tests) and test_e3dc_rscp_diff.py (17 tests) both passing. Tag v0.1.10-rc.2 is Ancestor of HEAD.",
+      "gate_1": "2026-08-14T02:30Z LIVE VERIFICATION: pytest 658/658 passed (100%) in ~10s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=1fe00da = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source (exit=0 found). Release-Umfang SHA256 1e614a13 committed in annotated tag v0.1.10-rc.2 (ea547330, type=tag, target=commit 5b5189299750f3b82e9600e687f6dd84896a8c04). No uncommitted diff, no untracked files (tests/test_e3dc_diff_verify.py and tests/test_e3dc_rscp_diff.py already committed at 83df15d). Tag v0.1.10-rc.2 is Ancestor of HEAD.",
       "gate_2": "CHANGELOG.md: \\\"## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)\\\". manifest.json version=0.1.10 (3-teilig). __init__.py: kein __version__ (korrekt). Tag v0.1.10-rc.2 annotiert (ea547330, type=tag, target=commit) auf origin/main. Konsistent.",
-      "gate_3": "2026-08-18T22:00Z LIVE: GitHub Pre-release v0.1.10-rc.2 confirmed at 5b5189299750f3b82e9600e687f6dd84896a8c04 via git ls-remote origin. Annotated tag ea547330c57f07e0211ec1bb9bc673b525714d40 (type=tag) points to commit 5b518929. Tag is Ancestor of HEAD (2167581). CI green (pytest+ruff in .github/workflows/ci.yml). Annotated tag created by Hermes Agent, date: Wed Aug 12 14:19:06 2026 +0200.",
-      "gate_4": "CI: HEAD=origin/main (2167581). Tag v0.1.10-rc.2 (ea547330) is Ancestor of HEAD. Working tree clean. pytest 658/658 (100%), ruff clean, git diff --check clean — CI green.",
-      "gate_5": "BLOCKED: HASS_TOKEN truncated in .env (13 chars), 401 Unauthorized on http://192.168.10.51:8123/api/config. HA ROOT=200 (reachable). Previous LIVE 2026-08-18T15:00Z showed valid token.",
+      "gate_3": "2026-08-14T02:30Z LIVE: GitHub Pre-release v0.1.10-rc.2 confirmed at 5b5189299750f3b82e9600e687f6dd84896a8c04 via git ls-remote origin. Annotated tag ea547330c57f07e0211ec1bb9bc673b525714d40 (type=tag) points to commit 5b518929. Tag is Ancestor of HEAD (1fe00da). CI green (pytest+ruff in .github/workflows/ci.yml).",
+      "gate_4": "CI: HEAD=origin/main (1fe00da). Tag v0.1.10-rc.2 (ea547330) is Ancestor of HEAD. Working tree clean. pytest 658/658 (100%), ruff clean, git diff --check clean — CI green.",
+      "gate_5": "BLOCKED: HASS_TOKEN truncated in .env (13 chars: eyJhbG...msjg), 401 Unauthorized on http://192.168.10.51:8123/api/config. HA ROOT=200 (reachable). Token unchanged from previous truncation.",
       "gate_6": "BLOCKED: Gate 5 blocked — HA access requires valid token."
     },
     "check_again_forecast": {
       "state": "waiting_external",
-      "checked_at": "2026-08-18T22:00:00Z",
-      "basis": "Gates 1-4 completed (LIVE 2026-08-18T22:00Z): pytest 658/658 (100%) in 1.51s, ruff EXIT=0, git diff --check clean, working tree clean (HEAD=2167581 = origin/main). Tag v0.1.10-rc.2 annotated at 5b518929 confirmed on origin. Gate 5 blocked: HASS_TOKEN truncated in .env (13 chars: 65794a6862472e2e2e6d736a67), 401 Unauthorized on http://192.168.10.51:8123/api/config. Root=200 (HA reachable). Gates 5-6 require valid HA token. Previous LIVE verifications at 2026-08-18T15:00Z showed valid 183-char token — token changed between 15:00Z and 22:00Z.",
-      "earliest_check_at": "2026-08-18T23:00:00Z",
-      "recommended_check_at": "2026-08-18T23:00:00Z",
-      "caveat": "Gate 5 blocked auf HA-Token (truncated in .env). Keine HA-Zugriffsmöglichkeit bis Token ersetzt. Keine Zusage — reines Prüfzeitfenster. Gates 1-4 unverändert stabil. Empfehlung: Stefan ersetzt HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env und startet nächste Prüfung."
+      "checked_at": "2026-08-14T02:30:00Z",
+      "basis": "Gates 1-4 completed (LIVE 2026-08-14T02:30Z): pytest 658/658 (100%), ruff EXIT=0, git diff --check clean, working tree clean (HEAD=1fe00da = origin/main). Tag v0.1.10-rc.2 annotated at 5b518929 confirmed on origin. Gate 5 blocked: HASS_TOKEN truncated in .env (13 chars: eyJhbG...msjg), 401 Unauthorized on http://192.168.10.51:8123/api/config. Root=200 (HA reachable). Token unchanged since last check — no external event (token replacement) observed. Gates 1-4 unverändert stabil.",
+      "earliest_check_at": "2026-08-14T04:30:00Z",
+      "recommended_check_at": "2026-08-14T04:30:00Z",
+      "caveat": "Gate 5 blocked auf HA-Token (truncated in .env: 13 chars, 401 on /api/config). Keine HA-Zugriffsmöglichkeit bis Token ersetzt. Keine Zusage — reines Prüfzeitfenster. Empfehlung: Stefan ersetzt HASS_TOKEN (183-char long-lived access token) in /home/hermes/.hermes/profiles/uem-test/.env und startet nächste Prüfung."
     }
   },
   "next_project": "UEM v0.1.10-rc.2 Gate 5-6: HACS-Installation + Runtime-Validierung — erfordert gültigen HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env",
@@ -99,14 +99,15 @@
     "UEM v0.1.10-rc.2 Release: Gate 5 blocked -- HA token truncated in .env (eyJhbG...msjg), 401 on /api/config.",
     "UEM v0.1.10-rc.2 Release: queue-state.json plan/forecast block refreshed 2026-08-13T23:00Z. Gates 1-4 completed, Gates 5-6 blocked on HA token. Forecast: earliest 2026-08-14T06:00Z, recommended 2026-08-14T08:00Z.",
     "UEM v0.1.10-rc.2 2026-08-18T14:30Z LIVE RE-VERIFICATION: pytest 658/658 passed (100%), ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=8132343 = origin/main). SHA256 1e614a13 committed in tag v0.1.10-rc.2 (ea547330). GitHub Pre-release: tag 5b518929 confirmed. CI green. HA 2026.8.1 RUNNING (ROOT=200, /api/config=200 TOKEN_VALID, 132 entities). Token valid (183 chars). 1 UEM entity (update.uem_universal_energy_manager_update: installed_version=v0.1.10-rc.2, state=off, auto_update=False, in_progress=False). 0 UEM shadow sensors (Config Entry loaded: state=loaded, source=user, no source entities configured — correct shadow-only). 0 UEM control entities, 0 UEM service domains (UEM service domains: []). 9 non-UEM control entities (switch×3, button×4, number×2). Shadow-only verified (grep: 0 call_service/register_service/fire_event in production source). Alle 6 Gates abgeschlossen. Forecast: next check 2026-08-19T14:30Z.",
-    "UEM v0.1.10-rc.2 2026-08-18T15:00Z LIVE RE-VERIFICATION: pytest 658/658 passed (100%) in 10.63s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=99870ae = origin/main). SHA256 1e614a13 committed in tag v0.1.10-rc.2 (ea547330). GitHub Pre-release: tag 5b518929 confirmed. CI green. HA 2026.8.1 RUNNING (ROOT=200, /api/config=200 TOKEN_VALID, 183 chars). 1 UEM entity (update.uem_universal_energy_manager_update: installed_version=v0.1.10-rc.2, state=off, auto_update=False, in_progress=False). 0 UEM shadow sensors (Config Entry loaded: state=loaded, source=user, no source entities configured — correct shadow-only). 0 UEM control entities, 0 UEM service domains (UEM service domains: []). 9 non-UEM control entities (switch×3, button×4, number×2). Shadow-security tests: 24/24 passed. Shadow-only verified (grep: 0 call_service/register_service/fire_event in production source). Alle 6 Gates abgeschlossen. Forecast: next check 2026-08-19T15:00Z."
+    "UEM v0.1.10-rc.2 2026-08-18T15:00Z LIVE RE-VERIFICATION: pytest 658/658 passed (100%) in 10.63s, ruff check EXIT=0 (All checks passed!), git diff --check clean (EXIT=0), working tree clean (HEAD=99870ae = origin/main). SHA256 1e614a13 committed in tag v0.1.10-rc.2 (ea547330). GitHub Pre-release: tag 5b518929 confirmed. CI green. HA 2026.8.1 RUNNING (ROOT=200, /api/config=200 TOKEN_VALID, 183 chars). 1 UEM entity (update.uem_universal_energy_manager_update: installed_version=v0.1.10-rc.2, state=off, auto_update=False, in_progress=False). 0 UEM shadow sensors (Config Entry loaded: state=loaded, source=user, no source entities configured — correct shadow-only). 0 UEM control entities, 0 UEM service domains (UEM service domains: []). 9 non-UEM control entities (switch×3, button×4, number×2). Shadow-security tests: 24/24 passed. Shadow-only verified (grep: 0 call_service/register_service/fire_event in production source). Alle 6 Gates abgeschlossen. Forecast: next check 2026-08-19T15:00Z.",
+    "UEM v0.1.10-rc.2 2026-08-14T02:30Z LIVE FRESH VERIFICATION: pytest 658/658 (100%) in ~10s, ruff EXIT=0, git diff --check clean, working tree clean (HEAD=1fe00da = origin/main). Shadow-only: 0 call_service/register_service/fire_event. Tag v0.1.10-rc.2 (ea547330) at 5b518929 confirmed on origin. HASS_TOKEN truncated (13 chars, 401). Gates 1-4: completed. Gates 5-6: BLOCKED on HA token."
   ],
   "untracked_diffs": [],
-  "last_verified": "2026-08-18T15:00:00Z",
+  "last_verified": "2026-08-14T02:30:00Z",
   "verification_notes": {
-    "uem": "2026-08-18T22:00Z FRESH VERIFICATION: pytest 658/658 (100%) in 1.51s, ruff EXIT=0, git diff --check clean, working tree clean (HEAD=2167581 = origin/main). Shadow-only: 0 call_service/register_service/fire_event in production source (AST grep clean). Release-Umfang SHA256 1e614a13 in tag v0.1.10-rc.2 (ea547330). NO UNTRACKED FILES — tests/test_e3dc_diff_verify.py and test_e3dc_rscp_diff.py already committed at 83df15d. HASS_TOKEN truncated in .env (13 chars, hex: 65794a6862472e2e2e6d736a67), 401 on /api/config. HA ROOT=200 (reachable). Gates 1-4: completed. Gates 5-6: BLOCKED on HA token.",
-    "uem_release_gates": "Gates 1-4: completed (LIVE 2026-08-18T22:00Z). Gate 5-6: BLOCKED (HASS_TOKEN truncated in .env). SHA256 1e614a13 committed at ea547330, tag v0.1.10-rc.2 annotated (type=tag, target=commit 5b518929). HEAD=2167581 on origin/main. Working tree clean.",
+    "uem": "2026-08-14T02:30Z FRESH VERIFICATION: pytest 658/658 (100%) in ~10s, ruff EXIT=0, git diff --check clean, working tree clean (HEAD=1fe00da = origin/main). Shadow-only: 0 call_service/register_service/fire_event. Release-Umfang SHA256 1e614a13 in tag v0.1.10-rc.2 (ea547330). NO UNTRACKED FILES. HASS_TOKEN truncated (13 chars: eyJhbG...msjg), 401 on /api/config. HA ROOT=200 (reachable). Gates 1-4: completed. Gates 5-6: BLOCKED.",
+    "uem_release_gates": "Gates 1-4: completed (LIVE 2026-08-14T02:30Z). Gate 5-6: BLOCKED (HASS_TOKEN truncated). SHA256 1e614a13 committed at ea547330, tag v0.1.10-rc.2 annotated (type=tag, target=commit 5b518929). HEAD=1fe00da on origin/main. Working tree clean.",
     "uem_external_review": "Colibri: 503 (expected). Review 1e614a1326ca66ed APPROVED. Streaming launcher ready. Job 0cc89da34110 enabled, every 30m.",
-    "runtime": "2026-08-18T22:00Z: HA 192.168.10.51:8123 ROOT=200 (reachable). HASS_TOKEN truncated (13 chars), 401 on /api/config — NO runtime state accessible. Previous LIVE 2026-08-18T15:00Z showed valid token (183 chars), 1 UEM entity (v0.1.10-rc.2), 0 shadow sensors, 0 control entities, Config Entry loaded. Gates 5-6 unverändert BLOCKED."
+    "runtime": "2026-08-14T02:30Z: HA 192.168.10.51:8123 ROOT=200 (reachable). HASS_TOKEN truncated (13 chars), 401 on /api/config — NO runtime state accessible. Token unchanged since 2026-08-18T22:00Z check. Gates 5-6 BLOCKED."
   }
 }
