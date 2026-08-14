@@ -1,0 +1,78 @@
+{
+  "version": 3,
+  "updated_at": "2026-08-14T23:45Z",
+  "project": "universal-energy-manager",
+  "current_release": "v0.1.10-rc.2",
+  "next_project": "UEM v0.1.10-rc.2 Shadow-Runtime-Validierung in Test-HA",
+  "next_concrete_slice": "Test-HA Token erneuern (current: placeholder eyJhbG...msjg), dann HACS-Update auf v0.1.10-rc.2 und Runtime-Validierung",
+  "plan": {
+    "total": 6,
+    "completed_count": 4,
+    "active_gate": null,
+    "next_gate": 5,
+    "last_evidence_at": "2026-08-14T23:45Z",
+    "gates": {
+      "1": {
+        "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
+        "status": "completed",
+        "evidence": "pytest 658/658 passed (100%) in 1.38s, ruff check EXIT=0, git diff --check clean, working tree clean. Shadow-only-Sicherheitsgrenze verifiziert: keine Services/Steuerentitäten/Write-Pfade. 2 Shadow-Testsuiten: test_e3dc_diff_verify.py, test_e3dc_rscp_diff.py."
+      },
+      "2": {
+        "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
+        "status": "completed",
+        "evidence": "Manifest version=0.1.10 (konsistent mit rc.1-rc.2-Praxis), CHANGELOG.md Eintrag v0.1.10-rc.2 vorhanden, Git-Tag v0.1.10-rc.2 annotiert."
+      },
+      "3": {
+        "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
+        "status": "completed",
+        "evidence": "GitHub Pre-release v0.1.10-rc.2 confirmed (prerelease=True, draft=False). Tag v0.1.10-rc.2 auf origin/main. CI-Workflow grün."
+      },
+      "4": {
+        "name": "CI-Abschlussprüfung",
+        "status": "completed",
+        "evidence": "pytest 658/658 passed, ruff check EXIT=0, git diff --check clean. Alle Checks grün."
+      },
+      "5": {
+        "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
+        "status": "blocked",
+        "blocker": "Test-HA Token ist ein Platzhalter (eyJhbG...msjg), 401 Unauthorized auf http://192.168.10.51:8123. Echter Token erforderlich für HACS-Update-Entity-Interaktion.",
+        "evidence": "HA erreichbar (TCP connect OK), aber /api/config gibt 401."
+      },
+      "6": {
+        "name": "Reload + Runtime-/Shadow-Validierung",
+        "status": "blocked",
+        "blocker": "Abhängig von Gate 5 (HACS-Installation).",
+        "evidence": "Wartet auf Gate 5 completion."
+      }
+    }
+  },
+  "check_again_forecast": {
+    "state": "forecast",
+    "checked_at": "2026-08-14T23:45Z",
+    "basis": "Gate 1-4 completed. Gate 5 blocked on external dependency: test-HA API token needs refresh. HA is reachable at 192.168.10.51:8123 but auth fails with 401.",
+    "earliest_check_at": "2026-08-15T06:00:00Z",
+    "recommended_check_at": "2026-08-15T09:00:00Z",
+    "caveat": "Prüfung nur sinnvoll, sobald ein gültiger Test-HA Token vorliegt. Bis dahin ist kein automatisches Weiterkommen möglich — externe Abhängigkeit (Token-Erneuerung durch Stefan)."
+  },
+  "release_artifacts": {
+    "tag": "v0.1.10-rc.2",
+    "tag_commit": "ea547330c57f07e0211ec1bb9bc673b525714d40",
+    "github_prerelease_url": "https://github.com/uncorp/universal-energy-manager/releases/tag/v0.1.10-rc.2",
+    "manifest_version": "0.1.10",
+    "changelog_head": "## 0.1.10-rc.2 – Multi-Generator + Multi-Battery (Beta Pre-Release)"
+  },
+  "test_ha": {
+    "endpoint": "http://192.168.10.51:8123",
+    "reachable": true,
+    "auth_status": "401 Unauthorized — token is placeholder",
+    "token_file": "/home/hermes/.hermes/profiles/uem-test/.env"
+  },
+  "shadow_security_summary": {
+    "no_control_entities": true,
+    "no_service_domains": true,
+    "no_write_paths": true,
+    "shadow_sensors_only": true,
+    "active_control_false": true,
+    "commands_sent_false": true
+  }
+}
