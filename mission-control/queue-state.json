@@ -1,58 +1,58 @@
 {
   "version": 3,
-  "updated_at": "2026-08-14T23:45Z",
+  "updated_at": "2026-08-18T22:00Z",
   "project": "universal-energy-manager",
   "current_release": "v0.1.10-rc.2",
-  "next_project": "UEM v0.1.10-rc.2 Shadow-Runtime-Validierung in Test-HA",
-  "next_concrete_slice": "Test-HA Token erneuern (current: placeholder eyJhbG...msjg), dann HACS-Update auf v0.1.10-rc.2 und Runtime-Validierung",
+  "next_project": "UEM v0.1.10-rc.2 Gate 5-6: HACS-Installation + Runtime-Validierung — erfordert gültigen HASS_TOKEN",
+  "next_concrete_slice": "Stefan ersetzt HASS_TOKEN (183-char long-lived access token) in /home/hermes/.hermes/profiles/uem-test/.env. Anschließend: Gate 5 (HACS update entity v0.1.10-rc.2) und Gate 6 (reload + shadow validation) durchführbar.",
   "plan": {
     "total": 6,
     "completed_count": 4,
     "active_gate": null,
     "next_gate": 5,
-    "last_evidence_at": "2026-08-14T23:45Z",
+    "last_evidence_at": "2026-08-18T22:00Z",
     "gates": {
       "1": {
         "name": "Releaseumfang/Shadow-Sicherheits- und lokale Vollprüfung",
         "status": "completed",
-        "evidence": "pytest 658/658 passed (100%) in 1.38s, ruff check EXIT=0, git diff --check clean, working tree clean. Shadow-only-Sicherheitsgrenze verifiziert: keine Services/Steuerentitäten/Write-Pfade. 2 Shadow-Testsuiten: test_e3dc_diff_verify.py, test_e3dc_rscp_diff.py."
+        "evidence": "2026-08-18T22:00Z LIVE: pytest 658/658 (100%) in 1.51s, ruff EXIT=0, git diff --check clean (EXIT=0), working tree clean (HEAD=2167581=origin/main). Shadow-only AST: 0 call_service/register_service/fire_event. Tag v0.1.10-rc.2 annotated at 5b518929 confirmed on origin. No untracked files (test_e3dc_diff_verify.py at 83df15d, test_e3dc_rscp_diff.py at 83df15d). Tag is Ancestor of HEAD."
       },
       "2": {
         "name": "Versions-/Changelog-Vorbereitung v0.1.10-rc.2",
         "status": "completed",
-        "evidence": "Manifest version=0.1.10 (konsistent mit rc.1-rc.2-Praxis), CHANGELOG.md Eintrag v0.1.10-rc.2 vorhanden, Git-Tag v0.1.10-rc.2 annotiert."
+        "evidence": "Manifest version=0.1.10 (konsistent mit rc.2-Praxis), CHANGELOG.md Eintrag v0.1.10-rc.2 vorhanden, Git-Tag v0.1.10-rc.2 annotiert (ea547330, type=tag, target=5b518929)."
       },
       "3": {
         "name": "Commit + Push + annotierter Tag + GitHub Pre-release",
         "status": "completed",
-        "evidence": "GitHub Pre-release v0.1.10-rc.2 confirmed (prerelease=True, draft=False). Tag v0.1.10-rc.2 auf origin/main. CI-Workflow grün."
+        "evidence": "GitHub Pre-release v0.1.10-rc.2 confirmed at 5b5189299750f3b82e9600e687f6dd84896a8c04 (tag v0.1.10-rc.2). Annotated tag ea547330 on origin/main. CI green."
       },
       "4": {
         "name": "CI-Abschlussprüfung",
         "status": "completed",
-        "evidence": "pytest 658/658 passed, ruff check EXIT=0, git diff --check clean. Alle Checks grün."
+        "evidence": "HEAD=origin/main (2167581). Tag v0.1.10-rc.2 (ea547330) is Ancestor of HEAD. pytest 658/658 passed, ruff check EXIT=0, git diff --check clean."
       },
       "5": {
         "name": "HACS-Installation von exakt v0.1.10-rc.2 in isolierte Test-HA",
         "status": "blocked",
-        "blocker": "Test-HA Token ist ein Platzhalter (eyJhbG...msjg), 401 Unauthorized auf http://192.168.10.51:8123. Echter Token erforderlich für HACS-Update-Entity-Interaktion.",
-        "evidence": "HA erreichbar (TCP connect OK), aber /api/config gibt 401."
+        "blocker": "HASS_TOKEN truncated in .env (13 chars: 65794a6862472e2e2e6d736a67), 401 Unauthorized on /api/config. Previous LIVE at 2026-08-18T15:00Z showed valid 183-char token — token changed between verifications.",
+        "evidence": "HA 192.168.10.51:8123 ROOT=200 (reachable), aber /api/config=401. Token: eyJhbG...msjg (13 chars)."
       },
       "6": {
         "name": "Reload + Runtime-/Shadow-Validierung",
         "status": "blocked",
         "blocker": "Abhängig von Gate 5 (HACS-Installation).",
-        "evidence": "Wartet auf Gate 5 completion."
+        "evidence": "Wartet auf Gate 5 completion und validen HA-Token."
       }
     }
   },
   "check_again_forecast": {
-    "state": "forecast",
-    "checked_at": "2026-08-14T23:45Z",
-    "basis": "Gate 1-4 completed. Gate 5 blocked on external dependency: test-HA API token needs refresh. HA is reachable at 192.168.10.51:8123 but auth fails with 401.",
-    "earliest_check_at": "2026-08-15T06:00:00Z",
-    "recommended_check_at": "2026-08-15T09:00:00Z",
-    "caveat": "Prüfung nur sinnvoll, sobald ein gültiger Test-HA Token vorliegt. Bis dahin ist kein automatisches Weiterkommen möglich — externe Abhängigkeit (Token-Erneuerung durch Stefan)."
+    "state": "waiting_external",
+    "checked_at": "2026-08-18T22:00Z",
+    "basis": "Gates 1-4 completed (LIVE 2026-08-18T22:00Z): pytest 658/658 (100%) in 1.51s, ruff EXIT=0, git diff --check clean, working tree clean (HEAD=2167581 = origin/main). Tag v0.1.10-rc.2 annotated at 5b518929 confirmed on origin. Gate 5 blocked: HASS_TOKEN truncated in .env (13 chars: 65794a6862472e2e2e6d736a67), 401 Unauthorized on /api/config. Root=200 (HA reachable). Gates 5-6 require valid HA token.",
+    "earliest_check_at": "2026-08-18T23:00:00Z",
+    "recommended_check_at": "2026-08-18T23:00:00Z",
+    "caveat": "Gate 5 blocked auf HA-Token (truncated in .env). Keine HA-Zugriffsmöglichkeit bis Token ersetzt. Keine Zusage — reines Prüfzeitfenster. Gates 1-4 unverändert stabil. Empfehlung: Stefan ersetzt HASS_TOKEN in /home/hermes/.hermes/profiles/uem-test/.env."
   },
   "release_artifacts": {
     "tag": "v0.1.10-rc.2",
